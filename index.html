@@ -187,9 +187,24 @@
         let isAdmin = false;
         let currentWeekIndex = 1;
 
-        // Updated Officers List
+        // Officers List
         const officers = ['ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'עינב', 'שלומית', 'רעות', 'ליפז'];
         
+        // Custom background color for each officer row
+        const officerRowColors = {
+            'ארז': 'bg-blue-50/60',
+            'בן זיקרי': 'bg-emerald-50/60',
+            'יניב': 'bg-amber-50/60',
+            'יחיאל': 'bg-purple-50/60',
+            'ולרי': 'bg-sky-50/60',
+            'ירין': 'bg-indigo-50/60',
+            'יוסף': 'bg-teal-50/60',
+            'עינב': 'bg-rose-50/60',
+            'שלומית': 'bg-orange-50/60',
+            'רעות': 'bg-fuchsia-50/60',
+            'ליפז': 'bg-lime-50/60'
+        };
+
         const holidaysData = [
             { name: 'פסח', date: '01.04.2026', eve: 'יחיאל', day: 'ולרי' },
             { name: 'פסח חג שני', date: '07.04.2026', eve: 'ולרי', day: 'ארז' },
@@ -308,9 +323,10 @@
 
             officers.forEach(officer => {
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition';
+                const rowBgClass = officerRowColors[officer] || 'bg-white';
+                tr.className = `${rowBgClass} hover:bg-slate-100/80 transition`;
 
-                let rowHTML = `<td class="p-3 font-bold text-slate-800 border-l border-slate-200 bg-slate-100/80 text-right">${officer}</td>`;
+                let rowHTML = `<td class="p-3 font-bold text-slate-900 border-l border-slate-200 bg-slate-200/50 text-right">${officer}</td>`;
 
                 const officerShifts = (currentData.shifts && currentData.shifts[officer]) ? currentData.shifts[officer] : ['', '', '', '', '', '', ''];
 
@@ -319,9 +335,17 @@
                     if (isAdmin) {
                         rowHTML += `
                             <td class="p-1 text-center border-l border-slate-200">
-                                <input type="text" value="${shiftVal}" 
-                                    onchange="updateShift('${officer}', ${day}, this.value)"
-                                    class="w-full text-center p-2 rounded-lg border border-slate-200 text-xs font-bold focus:bg-amber-50 focus:border-amber-400 focus:outline-none">
+                                <div class="flex items-center gap-1">
+                                    <input type="text" value="${shiftVal}" 
+                                        id="input-${officer}-${day}"
+                                        onchange="updateShift('${officer}', ${day}, this.value)"
+                                        class="w-full text-center p-1.5 rounded-lg border border-slate-300 text-xs font-bold focus:bg-amber-50 focus:border-amber-400 focus:outline-none">
+                                    <button onclick="toggleCarIcon('${officer}', ${day})" 
+                                        title="הוסף/הסר רכב" 
+                                        class="p-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg text-xs font-bold transition">
+                                        🚗
+                                    </button>
+                                </div>
                             </td>`;
                     } else {
                         const shiftBadgeClass = getShiftBadgeStyle(shiftVal);
@@ -342,37 +366,57 @@
             nInput.readOnly = !isAdmin;
         }
 
+        function toggleCarIcon(officer, dayIndex) {
+            if (!scheduleData[currentWeekIndex]) return;
+            if (!scheduleData[currentWeekIndex].shifts[officer]) {
+                scheduleData[currentWeekIndex].shifts[officer] = ['', '', '', '', '', '', ''];
+            }
+            let currentVal = scheduleData[currentWeekIndex].shifts[officer][dayIndex] || '';
+            
+            if (currentVal.includes('רכב')) {
+                currentVal = currentVal.replace('רכב', '').trim();
+            } else {
+                currentVal = (currentVal + ' רכב').trim();
+            }
+            
+            scheduleData[currentWeekIndex].shifts[officer][dayIndex] = currentVal;
+            renderSchedule();
+        }
+
         function getShiftBadgeStyle(val) {
             if (!val) return '<span class="text-slate-300 font-normal">-</span>';
             
-            const lowerVal = val.toLowerCase();
+            const hasCar = val.includes('רכב') || val.toLowerCase().includes('car');
+            let cleanVal = val.replace('רכב', '').trim();
 
-            // Vehicle Check
-            if (val.includes('רכב') || lowerVal.includes('car')) {
-                return `<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500 text-white font-black text-xs shadow-sm"><i class="fa-solid fa-car"></i> ${val}</span>`;
-            }
+            let carBadge = hasCar ? '<span class="bg-amber-500 text-white px-1.5 py-0.5 rounded text-[10px] font-black shadow-sm ml-1">🚗 רכב</span>' : '';
+
             // Standard Shifts
-            if (val === 'אבג' || val === 'אב' || val === 'בג') {
-                return `<span class="inline-block px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs shadow-sm">${val}</span>`;
+            if (cleanVal === 'אבג' || cleanVal === 'אב' || cleanVal === 'בג') {
+                return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs shadow-sm">${cleanVal || 'משמרת'}</span>${carBadge}</div>`;
             }
-            if (val === 'א') {
-                return `<span class="inline-block px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow-sm">${val}</span>`;
+            if (cleanVal === 'א') {
+                return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow-sm">${cleanVal}</span>${carBadge}</div>`;
             }
             // Vacation / Off
-            if (val.includes('חש') || val.includes('ח״ש') || val.includes('חופש')) {
-                return `<span class="inline-block px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold text-xs border border-amber-300">${val}</span>`;
+            if (cleanVal.includes('חש') || cleanVal.includes('ח״ש') || cleanVal.includes('חופש')) {
+                return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 font-bold text-xs border border-amber-300">${cleanVal}</span>${carBadge}</div>`;
             }
             // Sick
-            if (val.includes('מחלה')) {
-                return `<span class="inline-block px-2.5 py-1 rounded-lg bg-rose-500 text-white font-bold text-xs shadow-sm">${val}</span>`;
+            if (cleanVal.includes('מחלה')) {
+                return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-rose-500 text-white font-bold text-xs shadow-sm">${cleanVal}</span>${carBadge}</div>`;
             }
-            // Eilat / Training / Special
-            if (val.includes('אילת') || val.includes('כנס') || val.includes('מטווח')) {
-                return `<span class="inline-block px-2.5 py-1 rounded-lg bg-purple-600 text-white font-bold text-xs shadow-sm">${val}</span>`;
+            // Special
+            if (cleanVal.includes('אילת') || cleanVal.includes('כנס') || cleanVal.includes('מטווח')) {
+                return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-purple-600 text-white font-bold text-xs shadow-sm">${cleanVal}</span>${carBadge}</div>`;
             }
 
-            // Fallback default badge
-            return `<span class="inline-block px-2.5 py-1 rounded-lg bg-slate-200 text-slate-800 font-bold text-xs">${val}</span>`;
+            // Fallback default badge if only car or other text
+            if (!cleanVal && hasCar) {
+                return carBadge;
+            }
+
+            return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-800 font-bold text-xs">${cleanVal}</span>${carBadge}</div>`;
         }
 
         function updateShift(officer, dayIndex, val) {
