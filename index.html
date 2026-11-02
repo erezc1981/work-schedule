@@ -46,7 +46,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black tracking-wide">סידור עבודה משטרתי 2026</h1>
-                    <p class="text-xs text-blue-200">מערכת ניהול סבב ומשמרות</p>
+                    <p class="text-xs text-blue-200">מערכת ניהול סבב ומשמרות - קובץ מעודכן 1111</p>
                 </div>
             </div>
 
@@ -78,7 +78,7 @@
                 </button>
                 <div class="text-center min-w-[220px]">
                     <span class="text-xs font-bold text-police-blue block">שבוע נוכחי</span>
-                    <span id="week-range-display" class="font-bold text-slate-800 text-lg">04.01.2026 - 10.01.2026</span>
+                    <span id="week-range-display" class="font-bold text-slate-800 text-lg">טוען...</span>
                 </div>
                 <button onclick="changeWeek(1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">
                     <i class="fa-solid fa-chevron-left"></i>
@@ -230,7 +230,7 @@
 
         // State Management
         let isAdmin = false;
-        let currentWeekIndex = 1; // Default to first full week of Jan 2026
+        let currentWeekIndex = 1;
 
         const officers = ['ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'ליאור', 'עינב'];
         
@@ -246,228 +246,22 @@
             { name: 'חג שני סוכות', date: '02.10.2026', eve: 'יניב', day: 'ירין' }
         ];
 
-        // All Weeks Data Extracted from Excel
+        // FULL 2026 YEAR SCHEDULE DATA FROM FILE
         let scheduleData = [
-            {
-                dates: ['28.12.2025', '29.12.2025', '30.12.2025', '31.12.2025', '01.01.2026', '02.01.2026', '03.01.2026'],
-                shifts: { 'ארז': ['אבג', '', '', '', 'אבג', '', ''], 'בן זיקרי': ['', 'אבג', '', 'אבג', '', '', ''], 'יניב': ['', '', 'אבג', '', '', '', 'אבג'], 'יחיאל': ['', 'אבג', '', '', '', 'אבג', ''], 'ולרי': ['אבג', '', '', 'חש', '', '', ''], 'ירין': ['א', 'א', 'א', 'חש', 'א', '', ''] },
-                vehicleOfficer: '', vehicleTime: '', vehicleDetails: '', notes: ''
-            },
-            {
-                dates: ['04.01.2026', '05.01.2026', '06.01.2026', '07.01.2026', '08.01.2026', '09.01.2026', '10.01.2026'],
-                shifts: { 'ארז': ['', 'אבג', '', 'אבג', '', '', ''], 'בן זיקרי': ['אבג', '', 'אבג', '', '', '', ''], 'יניב': ['', '', 'אבג', '', '', 'אבג', ''], 'יחיאל': ['', 'אבג', '', '', 'אבג', '', ''], 'ולרי': ['אבג', '', '', 'אבג', '', '', ''], 'ירין': ['א', 'א', 'א', 'א', 'א', '', ''] },
-                vehicleOfficer: 'ראש מדור', vehicleTime: 'שבועי', vehicleDetails: 'רכב מדור', notes: ''
-            },
-            {
-                dates: ['11.01.2026', '12.01.2026', '13.01.2026', '14.01.2026', '15.01.2026', '16.01.2026', '17.01.2026'],
-                shifts: { 'ארז': ['אבג', '', 'אבג', '', '', '', ''], 'בן זיקרי': ['חש', 'אבג', '', '', '', '', ''], 'יניב': ['', '', 'אבג', '', 'אבג', '', ''], 'יחיאל': ['חש', 'אבג', '', 'אבג', '', '', ''], 'ולרי': ['', '', 'אבג', '', '', 'אבג', ''], 'ירין': ['א', 'א', 'א', 'א', 'א', '', ''] },
-                vehicleOfficer: 'יחיאל', vehicleTime: 'משמרת בוקר', vehicleDetails: '', notes: ''
-            },
-            {
-                dates: ['18.01.2026', '19.01.2026', '20.01.2026', '21.01.2026', '22.01.2026', '23.01.2026', '24.01.2026'],
-                shifts: { 'ארז': ['', 'אבג', '', 'אבג', '', '', ''], 'בן זיקרי': ['אבג', '', 'אבג', '', '', '', ''], 'יניב': ['', '', 'אבג', '', '', '', ''], 'יחיאל': ['', 'אבג', '', '', 'אבג', '', ''], 'ולרי': ['אבג', '', '', 'אבג', '', '', ''], 'ירין': ['א', 'א', 'א', 'א', 'א', '', ''] },
-                vehicleOfficer: 'ראש מדור', vehicleTime: 'כל השבוע', vehicleDetails: '', notes: ''
-            },
-            {
-                dates: ['25.01.2026', '26.01.2026', '27.01.2026', '28.01.2026', '29.01.2026', '30.01.2026', '31.01.2026'],
-                shifts: { 'ארז': ['אבג', '', 'אבג', '', '', '', ''], 'בן זיקרי': ['', 'אבג', '', 'אבג', '', '', ''], 'יניב': ['', '', 'אבג', '', '', '', ''], 'יחיאל': ['', 'אבג', '', '', '', '', ''], 'ולרי': ['אבג', '', '', '', '', '', ''], 'ירין': ['א', 'א', 'א', 'א', 'א', '', ''] },
-                vehicleOfficer: 'ראש מדור', vehicleTime: '25.01 - 31.01', vehicleDetails: 'לי מזרחי+יניב / ולרי+ראש מדור', notes: ''
-            }
-        ];
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            renderSchedule();
-            renderHolidays();
-        });
-
-        function toggleAdminMode() {
-            if (!isAdmin) {
-                const pwd = prompt('הכנס קוד מנהל/תמיכה:');
-                if (pwd === PRIMARY_ADMIN_PWD || pwd === SECONDARY_ADMIN_PWD) {
-                    isAdmin = true;
-                    const roleText = (pwd === PRIMARY_ADMIN_PWD) ? 'מצב מנהל (ליאור)' : 'מצב תמיכה מרחוק (1981)';
-                    document.getElementById('admin-btn-text').textContent = roleText;
-                    document.getElementById('admin-toggle-btn').classList.replace('bg-slate-800', 'bg-amber-500');
-                    document.getElementById('admin-toggle-btn').classList.replace('text-amber-400', 'text-slate-900');
-                    document.getElementById('admin-icon').classList.replace('fa-lock', 'fa-lock-open');
-                } else if (pwd !== null) {
-                    alert('סיסמה שגויה!');
-                }
-            } else {
-                isAdmin = false;
-                document.getElementById('admin-btn-text').textContent = 'מצב צפייה (שוטר)';
-                document.getElementById('admin-toggle-btn').classList.replace('bg-amber-500', 'bg-slate-800');
-                document.getElementById('admin-toggle-btn').classList.replace('text-slate-900', 'text-amber-400');
-                document.getElementById('admin-icon').classList.replace('fa-lock-open', 'fa-lock');
-            }
-            renderSchedule();
-        }
-
-        function renderSchedule() {
-            const currentData = scheduleData[currentWeekIndex] || {
-                dates: ['-', '-', '-', '-', '-', '-', '-'],
-                shifts: {},
-                vehicleOfficer: '', vehicleTime: '', vehicleDetails: '', notes: ''
-            };
-
-            // Update Week Display Header
-            if (currentData.dates && currentData.dates.length >= 7) {
-                document.getElementById('week-range-display').textContent = `${currentData.dates[0]} - ${currentData.dates[6]}`;
-                for (let i = 0; i < 7; i++) {
-                    document.getElementById(`date-${i}`).textContent = currentData.dates[i] || '-';
-                }
-            }
-
-            const tbody = document.getElementById('schedule-body');
-            tbody.innerHTML = '';
-
-            officers.forEach(officer => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition';
-
-                let rowHTML = `<td class="p-3 font-bold text-slate-800 border-l border-slate-200 bg-slate-50/50">${officer}</td>`;
-
-                const officerShifts = (currentData.shifts && currentData.shifts[officer]) ? currentData.shifts[officer] : ['', '', '', '', '', '', ''];
-
-                for (let day = 0; day < 7; day++) {
-                    const shiftVal = officerShifts[day] || '';
-                    if (isAdmin) {
-                        rowHTML += `
-                            <td class="p-1 text-center border-l border-slate-200">
-                                <input type="text" value="${shiftVal}" 
-                                    onchange="updateShift('${officer}', ${day}, this.value)"
-                                    class="w-full text-center p-2 rounded-lg border border-slate-200 text-xs font-bold focus:bg-amber-50 focus:border-amber-400 focus:outline-none">
-                            </td>`;
-                    } else {
-                        const shiftBadgeClass = getShiftBadgeStyle(shiftVal);
-                        rowHTML += `
-                            <td class="p-3 text-center border-l border-slate-200">
-                                <span class="${shiftBadgeClass}">${shiftVal || '-'}</span>
-                            </td>`;
-                    }
-                }
-
-                tr.innerHTML = rowHTML;
-                tbody.appendChild(tr);
-            });
-
-            // Vehicle & Notes inputs setup
-            const vOfficer = document.getElementById('vehicle-officer-select');
-            const vTime = document.getElementById('vehicle-time-input');
-            const vDetails = document.getElementById('vehicle-details-input');
-            const nInput = document.getElementById('general-notes');
-
-            vOfficer.value = currentData.vehicleOfficer || '';
-            vTime.value = currentData.vehicleTime || '';
-            vDetails.value = currentData.vehicleDetails || '';
-            nInput.value = currentData.notes || '';
-
-            vOfficer.disabled = !isAdmin;
-            vTime.readOnly = !isAdmin;
-            vDetails.readOnly = !isAdmin;
-            nInput.readOnly = !isAdmin;
-
-            // Vehicle Status Badge
-            const badge = document.getElementById('vehicle-status-badge');
-            if (vOfficer.value) {
-                badge.textContent = `משובץ ל-${vOfficer.value}`;
-                badge.className = 'text-[10px] bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full';
-            } else {
-                badge.textContent = 'רכב זמין';
-                badge.className = 'text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full';
-            }
-        }
-
-        function getShiftBadgeStyle(val) {
-            if (!val) return 'text-slate-400 font-normal';
-            if (val === 'אבג') return 'inline-block px-2.5 py-1 rounded-md bg-blue-100 text-blue-800 font-bold text-xs';
-            if (val === 'א') return 'inline-block px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 font-bold text-xs';
-            if (val === 'חש' || val === 'חופש') return 'inline-block px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 font-bold text-xs';
-            return 'inline-block px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 font-bold text-xs';
-        }
-
-        function updateShift(officer, dayIndex, val) {
-            if (!scheduleData[currentWeekIndex]) return;
-            if (!scheduleData[currentWeekIndex].shifts[officer]) {
-                scheduleData[currentWeekIndex].shifts[officer] = ['', '', '', '', '', '', ''];
-            }
-            scheduleData[currentWeekIndex].shifts[officer][dayIndex] = val;
-        }
-
-        function saveVehicleData() {
-            if (!scheduleData[currentWeekIndex]) return;
-            scheduleData[currentWeekIndex].vehicleOfficer = document.getElementById('vehicle-officer-select').value;
-            scheduleData[currentWeekIndex].vehicleTime = document.getElementById('vehicle-time-input').value;
-            scheduleData[currentWeekIndex].vehicleDetails = document.getElementById('vehicle-details-input').value;
-            renderSchedule();
-        }
-
-        function saveNotes() {
-            if (!scheduleData[currentWeekIndex]) return;
-            scheduleData[currentWeekIndex].notes = document.getElementById('general-notes').value;
-        }
-
-        function renderHolidays() {
-            const tbody = document.getElementById('holidays-body');
-            tbody.innerHTML = '';
-            holidaysData.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition';
-                tr.innerHTML = `
-                    <td class="p-3 font-bold text-police-navy">${item.name}</td>
-                    <td class="p-3 text-slate-600 font-medium">${item.date}</td>
-                    <td class="p-3"><span class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg font-bold text-xs">${item.eve}</span></td>
-                    <td class="p-3"><span class="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg font-bold text-xs">${item.day}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function changeWeek(direction) {
-            if (currentWeekIndex + direction >= 0 && currentWeekIndex + direction < scheduleData.length) {
-                currentWeekIndex += direction;
-                renderSchedule();
-            }
-        }
-
-        function switchTab(tab) {
-            if (tab === 'schedule') {
-                document.getElementById('view-schedule').classList.remove('hidden');
-                document.getElementById('view-holidays').classList.add('hidden');
-                document.getElementById('tab-schedule').className = 'py-2 px-4 rounded-lg bg-white shadow-sm text-police-navy';
-                document.getElementById('tab-holidays').className = 'py-2 px-4 rounded-lg text-slate-600 hover:text-slate-900';
-            } else {
-                document.getElementById('view-schedule').classList.add('hidden');
-                document.getElementById('view-holidays').classList.remove('hidden');
-                document.getElementById('tab-holidays').className = 'py-2 px-4 rounded-lg bg-white shadow-sm text-police-navy';
-                document.getElementById('tab-schedule').className = 'py-2 px-4 rounded-lg text-slate-600 hover:text-slate-900';
-            }
-        }
-
-        function copyForWhatsApp() {
-            const currentData = scheduleData[currentWeekIndex];
-            let text = `*📋 סידור עבודה משטרתי שבועי*\n`;
-            text += `תאריכים: ${document.getElementById('week-range-display').textContent}\n\n`;
-
-            officers.forEach(officer => {
-                const shifts = currentData?.shifts[officer] || [];
-                if (shifts.some(s => s)) {
-                    text += `*${officer}:* ${shifts.map(s => s || '-').join(' | ')}\n`;
-                }
-            });
-
-            if (currentData?.vehicleOfficer) {
-                text += `\n🚘 *רכב משובץ:* ${currentData.vehicleOfficer}`;
-                if (currentData?.vehicleTime) text += ` (${currentData.vehicleTime})`;
-                if (currentData?.vehicleDetails) text += ` - ${currentData.vehicleDetails}`;
-            }
-            if (currentData?.notes) text += `\n📌 *הערות:* ${currentData.notes}`;
-
-            navigator.clipboard.writeText(text).then(() => {
-                alert('הסידור הועתק בהצלחה! ניתן להדביק אותו בקבוצת הוואטסאפ.');
-            });
-        }
-    </script>
-</body>
-</html>
+            {"dates": ["28.12.2025", "29.12.2025", "30.12.2025", "31.12.2025", "01.01.2026", "02.01.2026", "03.01.2026"], "shifts": {"ארז": ["אבג", "", "", "", "אבג", "", ""], "בן זיקרי": ["", "אבג", "", "אבג", "", "", ""], "יניב": ["", "", "אבג", "", "", "", "אבג"], "יחיאל": ["", "אבג", "", "", "", "אבג", ""], "ולרי": ["אבג", "", "", "חש", "", "", ""], "ירין": ["א", "א", "א", "חש", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["04.01.2026", "05.01.2026", "06.01.2026", "07.01.2026", "08.01.2026", "09.01.2026", "10.01.2026"], "shifts": {"ארז": ["", "אבג", "", "אבג", "", "", ""], "בן זיקרי": ["אבג", "", "אבג", "", "", "", ""], "יניב": ["", "", "אבג", "", "", "אבג", ""], "יחיאל": ["", "אבג", "", "", "אבג", "", ""], "ולרי": ["אבג", "", "", "", "", "", "אבג"], "ירין": ["א", "א", "א", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["11.01.2026", "12.01.2026", "13.01.2026", "14.01.2026", "15.01.2026", "16.01.2026", "17.01.2026"], "shifts": {"ארז": ["אבג", "", "אבג", "", "", "", ""], "בן זיקרי": ["", "חש", "", "אבא", "", "", ""], "יניב": ["", "אבג", "", "", "אבג", "", ""], "יחיאל": ["", "", "", "חש", "", "", "אבג"], "ולרי": ["", "", "אבג", "", "", "אבג", ""], "ירין": ["א", "א", "א", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["18.01.2026", "19.01.2026", "20.01.2026", "21.01.2026", "22.01.2026", "23.01.2026", "24.01.2026"], "shifts": {"ארז": ["", "", "", "אבג", "", "", "אבג"], "בן זיקרי": ["", "אבג", "", "אבג", "", "", ""], "יניב": ["אבג", "", "", "", "אבג", "", ""], "יחיאל": ["", "אבג", "", "", "", "אבג", ""], "ולרי": ["", "", "אבג", "", "אבג", "", ""], "ירין": ["א", "א", "א", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "ראש מדור", "vehicleTime": "", "vehicleDetails": "ראש מדור ראש מדור ראש מדור ראש מדור", "notes": ""},
+            {"dates": ["25.01.2026", "26.01.2026", "27.01.2026", "28.01.2026", "29.01.2026", "30.01.2026", "31.01.2026"], "shifts": {"ארז": ["", "אבג", "", "", "", "אבג", ""], "בן זיקרי": ["", "", "אבג", "", "", "", "אבג"], "יניב": ["", "", "אבג", "", "אב", "", ""], "יחיאל": ["", "", "בג", "", "אבג", "", ""], "ולרי": ["אבג", "", "", "אבג", "", "", ""], "ירין": ["א", "א", "א", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "יניב", "vehicleTime": "", "vehicleDetails": "ראש מדור לי מזרחי+יניב ולרי+ראש מדור ראש מדור", "notes": ""},
+            {"dates": ["01.02.2026", "02.02.2026", "03.02.2026", "04.02.2026", "05.02.2026", "06.02.2026", "07.02.2026"], "shifts": {"ארז": ["אבג", "", "אבג", "", "", "", ""], "בן זיקרי": ["", "", "", "אבג", "", "", "אבג"], "יניב": ["", "", "אבג", "", "א", "", ""], "יחיאל": ["", "", "אב", "", "", "אבג", ""], "ולרי": ["", "אבג", "", "", "אבג", "", ""], "ירין": ["א", "א", "א", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["08.02.2026", "09.02.2026", "10.02.2026", "11.02.2026", "12.02.2026", "13.02.2026", "14.02.2026"], "shifts": {"ארז": ["", "", "אבג", "", "אבג", "", ""], "בן זיקרי": ["", "אב", "", "אבג", "", "", ""], "יניב": ["אבג", "", "", "", "", "", "אבג"], "יחיאל": ["", "בג", "", "", "", "אבג", ""], "ולרי": ["", "", "מחלה", "", "מחלה", "", ""], "ירין": ["א", "א", "חש", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "ליפז", "notes": ""},
+            {"dates": ["15.02.2026", "16.02.2026", "17.02.2026", "18.02.2026", "19.02.2026", "20.02.2026", "21.02.2026"], "shifts": {"ארז": ["אב", "", "אבג", "", "", "", ""], "בן זיקרי": ["אבג", "", "אבג", "", "", "", ""], "יניב": ["", "", "", "אבג", "", "אבג", ""], "יחיאל": ["", "אבג", "", "", "אבג", "", ""], "ולרי": ["אבג", "", "", "", "", "", "אבג"], "ירין": ["א", "א", "א", "א", "ב", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["22.02.2026", "23.02.2026", "24.02.2026", "25.02.2026", "26.02.2026", "27.02.2026", "28.02.2026"], "shifts": {"ארז": ["אבג", "", "אבג", "", "", "", ""], "בן זיקרי": ["", "אבג", "", "", "אבג", "", ""], "יניב": ["אבג", "", "", "", "", "", ""], "יחיאל": ["", "", "אבג", "", "", "", "אבג"], "ולרי": ["", "", "", "אבג", "", "אבג", ""], "ירין": ["א", "א", "א", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["01.03.2026", "02.03.2026", "03.03.2026", "04.03.2026", "05.03.2026", "06.03.2026", "07.03.2026"], "shifts": {"ארז": ["", "אבג", "", "", "", "", "אבג"], "בן זיקרי": ["אבג", "", "", "אבג", "", "", ""], "יניב": ["אבג", "", "", "", "אבג", "", ""], "יחיאל": ["", "", "", "", "", "אבג", ""], "ולרי": ["", "", "אבג", "", "אבג", "", ""], "ירין": ["א", "א", "א", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["08.03.2026", "09.03.2026", "10.03.2026", "11.03.2026", "12.03.2026", "13.03.2026", "14.03.2026"], "shifts": {"ארז": ["", "", "אבג", "", "", "אבג", ""], "בן זיקרי": ["", "אבג", "", "", "", "", "אבג"], "יניב": ["אבג", "", "אבג", "", "", "", ""], "יחיאל": ["", "אבג", "", "", "אבג", "", ""], "ולרי": ["אבג", "", "", "אבג", "", "", ""], "ירין": ["א", "א", "א", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["15.03.2026", "16.03.2026", "17.03.2026", "18.03.2026", "19.03.2026", "20.03.2026", "21.03.2026"], "shifts": {"ארז": ["", "אבג", "", "אבג", "", "", ""], "בן זיקרי": ["", "", "אבג", "", "", "", "אבג"], "יניב": ["", "", "אבג", "", "", "אבג", ""], "יחיאל": ["", "בג", "", "", "אבג", "", ""], "ולרי": ["אבג", "", "", "אבג", "", "", ""], "ירין": ["א", "א", "א", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["22.03.2026", "23.03.2026", "24.03.2026", "25.03.2026", "26.03.2026", "27.03.2026", "28.03.2026"], "shifts": {"ארז": ["", "אבג", "", "אבג", "", "", ""], "בן זיקרי": ["", "אבג", "", "", "", "", "אבג"], "יניב": ["אבג", "", "אבג", "", "", "", ""], "יחיאל": ["", "", "אבג", "", "", "אבג", ""], "ולרי": ["אבג", "", "", "", "אבג", "", ""], "ירין": ["א", "א", "א", "א", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["29.03.2026", "30.03.2026", "31.03.2026", "01.04.2026", "02.04.2026", "03.04.2026", "04.04.2026"], "shifts": {"ארז": ["אבג", "", "אבג", "", "", "", ""], "בן זיקרי": ["", "אבג", "", "", "", "", ""], "יניב": ["", "", "אבג", "", "", "אבג", ""], "יחיאל": ["", "בג", "", "אבג", "", "", ""], "ולרי": ["", "", "", "", "אבג", "", "אבג"], "ירין": ["", "", "", "", "", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["05.04.2026", "06.04.2026", "07.04.2026", "08.04.2026", "09.04.2026", "10.04.2026", "11.04.2026"], "shifts": {"ארז": ["", "אבג", "", "", "אבג", "", ""], "בן זיקרי": ["", "", "", "אבג", "", "", "אבג"], "יניב": ["אבג", "", "", "", "ח״ש", "", ""], "יחיאל": ["", "אבג", "", "", "אבג", "", ""], "ולרי": ["", "", "אבג", "", "", "אבג", ""], "ירין": ["", "", "", "", "", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "", "notes": ""},
+            {"dates": ["12.04.2026", "13.04.2026", "14.04.2026", "15.04.2026", "16.04.2026", "17.04.2026", "18.04.2026"], "shifts": {"ארז": ["", "", "אב", "", "", "אבג", ""], "בן זיקרי": ["", "", "אב", "", "חש", "", ""], "יניב": ["", "", "אבג", "", "", "", "אבג"], "יחיאל": ["אבג", "", "", "", "אבג", "", ""], "ולרי": ["", "אבג", "", "אבג", "", "", ""], "ירין": ["", "", "", "", "", "", ""], "יוסף": ["", "", "", "", "", "", ""], "ליאור": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""]}, "vehicleOfficer": "", "vehicleTime": "", "vehicleDetails": "יהודה יהודה", "notes": ""},
+            {"dates": ["19.04.2026", "20.04.2026", "21.04.2026", "22.04.2026", "23.04.2026", "24.04.2026", "25.04.2026"], "shifts": {"ארז": ["", "אבג", "", "", "", "", "אבג"], "בן זיקרי": ["ח״ש", "", "אבג", "", "", "", ""], "יניב": ["", "", "", "אבג", "", "אבג", ""], "יחיאל": ["אבג", "", "", "", "אבג", "", ""], "ולרי": ["", "אבג", "", "", "אבג", "", ""], "ירין": ["", "", "", "", "", "", ""], "יוסף": ["", "", "", "", "", "", ""], "
