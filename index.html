@@ -76,7 +76,7 @@
                 <button onclick="changeWeek(-1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
-                <div class="text-center min-w-[200px]">
+                <div class="text-center min-w-[220px]">
                     <span class="text-xs font-bold text-police-blue block">שבוע נוכחי</span>
                     <span id="week-range-display" class="font-bold text-slate-800 text-lg">04.01.2026 - 10.01.2026</span>
                 </div>
@@ -102,31 +102,31 @@
                                 <th class="p-3 font-bold border-b border-slate-700 text-right w-40">שם השוטר</th>
                                 <th class="p-3 border-b border-slate-700">
                                     <div>ראשון</div>
-                                    <div id="date-0" class="text-[10px] text-blue-200 font-normal">04.01.2026</div>
+                                    <div id="date-0" class="text-[10px] text-blue-200 font-normal">-</div>
                                 </th>
                                 <th class="p-3 border-b border-slate-700">
                                     <div>שני</div>
-                                    <div id="date-1" class="text-[10px] text-blue-200 font-normal">05.01.2026</div>
+                                    <div id="date-1" class="text-[10px] text-blue-200 font-normal">-</div>
                                 </th>
                                 <th class="p-3 border-b border-slate-700">
                                     <div>שלישי</div>
-                                    <div id="date-2" class="text-[10px] text-blue-200 font-normal">06.01.2026</div>
+                                    <div id="date-2" class="text-[10px] text-blue-200 font-normal">-</div>
                                 </th>
                                 <th class="p-3 border-b border-slate-700">
                                     <div>רביעי</div>
-                                    <div id="date-3" class="text-[10px] text-blue-200 font-normal">07.01.2026</div>
+                                    <div id="date-3" class="text-[10px] text-blue-200 font-normal">-</div>
                                 </th>
                                 <th class="p-3 border-b border-slate-700">
                                     <div>חמישי</div>
-                                    <div id="date-4" class="text-[10px] text-blue-200 font-normal">08.01.2026</div>
+                                    <div id="date-4" class="text-[10px] text-blue-200 font-normal">-</div>
                                 </th>
                                 <th class="p-3 border-b border-slate-700 bg-blue-900/50">
                                     <div>שישי</div>
-                                    <div id="date-5" class="text-[10px] text-amber-300 font-normal">09.01.2026</div>
+                                    <div id="date-5" class="text-[10px] text-amber-300 font-normal">-</div>
                                 </th>
                                 <th class="p-3 border-b border-slate-700 bg-blue-900/50">
                                     <div>שבת</div>
-                                    <div id="date-6" class="text-[10px] text-amber-300 font-normal">10.01.2026</div>
+                                    <div id="date-6" class="text-[10px] text-amber-300 font-normal">-</div>
                                 </th>
                             </tr>
                         </thead>
@@ -137,21 +137,61 @@
                 </div>
             </div>
 
-            <!-- Notes & Vehicle Row -->
+            <!-- Vehicle Request & Notes Section -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-xs text-slate-500 mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-car text-police-blue"></i>
-                        <span>רכב משובץ</span>
+                <!-- Vehicle Allocation Card -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-sm text-police-navy mb-3 flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <i class="fa-solid fa-car text-police-blue"></i>
+                            <span>שיבוץ / בקשת רכב לשבוע זה</span>
+                        </span>
+                        <span id="vehicle-status-badge" class="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full">רכב זמין</span>
                     </h3>
-                    <input type="text" id="vehicle-notes" readonly class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none" placeholder="טרם נקבע רכב" onchange="saveNotes()">
+                    
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">שוטר שמשוריין לו רכב:</label>
+                                <select id="vehicle-officer-select" disabled onchange="saveVehicleData()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none">
+                                    <option value="">-- ללא שיבוץ רכב --</option>
+                                    <option value="ארז">ארז</option>
+                                    <option value="בן זיקרי">בן זיקרי</option>
+                                    <option value="יניב">יניב</option>
+                                    <option value="יחיאל">יחיאל</option>
+                                    <option value="ולרי">ולרי</option>
+                                    <option value="ירין">ירין</option>
+                                    <option value="יוסף">יוסף</option>
+                                    <option value="ליאור">ליאור</option>
+                                    <option value="עינב">עינב</option>
+                                    <option value="ראש מדור">ראש מדור</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 mb-1">זמן / יום / משמרת:</label>
+                                <input type="text" id="vehicle-time-input" readonly placeholder="למשל: יום שלישי 08:00-16:00" onchange="saveVehicleData()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 mb-1">פירוט / היעוד לשימוש ברכב:</label>
+                            <input type="text" id="vehicle-details-input" readonly placeholder="הערות או סיבת השימוש ברכב..." onchange="saveVehicleData()" class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none">
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-                    <h3 class="font-bold text-xs text-slate-500 mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-comment-dots text-police-gold"></i>
-                        <span>הערות שבועיות</span>
-                    </h3>
-                    <input type="text" id="general-notes" readonly class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none" placeholder="אין הערות מיוחדות לשבוע זה" onchange="saveNotes()">
+
+                <!-- General Notes Card -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-sm text-police-navy mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-comment-dots text-police-gold"></i>
+                            <span>הערות שבועיות ודגשים</span>
+                        </h3>
+                        <textarea id="general-notes" readonly rows="3" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none resize-none" placeholder="אין הערות מיוחדות לשבוע זה..." onchange="saveNotes()"></textarea>
+                    </div>
+                    <div class="text-[11px] text-slate-400 mt-2 flex justify-between items-center">
+                        <span>שינויים נשמרים אוטומטית במצב מנהל</span>
+                        <i class="fa-solid fa-floppy-disk text-slate-300"></i>
+                    </div>
                 </div>
             </div>
         </div>
@@ -184,13 +224,16 @@
     </main>
 
     <script>
+        // Passwords Setup
+        const PRIMARY_ADMIN_PWD = 'lior';
+        const SECONDARY_ADMIN_PWD = '1981';
+
         // State Management
         let isAdmin = false;
-        let currentWeekIndex = 0;
+        let currentWeekIndex = 1; // Default to first full week of Jan 2026
 
         const officers = ['ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'ליאור', 'עינב'];
         
-        // Base Data from Excel
         const holidaysData = [
             { name: 'פסח', date: '01.04.2026', eve: 'יחיאל', day: 'ולרי' },
             { name: 'פסח חג שני', date: '07.04.2026', eve: 'ולרי', day: 'ליאור' },
@@ -203,21 +246,34 @@
             { name: 'חג שני סוכות', date: '02.10.2026', eve: 'יניב', day: 'ירין' }
         ];
 
-        let scheduleData = {
-            0: {
+        // All Weeks Data Extracted from Excel
+        let scheduleData = [
+            {
+                dates: ['28.12.2025', '29.12.2025', '30.12.2025', '31.12.2025', '01.01.2026', '02.01.2026', '03.01.2026'],
+                shifts: { 'ארז': ['אבג', '', '', '', 'אבג', '', ''], 'בן זיקרי': ['', 'אבג', '', 'אבג', '', '', ''], 'יניב': ['', '', 'אבג', '', '', '', 'אבג'], 'יחיאל': ['', 'אבג', '', '', '', 'אבג', ''], 'ולרי': ['אבג', '', '', 'חש', '', '', ''], 'ירין': ['א', 'א', 'א', 'חש', 'א', '', ''] },
+                vehicleOfficer: '', vehicleTime: '', vehicleDetails: '', notes: ''
+            },
+            {
                 dates: ['04.01.2026', '05.01.2026', '06.01.2026', '07.01.2026', '08.01.2026', '09.01.2026', '10.01.2026'],
-                shifts: {
-                    'ארז': ['אבג', 'אבג', 'ארז', 'בן זיקרי', 'אבג', 'אבג', ''],
-                    'בן זיקרי': ['אבג', 'אבג', 'ולרי', 'עינב', 'יניב', 'אבג', 'אבג'],
-                    'יניב': ['אבג', 'אבג', 'יניב', 'יחיאל', 'אבג', 'אבג', ''],
-                    'יחיאל': ['אבג', 'אבג', 'ליאור', 'ולרי', 'אבג', 'אבג', ''],
-                    'ולרי': ['אבג', 'אבג', 'ירין', 'ירין', 'אבג', 'אבג', ''],
-                    'ירין': ['א', 'א', 'א', 'א', 'א', '', '']
-                },
-                vehicle: 'ראש מדור',
-                notes: 'משמרות סדירות'
+                shifts: { 'ארז': ['', 'אבג', '', 'אבג', '', '', ''], 'בן זיקרי': ['אבג', '', 'אבג', '', '', '', ''], 'יניב': ['', '', 'אבג', '', '', 'אבג', ''], 'יחיאל': ['', 'אבג', '', '', 'אבג', '', ''], 'ולרי': ['אבג', '', '', 'אבג', '', '', ''], 'ירין': ['א', 'א', 'א', 'א', 'א', '', ''] },
+                vehicleOfficer: 'ראש מדור', vehicleTime: 'שבועי', vehicleDetails: 'רכב מדור', notes: ''
+            },
+            {
+                dates: ['11.01.2026', '12.01.2026', '13.01.2026', '14.01.2026', '15.01.2026', '16.01.2026', '17.01.2026'],
+                shifts: { 'ארז': ['אבג', '', 'אבג', '', '', '', ''], 'בן זיקרי': ['חש', 'אבג', '', '', '', '', ''], 'יניב': ['', '', 'אבג', '', 'אבג', '', ''], 'יחיאל': ['חש', 'אבג', '', 'אבג', '', '', ''], 'ולרי': ['', '', 'אבג', '', '', 'אבג', ''], 'ירין': ['א', 'א', 'א', 'א', 'א', '', ''] },
+                vehicleOfficer: 'יחיאל', vehicleTime: 'משמרת בוקר', vehicleDetails: '', notes: ''
+            },
+            {
+                dates: ['18.01.2026', '19.01.2026', '20.01.2026', '21.01.2026', '22.01.2026', '23.01.2026', '24.01.2026'],
+                shifts: { 'ארז': ['', 'אבג', '', 'אבג', '', '', ''], 'בן זיקרי': ['אבג', '', 'אבג', '', '', '', ''], 'יניב': ['', '', 'אבג', '', '', '', ''], 'יחיאל': ['', 'אבג', '', '', 'אבג', '', ''], 'ולרי': ['אבג', '', '', 'אבג', '', '', ''], 'ירין': ['א', 'א', 'א', 'א', 'א', '', ''] },
+                vehicleOfficer: 'ראש מדור', vehicleTime: 'כל השבוע', vehicleDetails: '', notes: ''
+            },
+            {
+                dates: ['25.01.2026', '26.01.2026', '27.01.2026', '28.01.2026', '29.01.2026', '30.01.2026', '31.01.2026'],
+                shifts: { 'ארז': ['אבג', '', 'אבג', '', '', '', ''], 'בן זיקרי': ['', 'אבג', '', 'אבג', '', '', ''], 'יניב': ['', '', 'אבג', '', '', '', ''], 'יחיאל': ['', 'אבג', '', '', '', '', ''], 'ולרי': ['אבג', '', '', '', '', '', ''], 'ירין': ['א', 'א', 'א', 'א', 'א', '', ''] },
+                vehicleOfficer: 'ראש מדור', vehicleTime: '25.01 - 31.01', vehicleDetails: 'לי מזרחי+יניב / ולרי+ראש מדור', notes: ''
             }
-        };
+        ];
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -227,15 +283,16 @@
 
         function toggleAdminMode() {
             if (!isAdmin) {
-                const pwd = prompt('הכנס קוד מנהל (ברירת מחדל: 1234):');
-                if (pwd === '1234') {
+                const pwd = prompt('הכנס קוד מנהל/תמיכה:');
+                if (pwd === PRIMARY_ADMIN_PWD || pwd === SECONDARY_ADMIN_PWD) {
                     isAdmin = true;
-                    document.getElementById('admin-btn-text').textContent = 'מצב מנהל (עריכה)';
+                    const roleText = (pwd === PRIMARY_ADMIN_PWD) ? 'מצב מנהל (ליאור)' : 'מצב תמיכה מרחוק (1981)';
+                    document.getElementById('admin-btn-text').textContent = roleText;
                     document.getElementById('admin-toggle-btn').classList.replace('bg-slate-800', 'bg-amber-500');
                     document.getElementById('admin-toggle-btn').classList.replace('text-amber-400', 'text-slate-900');
                     document.getElementById('admin-icon').classList.replace('fa-lock', 'fa-lock-open');
                 } else if (pwd !== null) {
-                    alert('קוד שגוי!');
+                    alert('סיסמה שגויה!');
                 }
             } else {
                 isAdmin = false;
@@ -249,15 +306,17 @@
 
         function renderSchedule() {
             const currentData = scheduleData[currentWeekIndex] || {
-                dates: ['04.01.2026', '05.01.2026', '06.01.2026', '07.01.2026', '08.01.2026', '09.01.2026', '10.01.2026'],
+                dates: ['-', '-', '-', '-', '-', '-', '-'],
                 shifts: {},
-                vehicle: '',
-                notes: ''
+                vehicleOfficer: '', vehicleTime: '', vehicleDetails: '', notes: ''
             };
 
-            // Update Dates Header
-            for (let i = 0; i < 7; i++) {
-                document.getElementById(`date-${i}`).textContent = currentData.dates[i] || '';
+            // Update Week Display Header
+            if (currentData.dates && currentData.dates.length >= 7) {
+                document.getElementById('week-range-display').textContent = `${currentData.dates[0]} - ${currentData.dates[6]}`;
+                for (let i = 0; i < 7; i++) {
+                    document.getElementById(`date-${i}`).textContent = currentData.dates[i] || '-';
+                }
             }
 
             const tbody = document.getElementById('schedule-body');
@@ -293,15 +352,31 @@
                 tbody.appendChild(tr);
             });
 
-            // Notes & Vehicle inputs
-            const vInput = document.getElementById('vehicle-notes');
+            // Vehicle & Notes inputs setup
+            const vOfficer = document.getElementById('vehicle-officer-select');
+            const vTime = document.getElementById('vehicle-time-input');
+            const vDetails = document.getElementById('vehicle-details-input');
             const nInput = document.getElementById('general-notes');
-            
-            vInput.value = currentData.vehicle || '';
+
+            vOfficer.value = currentData.vehicleOfficer || '';
+            vTime.value = currentData.vehicleTime || '';
+            vDetails.value = currentData.vehicleDetails || '';
             nInput.value = currentData.notes || '';
 
-            vInput.readOnly = !isAdmin;
+            vOfficer.disabled = !isAdmin;
+            vTime.readOnly = !isAdmin;
+            vDetails.readOnly = !isAdmin;
             nInput.readOnly = !isAdmin;
+
+            // Vehicle Status Badge
+            const badge = document.getElementById('vehicle-status-badge');
+            if (vOfficer.value) {
+                badge.textContent = `משובץ ל-${vOfficer.value}`;
+                badge.className = 'text-[10px] bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full';
+            } else {
+                badge.textContent = 'רכב זמין';
+                badge.className = 'text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full';
+            }
         }
 
         function getShiftBadgeStyle(val) {
@@ -313,18 +388,23 @@
         }
 
         function updateShift(officer, dayIndex, val) {
-            if (!scheduleData[currentWeekIndex]) {
-                scheduleData[currentWeekIndex] = { dates: [], shifts: {}, vehicle: '', notes: '' };
-            }
+            if (!scheduleData[currentWeekIndex]) return;
             if (!scheduleData[currentWeekIndex].shifts[officer]) {
                 scheduleData[currentWeekIndex].shifts[officer] = ['', '', '', '', '', '', ''];
             }
             scheduleData[currentWeekIndex].shifts[officer][dayIndex] = val;
         }
 
+        function saveVehicleData() {
+            if (!scheduleData[currentWeekIndex]) return;
+            scheduleData[currentWeekIndex].vehicleOfficer = document.getElementById('vehicle-officer-select').value;
+            scheduleData[currentWeekIndex].vehicleTime = document.getElementById('vehicle-time-input').value;
+            scheduleData[currentWeekIndex].vehicleDetails = document.getElementById('vehicle-details-input').value;
+            renderSchedule();
+        }
+
         function saveNotes() {
             if (!scheduleData[currentWeekIndex]) return;
-            scheduleData[currentWeekIndex].vehicle = document.getElementById('vehicle-notes').value;
             scheduleData[currentWeekIndex].notes = document.getElementById('general-notes').value;
         }
 
@@ -345,8 +425,10 @@
         }
 
         function changeWeek(direction) {
-            currentWeekIndex += direction;
-            renderSchedule();
+            if (currentWeekIndex + direction >= 0 && currentWeekIndex + direction < scheduleData.length) {
+                currentWeekIndex += direction;
+                renderSchedule();
+            }
         }
 
         function switchTab(tab) {
@@ -375,7 +457,11 @@
                 }
             });
 
-            if (currentData?.vehicle) text += `\n🚘 *רכב:* ${currentData.vehicle}`;
+            if (currentData?.vehicleOfficer) {
+                text += `\n🚘 *רכב משובץ:* ${currentData.vehicleOfficer}`;
+                if (currentData?.vehicleTime) text += ` (${currentData.vehicleTime})`;
+                if (currentData?.vehicleDetails) text += ` - ${currentData.vehicleDetails}`;
+            }
             if (currentData?.notes) text += `\n📌 *הערות:* ${currentData.notes}`;
 
             navigator.clipboard.writeText(text).then(() => {
