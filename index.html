@@ -213,10 +213,16 @@
             <!-- Holidays View -->
             <div id="view-holidays" class="hidden space-y-6">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                    <h2 class="text-lg font-bold text-police-navy mb-4 flex items-center gap-2">
-                        <i class="fa-solid fa-star text-amber-500"></i>
-                        <span>שיבוץ חגים וערבי חג לשנת 2026</span>
-                    </h2>
+                    <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                        <h2 class="text-lg font-bold text-police-navy flex items-center gap-2">
+                            <i class="fa-solid fa-star text-amber-500"></i>
+                            <span>שיבוץ חגים וערבי חג לשנת 2026</span>
+                        </h2>
+                        <button id="add-holiday-btn" onclick="addNewHoliday()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>הוסף חג חדש</span>
+                        </button>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-right">
                             <thead>
@@ -225,6 +231,7 @@
                                     <th class="p-3 font-bold">תאריך</th>
                                     <th class="p-3 font-bold">ערב חג (משמרת)</th>
                                     <th class="p-3 font-bold">יום החג (משמרת)</th>
+                                    <th class="p-3 font-bold text-center admin-only-col hidden">פעולות</th>
                                 </tr>
                             </thead>
                             <tbody id="holidays-body" class="divide-y divide-slate-100">
@@ -346,7 +353,7 @@
             'ליפז': { row: 'bg-lime-100/70', nameBg: 'bg-lime-300 text-lime-950' }
         };
 
-        const holidaysData = [
+        const defaultHolidaysData = [
             { name: 'פסח', date: '01.04.2026', eve: 'יחיאל', day: 'ולרי' },
             { name: 'פסח חג שני', date: '07.04.2026', eve: 'ולרי', day: 'ארז' },
             { name: 'יום העצמאות', date: '21.04.2025', eve: 'ארז', day: 'יניב' },
@@ -357,6 +364,8 @@
             { name: 'סוכות', date: '25.10.2026', eve: 'ולרי', day: 'יניב' },
             { name: 'חג שני סוכות', date: '02.10.2026', eve: 'יניב', day: 'ירין' }
         ];
+
+        let holidaysData = JSON.parse(localStorage.getItem('police_holidays_2026')) || defaultHolidaysData;
 
         // Default Schedule Data
         let defaultScheduleData = [
@@ -482,6 +491,7 @@
                 document.getElementById('admin-icon').classList.replace('fa-lock-open', 'fa-lock');
             }
             renderSchedule();
+            renderHolidays();
         }
 
         function renderSchedule() {
@@ -891,18 +901,85 @@
 
         function renderHolidays() {
             const tbody = document.getElementById('holidays-body');
+            const addBtn = document.getElementById('add-holiday-btn');
+            const adminCols = document.querySelectorAll('.admin-only-col');
+
             tbody.innerHTML = '';
-            holidaysData.forEach(item => {
+
+            if (isAdmin) {
+                addBtn.classList.remove('hidden');
+                adminCols.forEach(col => col.classList.remove('hidden'));
+            } else {
+                addBtn.classList.add('hidden');
+                adminCols.forEach(col => col.classList.add('hidden'));
+            }
+
+            holidaysData.forEach((item, index) => {
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50 transition';
-                tr.innerHTML = `
-                    <td class="p-3 font-bold text-police-navy">${item.name}</td>
-                    <td class="p-3 text-slate-600 font-medium">${item.date}</td>
-                    <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg font-bold text-xs">${item.eve}</span></td>
-                    <td class="p-3"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold text-xs">${item.day}</span></td>
-                `;
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+
+                if (isAdmin) {
+                    tr.innerHTML = `
+                        <td class="p-2">
+                            <input type="text" value="${item.name || ''}" 
+                                onchange="updateHoliday(${index}, 'name', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-police-navy text-xs focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="p-2">
+                            <input type="text" value="${item.date || ''}" 
+                                onchange="updateHoliday(${index}, 'date', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-medium text-slate-700 text-xs focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="p-2">
+                            <input type="text" value="${item.eve || ''}" 
+                                onchange="updateHoliday(${index}, 'eve', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-blue-800 text-xs focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="p-2">
+                            <input type="text" value="${item.day || ''}" 
+                                onchange="updateHoliday(${index}, 'day', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-amber-800 text-xs focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="p-2 text-center">
+                            <button onclick="deleteHoliday(${index})" title="מחק חג" class="text-rose-600 hover:text-rose-800 p-1">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold text-police-navy">${item.name}</td>
+                        <td class="p-3 text-slate-600 font-medium">${item.date}</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg font-bold text-xs">${item.eve || '-'}</span></td>
+                        <td class="p-3"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold text-xs">${item.day || '-'}</span></td>
+                    `;
+                }
                 tbody.appendChild(tr);
             });
+        }
+
+        function updateHoliday(index, field, value) {
+            if (!holidaysData[index]) return;
+            holidaysData[index][field] = value;
+            saveHolidaysLocally();
+        }
+
+        function addNewHoliday() {
+            holidaysData.push({ name: 'חג חדש', date: '01.01.2026', eve: '-', day: '-' });
+            saveHolidaysLocally();
+            renderHolidays();
+        }
+
+        function deleteHoliday(index) {
+            if (confirm('האם למחוק חג זה מלוח החגים?')) {
+                holidaysData.splice(index, 1);
+                saveHolidaysLocally();
+                renderHolidays();
+            }
+        }
+
+        function saveHolidaysLocally() {
+            localStorage.setItem('police_holidays_2026', JSON.stringify(holidaysData));
         }
 
         function changeWeek(direction) {
