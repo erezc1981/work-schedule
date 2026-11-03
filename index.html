@@ -36,6 +36,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- html2canvas Library for Screenshot capturing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: 'Heebo', sans-serif; background-color: #f8fafc; }
         .dimmed-row { opacity: 0.25; filter: grayscale(80%); }
@@ -64,9 +66,9 @@
 
                 <!-- Actions & Mode Switch -->
                 <div class="flex items-center gap-2 flex-wrap">
-                    <button onclick="shareToWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="shareScheduleAsImage()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-brands fa-whatsapp text-sm"></i>
-                        <span>שתף ב-WhatsApp</span>
+                        <span>שתף צילום מסך ב-WhatsApp</span>
                     </button>
                     <button onclick="openStatsModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-chart-pie"></i>
@@ -133,7 +135,7 @@
 
             <!-- Schedule View -->
             <div id="view-schedule" class="space-y-6">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-2">
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-right border-collapse">
                             <thead>
@@ -216,11 +218,11 @@
 
     <!-- Monthly Summary Modal -->
     <div id="stats-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col">
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
                 <h3 class="font-bold text-base flex items-center gap-2">
                     <i class="fa-solid fa-chart-pie text-amber-400"></i>
-                    <span>סיכום משמרות חודשי לשוטרים</span>
+                    <span>סיכום משמרות ושעות חודשי לשוטרים</span>
                 </h3>
                 <button onclick="closeStatsModal()" class="text-white hover:text-amber-400 text-lg p-1">
                     <i class="fa-solid fa-xmark"></i>
@@ -563,68 +565,101 @@
             }
         }
 
-        function shareToWhatsApp() {
-            const currentData = scheduleData[currentWeekIndex];
-            if (!currentData) return;
+        // WhatsApp Share as Image Screenshot
+        function shareScheduleAsImage() {
+            const captureElement = document.getElementById('schedule-capture-area');
+            if (!captureElement) return;
 
-            const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-            let text = `🚔 *סידור עבודה - פיקוח טכנולוגי*\n📅 *שבוע:* ${currentData.dates[0]} - ${currentData.dates[6]}\n\n`;
+            html2canvas(captureElement, { scale: 2, useCORS: true }).then(canvas => {
+                canvas.toBlob(blob => {
+                    const currentData = scheduleData[currentWeekIndex];
+                    const weekTitle = (currentData && currentData.dates) ? `${currentData.dates[0]} - ${currentData.dates[6]}` : 'שבועי';
+                    const fileName = `סידור_עבודה_${weekTitle.replace(/\./g, '_')}.png`;
 
-            officers.forEach(off => {
-                const shifts = currentData.shifts[off] || [];
-                let shiftText = '';
-                shifts.forEach((s, i) => {
-                    if (s) shiftText += `${days[i]}: ${s} | `;
+                    // Create file download link
+                    const link = document.createElement('a');
+                    link.download = fileName;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+
+                    // Alert & open WhatsApp Web/App
+                    setTimeout(() => {
+                        const msg = encodeURIComponent(`🚔 *סידור עבודה - פיקוח טכנולוגי*\n📅 שבוע: ${weekTitle}\n\nתמונת סידור העבודה הורדה למכשיר שלך! ניתן לצרף אותה להודעה 📸`);
+                        window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+                    }, 500);
                 });
-                if (shiftText) {
-                    text += `👤 *${off}:* ${shiftText.slice(0, -3)}\n`;
-                }
             });
-
-            if (currentData.notes) {
-                text += `\n📌 *הערות:* ${currentData.notes}\n`;
-            }
-
-            text += `\n🔗 לצפייה מלאה: https://erezc1981.github.io/work-schedule/`;
-
-            const encoded = encodeURIComponent(text);
-            window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
         }
 
+        // Detailed Monthly Statistics Modal
         function openStatsModal() {
             const container = document.getElementById('stats-modal-content');
             container.innerHTML = '';
 
-            let totalShifts = {};
-            officers.forEach(o => totalShifts[o] = { shifts: 0, car: 0, vacation: 0, sick: 0 });
+            let totalStats = {};
+            officers.forEach(o => totalStats[o] = { hours: 0, vacationDays: 0, carDays: 0, sickDays: 0, totalShiftsCount: 0 });
 
             scheduleData.forEach(week => {
                 officers.forEach(o => {
                     const shifts = week.shifts[o] || [];
                     shifts.forEach(s => {
                         if (!s) return;
-                        totalShifts[o].shifts++;
-                        if (s.includes('רכב')) totalShifts[o].car++;
-                        if (s.includes('חש') || s.includes('חופש')) totalShifts[o].vacation++;
-                        if (s.includes('מחלה')) totalShifts[o].sick++;
+
+                        // 1. Check Car
+                        if (s.includes('רכב')) {
+                            totalStats[o].carDays++;
+                        }
+
+                        // 2. Check Vacation (חופשה or ח"ש / חש)
+                        if (s.includes('חופשה') || s.includes('חש') || s.includes('ח״ש')) {
+                            totalStats[o].vacationDays++;
+                        } else if (s.includes('מחלה')) {
+                            totalStats[o].sickDays++;
+                        }
+
+                        // 3. Calculate Hours (א = 8, אב/בג = 16, אבג = 24)
+                        const cleanShift = s.replace('רכב', '').trim();
+                        if (cleanShift === 'אבג') {
+                            totalStats[o].hours += 24;
+                            totalStats[o].totalShiftsCount++;
+                        } else if (cleanShift === 'אב' || cleanShift === 'בג') {
+                            totalStats[o].hours += 16;
+                            totalStats[o].totalShiftsCount++;
+                        } else if (cleanShift === 'א') {
+                            totalStats[o].hours += 8;
+                            totalStats[o].totalShiftsCount++;
+                        }
                     });
                 });
             });
 
             let html = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">`;
             officers.forEach(o => {
-                const stats = totalShifts[o];
+                const stats = totalStats[o];
                 const colorConfig = officerRowColors[o] || { nameBg: 'bg-slate-200' };
                 html += `
-                    <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between">
-                        <div class="flex justify-between items-center mb-2">
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
                             <span class="font-extrabold text-sm px-2.5 py-0.5 rounded ${colorConfig.nameBg}">${o}</span>
-                            <span class="text-xs font-bold text-slate-500">סה"כ משמרות: ${stats.shifts}</span>
+                            <span class="text-xs font-black text-police-navy bg-blue-100 px-2 py-0.5 rounded-md">⏱️ סה"כ שעות: ${stats.hours} שע'</span>
                         </div>
-                        <div class="grid grid-cols-3 gap-1 text-center text-[11px] font-bold">
-                            <div class="bg-amber-100 text-amber-900 p-1.5 rounded-lg">🚗 רכב: ${stats.car}</div>
-                            <div class="bg-amber-50 text-amber-800 p-1.5 rounded-lg">🏖️ חופש: ${stats.vacation}</div>
-                            <div class="bg-rose-100 text-rose-900 p-1.5 rounded-lg">🤒 מחלה: ${stats.sick}</div>
+                        <div class="space-y-1 text-xs font-bold text-slate-700">
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
+                                <span>1️⃣ סה"כ משמרות (א/אב/אבג):</span>
+                                <span class="text-police-blue font-black">${stats.totalShiftsCount}</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
+                                <span>2️⃣ ימי חופשה (חופשה / ח"ש):</span>
+                                <span class="text-amber-600 font-black">${stats.vacationDays} ימים</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
+                                <span>3️⃣ ימי רכב (רכב):</span>
+                                <span class="text-amber-800 font-black">${stats.carDays} ימים</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
+                                <span>4️⃣ ימי מחלה:</span>
+                                <span class="text-rose-600 font-black">${stats.sickDays} ימים</span>
+                            </div>
                         </div>
                     </div>`;
             });
