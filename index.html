@@ -639,10 +639,13 @@
             }
         }
 
-        // WhatsApp Share as Image Screenshot (Captures FULL table without cropping)
-        function shareScheduleAsImage() {
+        // WhatsApp Share as Image Screenshot (Cross-Platform Mobile-Optimized)
+        async function shareScheduleAsImage() {
             const captureElement = document.getElementById('schedule-capture-area');
             if (!captureElement) return;
+
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const renderScale = isMobile ? 1.5 : 2;
 
             const originalStyle = captureElement.getAttribute('style') || '';
             const scrollContainer = captureElement.querySelector('.overflow-x-auto');
@@ -657,40 +660,71 @@
             const fullWidth = Math.max(captureElement.scrollWidth, captureElement.offsetWidth);
             const fullHeight = Math.max(captureElement.scrollHeight, captureElement.offsetHeight);
 
-            html2canvas(captureElement, {
-                scale: 2,
-                useCORS: true,
-                width: fullWidth,
-                height: fullHeight,
-                windowWidth: fullWidth + 100
-            }).then(canvas => {
-                captureElement.setAttribute('style', originalStyle);
-                if (scrollContainer) {
-                    scrollContainer.setAttribute('style', originalScrollStyle);
-                }
-
-                canvas.toBlob(blob => {
-                    const currentData = scheduleData[currentWeekIndex];
-                    const weekTitle = (currentData && currentData.dates) ? `${currentData.dates[0]} - ${currentData.dates[6]}` : 'שבועי';
-                    const fileName = `סידור_עבודה_${weekTitle.replace(/\./g, '_')}.png`;
-
-                    const link = document.createElement('a');
-                    link.download = fileName;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-
-                    setTimeout(() => {
-                        const msg = encodeURIComponent(`🚔 *סידור עבודה - פיקוח טכנולוגי*\n📅 שבוע: ${weekTitle}\n\nתמונת סידור העבודה המלאה הורדה למכשיר שלך! ניתן לצרף אותה להודעה 📸`);
-                        window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
-                    }, 500);
+            try {
+                const canvas = await html2canvas(captureElement, {
+                    scale: renderScale,
+                    useCORS: true,
+                    width: fullWidth,
+                    height: fullHeight,
+                    windowWidth: fullWidth + 100,
+                    logging: false
                 });
-            }).catch(err => {
+
                 captureElement.setAttribute('style', originalStyle);
                 if (scrollContainer) {
                     scrollContainer.setAttribute('style', originalScrollStyle);
                 }
+
+                const currentData = scheduleData[currentWeekIndex];
+                const weekTitle = (currentData && currentData.dates) ? `${currentData.dates[0]} - ${currentData.dates[6]}` : 'שבועי';
+                const fileName = `סידור_עבודה_${weekTitle.replace(/\./g, '_')}.png`;
+
+                canvas.toBlob(async (blob) => {
+                    if (!blob) {
+                        alert('שגיאה ביצירת תמונה');
+                        return;
+                    }
+
+                    const file = new File([blob], fileName, { type: 'image/png' });
+
+                    // Web Share API (Mobile native sharing menu)
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        try {
+                            await navigator.share({
+                                files: [file],
+                                title: 'סידור עבודה',
+                                text: `🚔 *סידור עבודה - פיקוח טכנולוגי*\n📅 שבוע: ${weekTitle}`
+                            });
+                        } catch (shareErr) {
+                            if (shareErr.name !== 'AbortError') {
+                                fallbackDownloadAndWhatsApp(canvas, weekTitle, fileName);
+                            }
+                        }
+                    } else {
+                        fallbackDownloadAndWhatsApp(canvas, weekTitle, fileName);
+                    }
+                }, 'image/png');
+
+            } catch (err) {
+                captureElement.setAttribute('style', originalStyle);
+                if (scrollContainer) {
+                    scrollContainer.setAttribute('style', originalScrollStyle);
+                }
+                alert('חלה שגיאה ביצירת צילום המסך. אנא נסה שנית.');
                 console.error('Error generating image:', err);
-            });
+            }
+        }
+
+        function fallbackDownloadAndWhatsApp(canvas, weekTitle, fileName) {
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            setTimeout(() => {
+                const msg = encodeURIComponent(`🚔 *סידור עבודה - פיקוח טכנולוגי*\n📅 שבוע: ${weekTitle}\n\nתמונת סידור העבודה המלאה הורדה למכשיר שלך! ניתן לצרף אותה להודעה 📸`);
+                window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+            }, 500);
         }
 
         // Request Submission Logic
