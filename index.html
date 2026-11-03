@@ -97,7 +97,7 @@
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
                         <div class="text-center min-w-[230px] bg-gradient-to-r from-police-navy to-blue-900 text-white px-4 py-2 rounded-2xl shadow-md border-2 border-amber-400/60">
-                            <span class="text-[10px] font-bold text-amber-300 block tracking-wider uppercase">✨ שבוע נוכחי ✨</span>
+                            <span class="text-[10px] font-bold text-amber-300 block tracking-wider uppercase">✨ שבוע מוצג ✨</span>
                             <span id="week-range-display" class="font-black text-white text-base tracking-wide">טוען...</span>
                         </div>
                         <button onclick="changeWeek(1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע הבא">
@@ -244,7 +244,7 @@
 
         // State Management
         let isAdmin = false;
-        let currentWeekIndex = 1;
+        let currentWeekIndex = 0;
         let selectedOfficerFilter = 'ALL';
 
         // Officers List
@@ -337,8 +337,26 @@
         // Load schedule data from LocalStorage or Fallback to Default
         let scheduleData = JSON.parse(localStorage.getItem('police_schedule_2026')) || defaultScheduleData;
 
+        // Auto-select Current Date Week Index
+        function autoSelectCurrentWeek() {
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const dateStrShort = `${day}.${month}`;
+
+            for (let i = 0; i < scheduleData.length; i++) {
+                if (scheduleData[i].dates.some(d => d.startsWith(dateStrShort))) {
+                    currentWeekIndex = i;
+                    return;
+                }
+            }
+            // Fallback default index
+            currentWeekIndex = 43; // November 2026
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            autoSelectCurrentWeek();
             populateOfficerFilterOptions();
             renderSchedule();
             renderHolidays();
@@ -533,7 +551,7 @@
             const query = document.getElementById('search-input').value.trim().toLowerCase();
             if (!query) return;
 
-            // Search by date or officer across all weeks
+            // Search by date across all weeks
             for (let wIndex = 0; wIndex < scheduleData.length; wIndex++) {
                 const week = scheduleData[wIndex];
                 const matchDate = week.dates.some(d => d.toLowerCase().includes(query));
