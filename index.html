@@ -66,6 +66,10 @@
 
                 <!-- Actions & Mode Switch -->
                 <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="openRequestModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                        <span>הגש בקשה</span>
+                    </button>
                     <button onclick="shareScheduleAsImage()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-brands fa-whatsapp text-sm"></i>
                         <span>שתף צילום מסך ב-WhatsApp</span>
@@ -216,13 +220,70 @@
         </main>
     </div>
 
+    <!-- Submit Request Modal -->
+    <div id="request-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col">
+            <div class="bg-police-navy text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane text-amber-400"></i>
+                    <span>הגשת בקשה לרכב / חופשה / שינוי משמרת</span>
+                </h3>
+                <button onclick="closeRequestModal()" class="text-white hover:text-amber-400 text-lg p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 space-y-4 text-xs font-bold">
+                <div>
+                    <label class="block text-slate-600 mb-1">שם השוטר המגיש:</label>
+                    <select id="req-officer-name" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-slate-600 mb-1">סוג הבקשה:</label>
+                    <select id="req-type" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
+                        <option value="בקשה לרכב 🚗">בקשה לרכב 🚗</option>
+                        <option value="בקשת יום חופשה 🏖️">בקשת יום חופשה 🏖️</option>
+                        <option value="בקשה לשינוי משמרת 🔄">בקשה לשינוי משמרת 🔄</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-slate-600 mb-1">תאריך מבוקש:</label>
+                    <input type="text" id="req-date" placeholder="למשל: 15.03.2026 או יום שלישי הקרוב" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-600 mb-1">פירוט / סיבת הבקשה:</label>
+                    <textarea id="req-details" rows="3" placeholder="פרט כאן את סיבת הבקשה או השינוי המבוקש..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500 resize-none"></textarea>
+                </div>
+
+                <div class="pt-2 border-t border-slate-200">
+                    <span class="block text-center text-slate-500 mb-2 font-normal">בחר למי לשלוח את הבקשה ב-WhatsApp:</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="sendRequestToWhatsApp('lior')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold py-2.5 px-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                            <span>שלח לליאור (050-6270112)</span>
+                        </button>
+                        <button onclick="sendRequestToWhatsApp('erez')" class="bg-police-blue hover:bg-blue-500 text-white font-extrabold py-2.5 px-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                            <span>שלח לארז (050-5069969)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Monthly Summary Modal -->
     <div id="stats-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col">
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
                 <h3 class="font-bold text-base flex items-center gap-2">
                     <i class="fa-solid fa-chart-pie text-amber-400"></i>
-                    <span>סיכום משמרות ושעות חודשי לשוטרים</span>
+                    <span id="stats-modal-title">סיכום משמרות חודשי לשוטרים</span>
                 </h3>
                 <button onclick="closeStatsModal()" class="text-white hover:text-amber-400 text-lg p-1">
                     <i class="fa-solid fa-xmark"></i>
@@ -366,11 +427,19 @@
 
         function populateOfficerFilterOptions() {
             const select = document.getElementById('officer-filter');
+            const reqSelect = document.getElementById('req-officer-name');
+            reqSelect.innerHTML = '';
+
             officers.forEach(off => {
                 const opt = document.createElement('option');
                 opt.value = off;
                 opt.textContent = off;
                 select.appendChild(opt);
+
+                const opt2 = document.createElement('option');
+                opt2.value = off;
+                opt2.textContent = off;
+                reqSelect.appendChild(opt2);
             });
         }
 
@@ -565,69 +634,164 @@
             }
         }
 
-        // WhatsApp Share as Image Screenshot
+        // WhatsApp Share as Image Screenshot (Captures FULL table without cropping)
         function shareScheduleAsImage() {
             const captureElement = document.getElementById('schedule-capture-area');
             if (!captureElement) return;
 
-            html2canvas(captureElement, { scale: 2, useCORS: true }).then(canvas => {
+            const originalStyle = captureElement.getAttribute('style') || '';
+            const scrollContainer = captureElement.querySelector('.overflow-x-auto');
+            const originalScrollStyle = scrollContainer ? (scrollContainer.getAttribute('style') || '') : '';
+
+            if (scrollContainer) {
+                scrollContainer.style.overflow = 'visible';
+            }
+            captureElement.style.width = 'auto';
+            captureElement.style.maxWidth = 'none';
+
+            const fullWidth = Math.max(captureElement.scrollWidth, captureElement.offsetWidth);
+            const fullHeight = Math.max(captureElement.scrollHeight, captureElement.offsetHeight);
+
+            html2canvas(captureElement, {
+                scale: 2,
+                useCORS: true,
+                width: fullWidth,
+                height: fullHeight,
+                windowWidth: fullWidth + 100
+            }).then(canvas => {
+                captureElement.setAttribute('style', originalStyle);
+                if (scrollContainer) {
+                    scrollContainer.setAttribute('style', originalScrollStyle);
+                }
+
                 canvas.toBlob(blob => {
                     const currentData = scheduleData[currentWeekIndex];
                     const weekTitle = (currentData && currentData.dates) ? `${currentData.dates[0]} - ${currentData.dates[6]}` : 'שבועי';
                     const fileName = `סידור_עבודה_${weekTitle.replace(/\./g, '_')}.png`;
 
-                    // Create file download link
                     const link = document.createElement('a');
                     link.download = fileName;
                     link.href = canvas.toDataURL('image/png');
                     link.click();
 
-                    // Alert & open WhatsApp Web/App
                     setTimeout(() => {
-                        const msg = encodeURIComponent(`🚔 *סידור עבודה - פיקוח טכנולוגי*\n📅 שבוע: ${weekTitle}\n\nתמונת סידור העבודה הורדה למכשיר שלך! ניתן לצרף אותה להודעה 📸`);
+                        const msg = encodeURIComponent(`🚔 *סידור עבודה - פיקוח טכנולוגי*\n📅 שבוע: ${weekTitle}\n\nתמונת סידור העבודה המלאה הורדה למכשיר שלך! ניתן לצרף אותה להודעה 📸`);
                         window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
                     }, 500);
                 });
+            }).catch(err => {
+                captureElement.setAttribute('style', originalStyle);
+                if (scrollContainer) {
+                    scrollContainer.setAttribute('style', originalScrollStyle);
+                }
+                console.error('Error generating image:', err);
             });
         }
 
-        // Detailed Monthly Statistics Modal
+        // Request Submission Logic
+        function openRequestModal() {
+            document.getElementById('request-modal').classList.remove('hidden');
+        }
+
+        function closeRequestModal() {
+            document.getElementById('request-modal').classList.add('hidden');
+        }
+
+        function sendRequestToWhatsApp(target) {
+            const officerName = document.getElementById('req-officer-name').value;
+            const reqType = document.getElementById('req-type').value;
+            const reqDate = document.getElementById('req-date').value.trim();
+            const reqDetails = document.getElementById('req-details').value.trim();
+
+            if (!reqDate) {
+                alert('אנא הזן תאריך מבוקש לבקשה!');
+                return;
+            }
+
+            let msgText = `📋 *בקשה חדשה בסידור העבודה*\n\n`;
+            msgText += `👤 *מגיש הבקשה:* ${officerName}\n`;
+            msgText += `📌 *סוג הבקשה:* ${reqType}\n`;
+            msgText += `📅 *תאריך מבוקש:* ${reqDate}\n`;
+            if (reqDetails) {
+                msgText += `📝 *פירוט:* ${reqDetails}\n`;
+            }
+            msgText += `\nלטיפולך, תודה! 🙏`;
+
+            const encodedMsg = encodeURIComponent(msgText);
+
+            if (target === 'erez') {
+                // Erez Phone: 050-5069969
+                window.open(`https://api.whatsapp.com/send?phone=972505069969&text=${encodedMsg}`, '_blank');
+            } else {
+                // Lior Phone: 050-6270112
+                window.open(`https://api.whatsapp.com/send?phone=972506270112&text=${encodedMsg}`, '_blank');
+            }
+
+            closeRequestModal();
+        }
+
+        // Detailed Monthly & Weekly Statistics Modal
         function openStatsModal() {
             const container = document.getElementById('stats-modal-content');
             container.innerHTML = '';
 
-            let totalStats = {};
-            officers.forEach(o => totalStats[o] = { hours: 0, vacationDays: 0, carDays: 0, sickDays: 0, totalShiftsCount: 0 });
+            // Get Current Week Dates and Month
+            const currentWeekData = scheduleData[currentWeekIndex] || { dates: [], shifts: {} };
+            let currentMonth = '';
+            if (currentWeekData.dates && currentWeekData.dates.length > 0) {
+                // Extract month from first date of week (e.g., "15.03.2026" or "15.03" -> "03")
+                const parts = currentWeekData.dates[0].split('.');
+                if (parts.length >= 2) {
+                    currentMonth = parts[1];
+                }
+            }
 
-            scheduleData.forEach(week => {
+            document.getElementById('stats-modal-title').textContent = currentMonth ? `סיכום משמרות חודשי (חודש ${currentMonth}) ושבועי` : 'סיכום משמרות ושעות לשוטרים';
+
+            let totalStats = {};
+            officers.forEach(o => totalStats[o] = { 
+                monthlyHours: 0, 
+                weeklyShiftsCount: 0, 
+                vacationDays: 0, 
+                carDays: 0, 
+                sickDays: 0 
+            });
+
+            // Calculate stats per officer
+            scheduleData.forEach((week, wIdx) => {
+                const isCurrentWeek = (wIdx === currentWeekIndex);
+                
+                // Determine if this week belongs to the current month being displayed
+                let isSameMonth = false;
+                if (week.dates && week.dates.length > 0 && currentMonth) {
+                    isSameMonth = week.dates.some(d => {
+                        const p = d.split('.');
+                        return p.length >= 2 && p[1] === currentMonth;
+                    });
+                }
+
                 officers.forEach(o => {
                     const shifts = week.shifts[o] || [];
                     shifts.forEach(s => {
                         if (!s) return;
 
-                        // 1. Check Car
-                        if (s.includes('רכב')) {
-                            totalStats[o].carDays++;
-                        }
-
-                        // 2. Check Vacation (חופשה or ח"ש / חש)
-                        if (s.includes('חופשה') || s.includes('חש') || s.includes('ח״ש')) {
-                            totalStats[o].vacationDays++;
-                        } else if (s.includes('מחלה')) {
-                            totalStats[o].sickDays++;
-                        }
-
-                        // 3. Calculate Hours (א = 8, אב/בג = 16, אבג = 24)
                         const cleanShift = s.replace('רכב', '').trim();
-                        if (cleanShift === 'אבג') {
-                            totalStats[o].hours += 24;
-                            totalStats[o].totalShiftsCount++;
-                        } else if (cleanShift === 'אב' || cleanShift === 'בג') {
-                            totalStats[o].hours += 16;
-                            totalStats[o].totalShiftsCount++;
-                        } else if (cleanShift === 'א') {
-                            totalStats[o].hours += 8;
-                            totalStats[o].totalShiftsCount++;
+                        let hours = 0;
+                        if (cleanShift === 'אבג') hours = 24;
+                        else if (cleanShift === 'אב' || cleanShift === 'בג') hours = 16;
+                        else if (cleanShift === 'א') hours = 8;
+
+                        // 1. Monthly Hours (Accumulated only for weeks in the current displayed month)
+                        if (isSameMonth) {
+                            totalStats[o].monthlyHours += hours;
+                            if (s.includes('רכב')) totalStats[o].carDays++;
+                            if (s.includes('חופשה') || s.includes('חש') || s.includes('ח״ש')) totalStats[o].vacationDays++;
+                            else if (s.includes('מחלה')) totalStats[o].sickDays++;
+                        }
+
+                        // 2. Option 1: Weekly Shifts Count (Only for the CURRENT displayed week)
+                        if (isCurrentWeek && hours > 0) {
+                            totalStats[o].weeklyShiftsCount++;
                         }
                     });
                 });
@@ -636,28 +800,28 @@
             let html = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">`;
             officers.forEach(o => {
                 const stats = totalStats[o];
-                const colorConfig = officerRowColors[o] || { nameBg: 'bg-slate-200' };
+                const colorConfig = officerRowColors[o] || { nameBg: 'bg-slate-200 text-slate-800' };
                 html += `
                     <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between shadow-sm">
                         <div class="flex justify-between items-center mb-3">
                             <span class="font-extrabold text-sm px-2.5 py-0.5 rounded ${colorConfig.nameBg}">${o}</span>
-                            <span class="text-xs font-black text-police-navy bg-blue-100 px-2 py-0.5 rounded-md">⏱️ סה"כ שעות: ${stats.hours} שע'</span>
+                            <span class="text-xs font-black text-police-navy bg-blue-100 px-2.5 py-1 rounded-md shadow-sm">⏱️ שעות חודשי: ${stats.monthlyHours} שע'</span>
                         </div>
-                        <div class="space-y-1 text-xs font-bold text-slate-700">
-                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
-                                <span>1️⃣ סה"כ משמרות (א/אב/אבג):</span>
-                                <span class="text-police-blue font-black">${stats.totalShiftsCount}</span>
+                        <div class="space-y-1.5 text-xs font-bold text-slate-700">
+                            <div class="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-200">
+                                <span class="text-slate-800 font-extrabold">1️⃣ סה"כ שבועי (משמרות השבוע):</span>
+                                <span class="text-police-blue font-black bg-blue-50 px-2 py-0.5 rounded">${stats.weeklyShiftsCount}</span>
                             </div>
                             <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
-                                <span>2️⃣ ימי חופשה (חופשה / ח"ש):</span>
+                                <span>2️⃣ ימי חופשה חודשי (חופשה / ח"ש):</span>
                                 <span class="text-amber-600 font-black">${stats.vacationDays} ימים</span>
                             </div>
                             <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
-                                <span>3️⃣ ימי רכב (רכב):</span>
+                                <span>3️⃣ ימי רכב חודשי (רכב):</span>
                                 <span class="text-amber-800 font-black">${stats.carDays} ימים</span>
                             </div>
                             <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
-                                <span>4️⃣ ימי מחלה:</span>
+                                <span>4️⃣ ימי מחלה חודשי:</span>
                                 <span class="text-rose-600 font-black">${stats.sickDays} ימים</span>
                             </div>
                         </div>
