@@ -59,6 +59,12 @@
             z-index: 30;
         }
 
+        /* Class added during screenshot export to prevent sticky positioning clipping */
+        .capturing-canvas .sticky-col {
+            position: static !important;
+            box-shadow: none !important;
+        }
+
         @media print {
             .no-print { display: none !important; }
             .print-full { width: 100% !important; max-width: none !important; margin: 0 !important; }
@@ -85,23 +91,23 @@
                 <!-- Actions & Mode Switch -->
                 <div class="flex items-center gap-2 flex-wrap">
                     <button onclick="openRequestModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
                         <span>הגש בקשה</span>
                     </button>
                     <button onclick="shareScheduleAsImage()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
-                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <i class="fa-brands fa-whatsapp text-xs"></i>
                         <span>שתף צילום מסך ב-WhatsApp</span>
                     </button>
                     <button onclick="openStatsModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-chart-pie"></i>
+                        <i class="fa-solid fa-chart-pie text-xs"></i>
                         <span>סיכום חודשי</span>
                     </button>
                     <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-slate-800 hover:bg-slate-700 text-xs text-amber-400 font-bold py-2 px-3 rounded-lg border border-amber-500/30 transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-lock" id="admin-icon"></i>
+                        <i class="fa-solid fa-lock text-xs" id="admin-icon"></i>
                         <span id="admin-btn-text">מצב צפייה</span>
                     </button>
                     <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-print"></i>
+                        <i class="fa-solid fa-print text-xs"></i>
                         <span>הדפסה</span>
                     </button>
                 </div>
@@ -159,7 +165,7 @@
             <div id="view-schedule" class="space-y-6">
                 <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-2">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-sm text-right border-collapse">
+                        <table class="w-full text-sm text-right border-collapse" id="schedule-table">
                             <thead>
                                 <tr class="bg-police-navy text-white text-center text-xs">
                                     <th class="p-3.5 font-bold border-b border-slate-700 text-right min-w-[110px] w-32 bg-slate-900 sticky-col">שם השוטר</th>
@@ -662,16 +668,20 @@
             }
         }
 
-        // WhatsApp Share as Image Screenshot (Cross-Platform Mobile-Optimized)
+        // WhatsApp Share as Image Screenshot (Optimized Full-Width & Unclipped Officers Column)
         async function shareScheduleAsImage() {
             const captureElement = document.getElementById('schedule-capture-area');
-            if (!captureElement) return;
+            const tableElement = document.getElementById('schedule-table');
+            if (!captureElement || !tableElement) return;
 
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const renderScale = isMobile ? 1.5 : 2;
+            const renderScale = isMobile ? 2 : 2;
 
-            const originalStyle = captureElement.getAttribute('style') || '';
+            // Add CSS flag class to un-stick officers column during render
+            document.body.classList.add('capturing-canvas');
+
             const scrollContainer = captureElement.querySelector('.overflow-x-auto');
+            const originalContainerStyle = captureElement.getAttribute('style') || '';
             const originalScrollStyle = scrollContainer ? (scrollContainer.getAttribute('style') || '') : '';
 
             if (scrollContainer) {
@@ -680,7 +690,9 @@
             captureElement.style.width = 'auto';
             captureElement.style.maxWidth = 'none';
 
-            const fullWidth = Math.max(captureElement.scrollWidth, captureElement.offsetWidth);
+            // Calculate absolute full dimensions of the table
+            const tableWidth = tableElement.offsetWidth + 20;
+            const fullWidth = Math.max(captureElement.scrollWidth, tableWidth);
             const fullHeight = Math.max(captureElement.scrollHeight, captureElement.offsetHeight);
 
             try {
@@ -693,7 +705,9 @@
                     logging: false
                 });
 
-                captureElement.setAttribute('style', originalStyle);
+                // Restore styles and sticky class
+                document.body.classList.remove('capturing-canvas');
+                captureElement.setAttribute('style', originalContainerStyle);
                 if (scrollContainer) {
                     scrollContainer.setAttribute('style', originalScrollStyle);
                 }
@@ -729,7 +743,8 @@
                 }, 'image/png');
 
             } catch (err) {
-                captureElement.setAttribute('style', originalStyle);
+                document.body.classList.remove('capturing-canvas');
+                captureElement.setAttribute('style', originalContainerStyle);
                 if (scrollContainer) {
                     scrollContainer.setAttribute('style', originalScrollStyle);
                 }
