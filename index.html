@@ -98,6 +98,10 @@
                         <i class="fa-brands fa-whatsapp text-xs"></i>
                         <span>שתף צילום מסך ב-WhatsApp</span>
                     </button>
+                    <button onclick="exportShiftsToCalendar()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5" title="ייצא משמרות שבועיות ליומן Google">
+                        <i class="fa-solid fa-calendar-plus text-xs"></i>
+                        <span>סנכרן ליומן Google</span>
+                    </button>
                     <button onclick="openStatsModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-chart-pie text-xs"></i>
                         <span>סיכום חודשי</span>
@@ -668,7 +672,7 @@
             }
         }
 
-        // WhatsApp Share as Image Screenshot (Optimized Full-Width & Unclipped Officers Column)
+        // WhatsApp Share as Image Screenshot
         async function shareScheduleAsImage() {
             const captureElement = document.getElementById('schedule-capture-area');
             const tableElement = document.getElementById('schedule-table');
@@ -677,7 +681,6 @@
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             const renderScale = isMobile ? 2 : 2;
 
-            // Add CSS flag class to un-stick officers column during render
             document.body.classList.add('capturing-canvas');
 
             const scrollContainer = captureElement.querySelector('.overflow-x-auto');
@@ -690,7 +693,6 @@
             captureElement.style.width = 'auto';
             captureElement.style.maxWidth = 'none';
 
-            // Calculate absolute full dimensions of the table
             const tableWidth = tableElement.offsetWidth + 20;
             const fullWidth = Math.max(captureElement.scrollWidth, tableWidth);
             const fullHeight = Math.max(captureElement.scrollHeight, captureElement.offsetHeight);
@@ -705,7 +707,6 @@
                     logging: false
                 });
 
-                // Restore styles and sticky class
                 document.body.classList.remove('capturing-canvas');
                 captureElement.setAttribute('style', originalContainerStyle);
                 if (scrollContainer) {
@@ -724,7 +725,6 @@
 
                     const file = new File([blob], fileName, { type: 'image/png' });
 
-                    // Web Share API (Mobile native sharing menu)
                     if (navigator.canShare && navigator.canShare({ files: [file] })) {
                         try {
                             await navigator.share({
@@ -765,6 +765,99 @@
             }, 500);
         }
 
+        // Export Officer Shifts to Google Calendar / iCal File
+        function exportShiftsToCalendar() {
+            let targetOfficer = selectedOfficerFilter;
+            
+            if (targetOfficer === 'ALL') {
+                targetOfficer = prompt('הכנס את שם השוטר שעבורו תרצה לייצא את המשמרות ליומן Google:', 'ארז');
+                if (!targetOfficer) return;
+            }
+
+            const weekData = scheduleData[currentWeekIndex];
+            if (!weekData || !weekData.dates || !weekData.shifts[targetOfficer]) {
+                alert(`לא נמצאו משמרות עבור ${targetOfficer} בשבוע המוצג.`);
+                return;
+            }
+
+            const shifts = weekData.shifts[targetOfficer];
+            let eventsICal = [];
+            let shiftCount = 0;
+
+            shifts.forEach((s, idx) => {
+                if (!s) return;
+
+                const cleanShift = s.replace('רכב', '').trim();
+                if (!cleanShift) return;
+
+                const dateStr = weekData.dates[idx]; // Format e.g., "15.03.2026" or "15.03"
+                let parts = dateStr.split('.');
+                let day = parts[0].padStart(2, '0');
+                let month = parts[1].padStart(2, '0');
+                let year = parts[2] || '2026';
+
+                let formattedDate = `${year}${month}${day}`;
+
+                // Set default shift hours
+                let startTime = '070000';
+                let endTime = '150000';
+                let summary = `משמרת ${cleanShift} - פיקוח טכנולוגי`;
+
+                if (cleanShift === 'אבג') {
+                    startTime = '070000';
+                    endTime = '070000'; // 24 hours full day
+                    summary = `משמרת 24 שע' (אבג) - פיקוח טכנולוגי`;
+                } else if (cleanShift === 'אב' || cleanShift === 'בג') {
+                    startTime = '070000';
+                    endTime = '230000';
+                    summary = `משמרת 16 שע' (${cleanShift}) - פיקוח טכנולוגי`;
+                } else if (cleanShift === 'א') {
+                    startTime = '070000';
+                    endTime = '150000';
+                    summary = `משמרת א' - פיקוח טכנולוגי`;
+                } else if (cleanShift.includes('חופשה') || cleanShift.includes('חש') || cleanShift.includes('ח״ש')) {
+                    summary = `יום חופשה - פיקוח טכנולוגי`;
+                }
+
+                if (s.includes('רכב')) {
+                    summary += ' (כולל רכב 🚗)';
+                }
+
+                eventsICal.push(`BEGIN:VEVENT
+SUMMARY:${summary}
+DTSTART:${formattedDate}T${startTime}
+DTEND:${formattedDate}T${endTime}
+DESCRIPTION:סידור עבודה פיקוח טכנולוגי - ${targetOfficer}
+END:VEVENT`);
+                shiftCount++;
+            });
+
+            if (shiftCount === 0) {
+                alert(`אין משמרות מתוכננות עבור ${targetOfficer} בשבוע זה.`);
+                return;
+            }
+
+            const icalContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Police Schedule 2026//HE
+CALSCALE:GREGORIAN
+${eventsICal.join('\n')}
+END:VCALENDAR`;
+
+            // Create Blob and trigger download/sync prompt
+            const blob = new Blob([icalContent], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `משמרות_${targetOfficer}_שבוע_${weekData.dates[0]}_${weekData.dates[6]}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert(`יוצרו ${shiftCount} משמרות עבור ${targetOfficer}.\nהקובץ ירד למכשירך - לחץ עליו כדי להוסיף את המשמרות ישר ליומן Google!`);
+        }
+
         // Request Submission Logic
         function openRequestModal() {
             document.getElementById('request-modal').classList.remove('hidden');
@@ -797,10 +890,8 @@
             const encodedMsg = encodeURIComponent(msgText);
 
             if (target === 'erez') {
-                // Erez Phone: 050-5069969
                 window.open(`https://api.whatsapp.com/send?phone=972505069969&text=${encodedMsg}`, '_blank');
             } else {
-                // Lior Phone: 050-6270112
                 window.open(`https://api.whatsapp.com/send?phone=972506270112&text=${encodedMsg}`, '_blank');
             }
 
@@ -812,11 +903,9 @@
             const container = document.getElementById('stats-modal-content');
             container.innerHTML = '';
 
-            // Get Current Week Dates and Month
             const currentWeekData = scheduleData[currentWeekIndex] || { dates: [], shifts: {} };
             let currentMonth = '';
             if (currentWeekData.dates && currentWeekData.dates.length > 0) {
-                // Extract month from first date of week (e.g., "15.03.2026" or "15.03" -> "03")
                 const parts = currentWeekData.dates[0].split('.');
                 if (parts.length >= 2) {
                     currentMonth = parts[1];
@@ -834,11 +923,9 @@
                 sickDays: 0 
             });
 
-            // Calculate stats per officer
             scheduleData.forEach((week, wIdx) => {
                 const isCurrentWeek = (wIdx === currentWeekIndex);
                 
-                // Determine if this week belongs to the current month being displayed
                 let isSameMonth = false;
                 if (week.dates && week.dates.length > 0 && currentMonth) {
                     isSameMonth = week.dates.some(d => {
@@ -858,7 +945,6 @@
                         else if (cleanShift === 'אב' || cleanShift === 'בג') hours = 16;
                         else if (cleanShift === 'א') hours = 8;
 
-                        // 1. Monthly Hours (Accumulated only for weeks in the current displayed month)
                         if (isSameMonth) {
                             totalStats[o].monthlyHours += hours;
                             if (s.includes('רכב')) totalStats[o].carDays++;
@@ -866,7 +952,6 @@
                             else if (s.includes('מחלה')) totalStats[o].sickDays++;
                         }
 
-                        // 2. Option 1: Weekly Shifts Count (Only for the CURRENT displayed week)
                         if (isCurrentWeek && hours > 0) {
                             totalStats[o].weeklyShiftsCount++;
                         }
