@@ -41,8 +41,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    <!-- html2canvas Library for Screenshot capturing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: 'Heebo', sans-serif; background-color: #f8fafc; }
         .dimmed-row { opacity: 0.25; filter: grayscale(80%); }
@@ -57,12 +55,6 @@
         }
         th.sticky-col {
             z-index: 30;
-        }
-
-        /* Class added during screenshot export to prevent sticky positioning clipping */
-        .capturing-canvas .sticky-col {
-            position: static !important;
-            box-shadow: none !important;
         }
 
         @media print {
@@ -88,15 +80,11 @@
                     </div>
                 </div>
 
-                <!-- Actions & Mode Switch -->
+                <!-- Actions & Mode Switch (Removed WhatsApp Share & Reset buttons) -->
                 <div class="flex items-center gap-2 flex-wrap">
                     <button onclick="openRequestModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                         <span>הגש בקשה</span>
-                    </button>
-                    <button onclick="shareScheduleAsImage()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
-                        <i class="fa-brands fa-whatsapp text-xs"></i>
-                        <span>שתף צילום מסך ב-WhatsApp</span>
                     </button>
                     <button onclick="exportShiftsToCalendar()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5" title="ייצא משמרות שבועיות ליומן Google">
                         <i class="fa-solid fa-calendar-plus text-xs"></i>
@@ -105,10 +93,6 @@
                     <button onclick="openStatsModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-chart-pie text-xs"></i>
                         <span>סיכום חודשי</span>
-                    </button>
-                    <button onclick="resetDataAndReload()" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5" title="אפס נתונים וטען מחדש">
-                        <i class="fa-solid fa-rotate text-xs"></i>
-                        <span>איפוס תצוגה</span>
                     </button>
                     <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold py-2 px-3 rounded-lg border border-amber-500/30 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-lock text-xs" id="admin-icon"></i>
@@ -461,21 +445,8 @@
                     }
                 }
             }
-            currentWeekIndex = 43; // Default to Nov 2026 week
+            currentWeekIndex = 43; // Nov 2026 default
             if (currentWeekIndex >= scheduleData.length) currentWeekIndex = 0;
-        }
-
-        function resetDataAndReload() {
-            if (confirm('האם לאפס את הזיכרון המקומי בדפדפן ולטעון מחדש את הטבלה?')) {
-                localStorage.removeItem('police_schedule_2026');
-                localStorage.removeItem('police_holidays_2026');
-                scheduleData = defaultScheduleData;
-                holidaysData = defaultHolidaysData;
-                autoSelectCurrentWeek();
-                renderSchedule();
-                renderHolidays();
-                alert('התצוגה אופסה בהצלחה!');
-            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -692,98 +663,6 @@
                     break;
                 }
             }
-        }
-
-        async function shareScheduleAsImage() {
-            const captureElement = document.getElementById('schedule-capture-area');
-            const tableElement = document.getElementById('schedule-table');
-            if (!captureElement || !tableElement) return;
-
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const renderScale = isMobile ? 2 : 2;
-
-            document.body.classList.add('capturing-canvas');
-
-            const scrollContainer = captureElement.querySelector('.overflow-x-auto');
-            const originalContainerStyle = captureElement.getAttribute('style') || '';
-            const originalScrollStyle = scrollContainer ? (scrollContainer.getAttribute('style') || '') : '';
-
-            if (scrollContainer) {
-                scrollContainer.style.overflow = 'visible';
-            }
-            captureElement.style.width = 'auto';
-            captureElement.style.maxWidth = 'none';
-
-            const tableWidth = tableElement.offsetWidth + 20;
-            const fullWidth = Math.max(captureElement.scrollWidth, tableWidth);
-            const fullHeight = Math.max(captureElement.scrollHeight, captureElement.offsetHeight);
-
-            try {
-                const canvas = await html2canvas(captureElement, {
-                    scale: renderScale,
-                    useCORS: true,
-                    width: fullWidth,
-                    height: fullHeight,
-                    windowWidth: fullWidth + 100,
-                    logging: false
-                });
-
-                document.body.classList.remove('capturing-canvas');
-                captureElement.setAttribute('style', originalContainerStyle);
-                if (scrollContainer) {
-                    scrollContainer.setAttribute('style', originalScrollStyle);
-                }
-
-                const currentData = scheduleData[currentWeekIndex];
-                const weekTitle = (currentData && currentData.dates) ? `${currentData.dates[0]} - ${currentData.dates[6]}` : 'שבועי';
-                const fileName = `סידור_עבודה_${weekTitle.replace(/\./g, '_')}.png`;
-
-                canvas.toBlob(async (blob) => {
-                    if (!blob) {
-                        alert('שגיאה ביצירת תמונה');
-                        return;
-                    }
-
-                    const file = new File([blob], fileName, { type: 'image/png' });
-
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({
-                                files: [file],
-                                title: 'סידור עבודה',
-                                text: `🚔 *סידור עבודה - פיקוח טכנולוגי*\n📅 שבוע: ${weekTitle}`
-                            });
-                        } catch (shareErr) {
-                            if (shareErr.name !== 'AbortError') {
-                                fallbackDownloadAndWhatsApp(canvas, weekTitle, fileName);
-                            }
-                        }
-                    } else {
-                        fallbackDownloadAndWhatsApp(canvas, weekTitle, fileName);
-                    }
-                }, 'image/png');
-
-            } catch (err) {
-                document.body.classList.remove('capturing-canvas');
-                captureElement.setAttribute('style', originalContainerStyle);
-                if (scrollContainer) {
-                    scrollContainer.setAttribute('style', originalScrollStyle);
-                }
-                alert('חלה שגיאה ביצירת צילום המסך. אנא נסה שנית.');
-                console.error('Error generating image:', err);
-            }
-        }
-
-        function fallbackDownloadAndWhatsApp(canvas, weekTitle, fileName) {
-            const link = document.createElement('a');
-            link.download = fileName;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-
-            setTimeout(() => {
-                const msg = encodeURIComponent(`🚔 *סידור עבודה - פיקוח טכנולוגי*\n📅 שבוע: ${weekTitle}\n\nתמונת סידור העבודה המלאה הורדה למכשיר שלך! ניתן לצרף אותה להודעה 📸`);
-                window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
-            }, 500);
         }
 
         function exportShiftsToCalendar() {
