@@ -46,7 +46,12 @@
         .dimmed-row { opacity: 0.25; filter: grayscale(80%); }
         .focused-row { transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; position: relative; }
         
-        /* Sticky Column Setup for Mobile Horizontal Scrolling */
+        /* Sticky Column & Scroll Setup for Mobile */
+        .table-scroll-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            max-width: 100%;
+        }
         .sticky-col {
             position: sticky;
             right: 0;
@@ -174,37 +179,47 @@
 
             <!-- Schedule View -->
             <div id="view-schedule" class="space-y-6">
+                
+                <!-- Mobile Scroll Instruction Hint -->
+                <div class="md:hidden flex items-center justify-between bg-blue-50 border border-blue-200 text-blue-900 px-3 py-2 rounded-xl text-xs font-bold">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrows-left-right text-blue-600"></i>
+                        <span>ניתן לגלול ימינה ושמאלה לצפייה בכל הימים</span>
+                    </span>
+                    <i class="fa-solid fa-hand-pointer text-blue-400 animate-pulse"></i>
+                </div>
+
                 <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-2">
-                    <div class="overflow-x-auto">
+                    <div class="table-scroll-container">
                         <table class="w-full text-sm text-right border-collapse" id="schedule-table">
                             <thead>
                                 <tr class="bg-police-navy text-white text-center text-xs">
                                     <th class="p-3.5 font-bold border-b border-slate-700 text-right min-w-[110px] w-32 bg-slate-900 sticky-col">שם השוטר</th>
-                                    <th class="p-3 border-b border-slate-700 min-w-[100px]">
+                                    <th class="p-3 border-b border-slate-700 min-w-[95px]">
                                         <div>ראשון</div>
                                         <div id="date-0" class="text-[10px] text-blue-200 font-normal">-</div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 min-w-[100px]">
+                                    <th class="p-3 border-b border-slate-700 min-w-[95px]">
                                         <div>שני</div>
                                         <div id="date-1" class="text-[10px] text-blue-200 font-normal">-</div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 min-w-[100px]">
+                                    <th class="p-3 border-b border-slate-700 min-w-[95px]">
                                         <div>שלישי</div>
                                         <div id="date-2" class="text-[10px] text-blue-200 font-normal">-</div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 min-w-[100px]">
+                                    <th class="p-3 border-b border-slate-700 min-w-[95px]">
                                         <div>רביעי</div>
                                         <div id="date-3" class="text-[10px] text-blue-200 font-normal">-</div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 min-w-[100px]">
+                                    <th class="p-3 border-b border-slate-700 min-w-[95px]">
                                         <div>חמישי</div>
                                         <div id="date-4" class="text-[10px] text-blue-200 font-normal">-</div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 bg-blue-900/60 min-w-[100px]">
+                                    <th class="p-3 border-b border-slate-700 bg-blue-900/60 min-w-[95px]">
                                         <div>שישי</div>
                                         <div id="date-5" class="text-[10px] text-amber-300 font-normal">-</div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 bg-blue-900/60 min-w-[100px]">
+                                    <th class="p-3 border-b border-slate-700 bg-blue-900/60 min-w-[95px]">
                                         <div>שבת</div>
                                         <div id="date-6" class="text-[10px] text-amber-300 font-normal">-</div>
                                     </th>
@@ -240,7 +255,7 @@
                             <span>הוסף חג חדש</span>
                         </button>
                     </div>
-                    <div class="overflow-x-auto">
+                    <div class="table-scroll-container">
                         <table class="w-full text-sm text-right">
                             <thead>
                                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
@@ -325,7 +340,7 @@
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
                 <h3 class="font-bold text-base flex items-center gap-2">
                     <i class="fa-solid fa-chart-pie text-amber-400"></i>
-                    <span id="stats-modal-title">סיכום משמרות חודשי לשוטרים</span>
+                    <span id="stats-modal-title">סיכום משמרות שבועי ושנתי לשוטרים</span>
                 </h3>
                 <button onclick="closeStatsModal()" class="text-white hover:text-amber-400 text-lg p-1">
                     <i class="fa-solid fa-xmark"></i>
@@ -418,4 +433,649 @@
             {"dates": ["16.08.2026", "17.08.2026", "18.08.2026", "19.08.2026", "20.08.2026", "21.08.2026", "22.08.2026"], "shifts": {"ארז": ["", "", "אבג", "", "", "", "אבג"], "בן זיקרי": ["אבג", "", "", "אב", "", "", ""], "יניב": ["אב", "", "", "אבג", "", "", ""], "יחיאל": ["", "", "", "", "", "ח״ש", ""], "ולרי": ["", "", "אבג", "", "אבג", "", ""], "ירין": ["", "אבג", "", "", "", "אבג", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
             {"dates": ["23.08.2026", "24.08.2026", "25.08.2026", "26.08.2026", "27.08.2026", "28.08.2026", "29.08.2026"], "shifts": {"ארז": ["אבג", "", "אבג", "", "", "", ""], "בן זיקרי": ["אבג", "", "", "אב", "", "", ""], "יניב": ["", "אבג", "", "", "אבג", "", ""], "יחיאל": ["", "", "", "בג", "", "", ""], "ולרי": ["", "", "אבג", "", "", "אבג", ""], "ירין": ["חופשה", "חופשה", "חופשה", "חופשה", "חופשה", "", "אבג"], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
             {"dates": ["30.08.2026", "31.08.2026", "01.09.2026", "02.09.2026", "03.09.2026", "04.09.2026", "05.09.2026"], "shifts": {"ארז": ["אבג", "", "", "אבג", "", "", ""], "בן זיקרי": ["", "אבג", "", "", "אבג", "", ""], "יניב": ["", "", "", "אבג", "", "", "אבג"], "יחיאל": ["אב", "", "", "", "", "אבג", ""], "ולרי": ["", "אבג", "", "אבג", "", "", ""], "ירין": ["", "", "אבג", "", "אבג", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
-            {"dates": ["06.09.2026", "07.09.2026", "08.09.2026", "09.09.2026", "10.09.2026", "11.09.2026", "12.09.2026"], "shifts": {"ארז": ["אבג", "", "אב
+            {"dates": ["06.09.2026", "07.09.2026", "08.09.2026", "09.09.2026", "10.09.2026", "11.09.2026", "12.09.2026"], "shifts": {"ארז": ["אבג", "", "אבג", "", "", "", ""], "בן זיקרי": ["", "אבג", "", "אב", "", "", ""], "יניב": ["", "אבג", "", "", "אבג", "", ""], "יחיאל": ["", "", "אבג", "", "", "אבג", ""], "ולרי": ["אבג", "", "", "", "ח״ש", "", ""], "ירין": ["", "", "", "אבג", "", "", "אבג"], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["13.09.2026", "14.09.2026", "15.09.2026", "16.09.2026", "17.09.2026", "18.09.2026", "19.09.2026"], "shifts": {"ארז": ["חופשה", "חופשה", "חופשה", "חופשה", "חופשה", "", ""], "בן זיקרי": ["ג", "", "", "ח״ש", "", "", ""], "יניב": ["", "אבג", "", "אבג", "", "", ""], "יחיאל": ["אב", "", "", "", "", "אבג", ""], "ולרי": ["", "אבג", "", "", "", "", "אבג"], "ירין": ["", "", "אבג", "", "בג", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["א", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": "שלומית א"},
+            {"dates": ["20.09.2026", "21.09.2026", "22.09.2026", "23.09.2026", "24.09.2026", "25.09.2026", "26.09.2026"], "shifts": {"ארז": ["בג", "אבג", "", "", "", "", ""], "בן זיקרי": ["א", "", "", "אבג", "", "", ""], "יניב": ["", "", "", "אבג", "", "", "אבג"], "יחיאל": ["", "", "אב", "", "", "אבג", ""], "ולרי": ["", "", "בג", "", "אבג", "", ""], "ירין": ["", "", "אבג", "", "אב", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["27.09.2026", "28.09.2026", "29.09.2026", "30.09.2026", "01.10.2026", "02.10.2026", "03.10.2026"], "shifts": {"ארז": ["אבג", "", "", "אבג", "", "", ""], "בן זיקרי": ["חופשה", "חופשה", "חופשה", "חופשה", "חופשה", "", ""], "יניב": ["", "ח״ש", "", "", "אבג", "", ""], "יחיאל": ["", "", "אבג", "", "", "אבג", ""], "ולרי": ["", "אבג", "", "ח״ש", "", "", ""], "ירין": ["", "", "בג", "", "", "", "אבג"], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["04.10.2026", "05.10.2026", "06.10.2026", "07.10.2026", "08.10.2026", "09.10.2026", "10.10.2026"], "shifts": {"ארז": ["", "אבג", "", "אב", "", "", ""], "בן זיקרי": ["אבג", "", "", "אבג", "", "", ""], "יניב": ["", "אבג", "", "", "א", "", ""], "יחיאל": ["אב", "", "", "", "", "אבג", ""], "ולרי": ["", "", "אבג", "", "אבג", "", ""], "ירין": ["", "", "בג", "", "", "", "אבג"], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["11.10.2026", "12.10.2026", "13.10.2026", "14.10.2026", "15.10.2026", "16.10.2026", "17.10.2026"], "shifts": {"ארז": ["אילת יחידה", "אילת יחידה", "אילת יחידה", "אב", "", "", ""], "בן זיקרי": ["אילת יחידה", "אילת יחידה", "אילת יחידה", "א", "", "", "אבג"], "יניב": ["אילת יחידה", "אילת יחידה", "אילת יחידה", "בג", "", "", ""], "יחיאל": ["אילת יחידה", "אילת יחידה", "אילת יחידה", "בג", "", "אבג", ""], "ולרי": ["אבג", "", "אבג", "", "", "", ""], "ירין": ["", "אבג", "", "", "אבג", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": "אילת יחידה אילת יחידה אילת יחידה"},
+            {"dates": ["18.10.2026", "19.10.2026", "20.10.2026", "21.10.2026", "22.10.2026", "23.10.2026", "24.10.2026"], "shifts": {"ארז": ["אבג", "", "", "אבג", "", "", ""], "בן זיקרי": ["", "א", "אב", "א", "א", "", ""], "יניב": ["", "אבג", "", "", "ח״ש", "", ""], "יחיאל": ["אב", "", "", "", "", "אבג", ""], "ולרי": ["", "", "אבג", "", "", "", "אבג"], "ירין": ["מחלה", "", "", "", "אבג", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["25.10.2026", "26.10.2026", "27.10.2026", "28.10.2026", "29.10.2026", "30.10.2026", "31.10.2026"], "shifts": {"ארז": ["אבג", "חש", "", "", "אבג", "", ""], "בן זיקרי": ["אב", "א", "אב", "", "חש", "חש", "חש"], "יניב": ["חופשה", "חופשה", "חופשה", "חופשה", "חופשה", "", "אבג"], "יחיאל": ["", "כנס", "", "", "מטווח", "אבג", ""], "ולרי": ["", "כנס", "אבג", "", "מטווח", "", ""], "ירין": ["", "בג", "", "אבג", "", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["רכב", "רכב", "רכב", "", "", "", ""]}, "notes": "מטווח"},
+            {"dates": ["01.11.2026", "02.11.2026", "03.11.2026", "04.11.2026", "05.11.2026", "06.11.2026", "07.11.2026"], "shifts": {"ארז": ["", "אבג", "", "אבג", "", "", ""], "בן זיקרי": ["חופשה", "חופשה", "חופשה", "חופשה", "חופשה", "חופשה", "חופשה"], "יניב": ["", "אבג", "", "", "אבג", "", ""], "יחיאל": ["חש", "", "", "", "", "אבג", ""], "ולרי": ["", "", "אבג", "", "ח״ש", "", ""], "ירין": ["אבג", "", "", "", "", "", "אבג"], "יוסף": ["א", "א", "אבג", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["08.11.2026", "09.11.2026", "10.11.2026", "11.11.2026", "12.11.2026", "13.11.2026", "14.11.2026"], "shifts": {"ארז": ["אבג", "", "", "אבג", "", "", ""], "בן זיקרי": ["חופשה", "חופשה", "חופשה", "חופשה", "חופשה", "", "אבג"], "יניב": ["", "אבג", "", "אב", "", "", ""], "יחיאל": ["", "", "", "", "", "אבג", ""], "ולרי": ["", "", "אבג", "", "בג", "", ""], "ירין": ["", "א", "", "ב", "אבג", "", ""], "יוסף": ["", "אב", "", "אבג", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["15.11.2026", "16.11.2026", "17.11.2026", "18.11.2026", "19.11.2026", "20.11.2026", "21.11.2026"], "shifts": {"ארז": ["אבג", "", "", "אבג", "", "", ""], "בן זיקרי": ["", "", "אבג", "", "", "", "אבג"], "יניב": ["", "אבג", "", "", "אבג", "", ""], "יחיאל": ["", "", "אבג", "", "אבג", "", ""], "ולרי": ["אבג", "", "", "", "", "אבג", ""], "ירין": ["", "אבג", "", "אבג", "", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["22.11.2026", "23.11.2026", "24.11.2026", "25.11.2026", "26.11.2026", "27.11.2026", "28.11.2026"], "shifts": {"ארז": ["", "", "אבג", "", "", "", "אבג"], "בן זיקרי": ["", "אבג", "", "", "אבג", "", ""], "יניב": ["", "", "", "", "", "", ""], "יחיאל": ["אבג", "", "", "אבג", "", "", ""], "ולרי": ["", "אבג", "", "", "אבג", "", ""], "ירין": ["", "", "אבג", "", "", "אבג", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["29.11.2026", "30.11.2026", "01.12.2026", "02.12.2026", "03.12.2026", "04.12.2026", "05.12.2026"], "shifts": {"ארז": ["", "", "אבג", "", "", "אבג", ""], "בן זיקרי": ["", "אבג", "", "", "אבג", "", ""], "יניב": ["אבג", "", "", "אבג", "", "", ""], "יחיאל": ["", "אבג", "", "", "אבג", "", ""], "ולרי": ["אבג", "", "", "אבג", "", "", ""], "ירין": ["", "", "אבג", "", "", "", "אבג"], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["06.12.2026", "07.12.2026", "08.12.2026", "09.12.2026", "10.12.2026", "11.12.2026", "12.12.2026"], "shifts": {"ארז": ["אבג", "", "", "אבג", "", "", ""], "בן זיקרי": ["", "אבג", "", "", "אבג", "", ""], "יניב": ["", "", "אבג", "", "", "", "אבג"], "יחיאל": ["", "", "אבג", "", "", "אבג", ""], "ולרי": ["אבג", "", "", "אבג", "", "", ""], "ירין": ["", "אבג", "", "", "אבג", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["13.12.2026", "14.12.2026", "15.12.2026", "16.12.2026", "17.12.2026", "18.12.2026", "19.12.2026"], "shifts": {"ארז": ["", "בג", "", "אבג", "", "", ""], "בן זיקרי": ["אבג", "", "", "", "אבג", "", ""], "יניב": ["", "", "אבג", "", "", "אבג", ""], "יחיאל": ["", "", "אבג", "", "", "", "אבג"], "ולרי": ["אבג", "", "", "אבג", "", "", ""], "ירין": ["", "", "", "", "", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["20.12.2026", "21.12.2026", "22.12.2026", "23.12.2026", "24.12.2026", "25.12.2026", "26.12.2026"], "shifts": {"ארז": ["אבג", "", "", "אבג", "", "", ""], "בן זיקרי": ["", "", "אבג", "", "", "אבג", ""], "יניב": ["", "אבג", "", "", "אבג", "", ""], "יחיאל": ["", "אבג", "", "", "אבג", "", ""], "ולרי": ["", "", "אבג", "", "", "", "אבג"], "ירין": ["אבג", "", "", "אבג", "", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
+            {"dates": ["27.12.2026", "28.12.2026", "29.12.2026", "30.12.2026", "31.12.2026", "01.01.2027", "02.01.2027"], "shifts": {"ארז": ["", "אבג", "", "", "", "", "אבג"], "בן זיקרי": ["אבג", "", "אבג", "", "", "", ""], "יניב": ["", "", "", "", "", "", ""], "יחיאל": ["", "", "", "בג", "", "אבג", ""], "ולרי": ["אבג", "", "", "", "", "", ""], "ירין": ["אבג", "", "", "אבג", "", "חופשה", "חופשה"], "יוסף": ["", "", "אבג", "", "אבג", "", ""], "עינב": ["", "אבג", "", "", "אבג", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""}
+        ];
+
+        let scheduleData = defaultScheduleData;
+
+        try {
+            const stored = localStorage.getItem('police_schedule_2026');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    scheduleData = parsed;
+                }
+            }
+        } catch (e) {
+            console.error('Error loading schedule:', e);
+        }
+
+        function autoSelectCurrentWeek() {
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const dateStrShort = `${day}.${month}`;
+
+            if (scheduleData && scheduleData.length > 0) {
+                for (let i = 0; i < scheduleData.length; i++) {
+                    if (scheduleData[i].dates && scheduleData[i].dates.some(d => d.includes(dateStrShort))) {
+                        currentWeekIndex = i;
+                        return;
+                    }
+                }
+            }
+            currentWeekIndex = 43; // Nov 2026 default
+            if (currentWeekIndex >= scheduleData.length) currentWeekIndex = 0;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            autoSelectCurrentWeek();
+            populateOfficerFilterOptions();
+            renderSchedule();
+            renderHolidays();
+        });
+
+        function populateOfficerFilterOptions() {
+            const select = document.getElementById('officer-filter');
+            const reqSelect = document.getElementById('req-officer-name');
+            if (!select || !reqSelect) return;
+            select.innerHTML = '<option value="ALL">הצג את כולם</option>';
+            reqSelect.innerHTML = '';
+
+            officers.forEach(off => {
+                const opt = document.createElement('option');
+                opt.value = off;
+                opt.textContent = off;
+                select.appendChild(opt);
+
+                const opt2 = document.createElement('option');
+                opt2.value = off;
+                opt2.textContent = off;
+                reqSelect.appendChild(opt2);
+            });
+        }
+
+        function toggleAdminMode() {
+            if (!isAdmin) {
+                const pwd = prompt('הכנס קוד מנהל/תמיכה:');
+                if (pwd === PRIMARY_ADMIN_PWD || pwd === SECONDARY_ADMIN_PWD) {
+                    isAdmin = true;
+                    const roleText = (pwd === PRIMARY_ADMIN_PWD) ? 'מצב מנהל (ליאור)' : 'מצב תמיכה (1981)';
+                    document.getElementById('admin-btn-text').textContent = roleText;
+                    document.getElementById('admin-toggle-btn').classList.replace('bg-slate-800', 'bg-amber-500');
+                    document.getElementById('admin-toggle-btn').classList.replace('text-amber-400', 'text-slate-900');
+                    document.getElementById('admin-icon').classList.replace('fa-lock', 'fa-lock-open');
+                } else if (pwd !== null) {
+                    alert('סיסמה שגויה!');
+                }
+            } else {
+                isAdmin = false;
+                document.getElementById('admin-btn-text').textContent = 'מצב צפייה';
+                document.getElementById('admin-toggle-btn').classList.replace('bg-amber-500', 'bg-slate-800');
+                document.getElementById('admin-toggle-btn').classList.replace('text-slate-900', 'text-amber-400');
+                document.getElementById('admin-icon').classList.replace('fa-lock-open', 'fa-lock');
+            }
+            renderSchedule();
+            renderHolidays();
+        }
+
+        function renderSchedule() {
+            const tbody = document.getElementById('schedule-body');
+            if (!tbody) return;
+
+            const currentData = scheduleData[currentWeekIndex] || {
+                dates: ['-', '-', '-', '-', '-', '-', '-'],
+                shifts: {},
+                notes: ''
+            };
+
+            if (currentData.dates && currentData.dates.length >= 7) {
+                const weekElem = document.getElementById('week-range-display');
+                if (weekElem) weekElem.textContent = `${currentData.dates[0]} - ${currentData.dates[6]}`;
+                for (let i = 0; i < 7; i++) {
+                    const dElem = document.getElementById(`date-${i}`);
+                    if (dElem) dElem.textContent = currentData.dates[i] || '-';
+                }
+            }
+
+            tbody.innerHTML = '';
+
+            officers.forEach(officer => {
+                const tr = document.createElement('tr');
+                const colorConfig = officerRowColors[officer] || { row: 'bg-white', nameBg: 'bg-slate-200 text-slate-800' };
+                
+                let focusClass = '';
+                if (selectedOfficerFilter !== 'ALL') {
+                    if (selectedOfficerFilter === officer) {
+                        focusClass = 'focused-row border-2 border-police-navy';
+                    } else {
+                        focusClass = 'dimmed-row';
+                    }
+                }
+
+                tr.className = `${colorConfig.row} ${focusClass} hover:opacity-90 transition border-b border-slate-300`;
+
+                let rowHTML = `<td class="p-3 font-extrabold border-l border-slate-300 ${colorConfig.nameBg} text-right shadow-inner sticky-col min-w-[110px] w-32">${officer}</td>`;
+
+                const officerShifts = (currentData.shifts && currentData.shifts[officer]) ? currentData.shifts[officer] : ['', '', '', '', '', '', ''];
+
+                for (let day = 0; day < 7; day++) {
+                    const shiftVal = officerShifts[day] || '';
+                    if (isAdmin) {
+                        rowHTML += `
+                            <td class="p-1 text-center border-l border-slate-300/60 min-w-[95px]">
+                                <div class="flex items-center gap-1">
+                                    <input type="text" list="shift-options" value="${shiftVal}" 
+                                        id="input-${officer}-${day}"
+                                        onchange="updateShift('${officer}', ${day}, this.value)"
+                                        class="w-full text-center p-1.5 rounded-lg border border-slate-400 text-xs font-bold focus:bg-amber-50 focus:border-amber-400 focus:outline-none shadow-sm">
+                                    <button onclick="toggleCarIcon('${officer}', ${day})" 
+                                        title="הוסף/הסר רכב" 
+                                        class="p-1.5 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-bold transition shadow-sm">
+                                        🚗
+                                    </button>
+                                </div>
+                            </td>`;
+                    } else {
+                        const shiftBadgeClass = getShiftBadgeStyle(shiftVal);
+                        rowHTML += `
+                            <td class="p-2.5 text-center border-l border-slate-300/60 min-w-[95px]">
+                                ${shiftBadgeClass}
+                            </td>`;
+                    }
+                }
+
+                tr.innerHTML = rowHTML;
+                tbody.appendChild(tr);
+            });
+
+            const nInput = document.getElementById('general-notes');
+            if (nInput) {
+                nInput.value = currentData.notes || '';
+                nInput.readOnly = !isAdmin;
+            }
+        }
+
+        function toggleCarIcon(officer, dayIndex) {
+            if (!scheduleData[currentWeekIndex]) return;
+            if (!scheduleData[currentWeekIndex].shifts[officer]) {
+                scheduleData[currentWeekIndex].shifts[officer] = ['', '', '', '', '', '', ''];
+            }
+            let currentVal = scheduleData[currentWeekIndex].shifts[officer][dayIndex] || '';
+            
+            if (currentVal.includes('רכב')) {
+                currentVal = currentVal.replace('רכב', '').trim();
+            } else {
+                currentVal = (currentVal + ' רכב').trim();
+            }
+            
+            scheduleData[currentWeekIndex].shifts[officer][dayIndex] = currentVal;
+            saveDataLocally();
+            renderSchedule();
+        }
+
+        function getShiftBadgeStyle(val) {
+            if (!val) return '<span class="text-slate-400/60 font-normal">-</span>';
+            
+            const hasCar = val.includes('רכב') || val.toLowerCase().includes('car');
+            let cleanVal = val.replace('רכב', '').trim();
+
+            let carBadge = hasCar ? '<span class="bg-amber-500 text-white px-1.5 py-0.5 rounded text-[10px] font-black shadow ml-1">🚗 רכב</span>' : '';
+
+            if (cleanVal === 'אבג' || cleanVal === 'אב' || cleanVal === 'בג') {
+                return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs shadow">${cleanVal || 'משמרת'}</span>${carBadge}</div>`;
+            }
+            if (cleanVal === 'א') {
+                return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
+            }
+            if (cleanVal.includes('חש') || cleanVal.includes('ח״ש') || cleanVal.includes('חופש')) {
+                return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-amber-200 text-amber-900 font-bold text-xs border border-amber-400 shadow-sm">${cleanVal}</span>${carBadge}</div>`;
+            }
+            if (cleanVal.includes('מחלה')) {
+                return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
+            }
+            if (cleanVal.includes('אילת') || cleanVal.includes('כנס') || cleanVal.includes('מטווח') || cleanVal.includes('קורס')) {
+                return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-purple-600 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
+            }
+
+            if (!cleanVal && hasCar) {
+                return carBadge;
+            }
+
+            return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-slate-700 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
+        }
+
+        function updateShift(officer, dayIndex, val) {
+            if (!scheduleData[currentWeekIndex]) return;
+            if (!scheduleData[currentWeekIndex].shifts[officer]) {
+                scheduleData[currentWeekIndex].shifts[officer] = ['', '', '', '', '', '', ''];
+            }
+            scheduleData[currentWeekIndex].shifts[officer][dayIndex] = val;
+            saveDataLocally();
+        }
+
+        function saveNotes() {
+            if (!scheduleData[currentWeekIndex]) return;
+            scheduleData[currentWeekIndex].notes = document.getElementById('general-notes').value;
+            saveDataLocally();
+        }
+
+        function saveDataLocally() {
+            localStorage.setItem('police_schedule_2026', JSON.stringify(scheduleData));
+        }
+
+        function filterOfficer() {
+            selectedOfficerFilter = document.getElementById('officer-filter').value;
+            renderSchedule();
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            if (!query) return;
+
+            for (let wIndex = 0; wIndex < scheduleData.length; wIndex++) {
+                const week = scheduleData[wIndex];
+                const matchDate = week.dates.some(d => d.toLowerCase().includes(query));
+                if (matchDate) {
+                    currentWeekIndex = wIndex;
+                    renderSchedule();
+                    break;
+                }
+            }
+        }
+
+        function shareScheduleToWhatsAppText() {
+            const weekData = scheduleData[currentWeekIndex];
+            if (!weekData || !weekData.dates || weekData.dates.length < 7) {
+                alert('אין נתוני שבוע תקינים לשיתוף.');
+                return;
+            }
+
+            const weekTitle = `${weekData.dates[0]} - ${weekData.dates[6]}`;
+            let msg = `🚔 *סידור עבודה פיקוח טכנולוגי*\n📅 *שבוע:* ${weekTitle}\n\n`;
+
+            for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+                const dayLabel = dayNames[dayIdx];
+                const dateLabel = weekData.dates[dayIdx];
+
+                let workingOfficers = [];
+                
+                officers.forEach(off => {
+                    const officerShifts = weekData.shifts ? weekData.shifts[off] : null;
+                    if (officerShifts && officerShifts[dayIdx]) {
+                        const shiftVal = officerShifts[dayIdx].trim();
+                        if (shiftVal !== '') {
+                            workingOfficers.push(`${off} (${shiftVal})`);
+                        }
+                    }
+                });
+
+                msg += `📌 *יום ${dayLabel} (${dateLabel}):*\n`;
+                if (workingOfficers.length > 0) {
+                    msg += workingOfficers.map(item => `  • ${item}`).join('\n') + `\n\n`;
+                } else {
+                    msg += `  • אין משמרות/פעילות\n\n`;
+                }
+            }
+
+            if (weekData.notes && weekData.notes.trim() !== '') {
+                msg += `📝 *הערות שבועיות:* ${weekData.notes.trim()}\n`;
+            }
+
+            const encodedMsg = encodeURIComponent(msg);
+            window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
+        }
+
+        function exportShiftsToCalendar() {
+            let targetOfficer = selectedOfficerFilter;
+            
+            if (targetOfficer === 'ALL') {
+                targetOfficer = prompt('הכנס את שם השוטר שעבורו תרצה לייצא את המשמרות ליומן Google:', 'ארז');
+                if (!targetOfficer) return;
+            }
+
+            const weekData = scheduleData[currentWeekIndex];
+            if (!weekData || !weekData.dates || !weekData.shifts[targetOfficer]) {
+                alert(`לא נמצאו משמרות עבור ${targetOfficer} בשבוע המוצג.`);
+                return;
+            }
+
+            const shifts = weekData.shifts[targetOfficer];
+            let eventsICal = [];
+            let shiftCount = 0;
+
+            shifts.forEach((s, idx) => {
+                if (!s) return;
+
+                const cleanShift = s.replace('רכב', '').trim();
+                if (!cleanShift) return;
+
+                const dateStr = weekData.dates[idx];
+                let parts = dateStr.split('.');
+                let day = parts[0].padStart(2, '0');
+                let month = parts[1].padStart(2, '0');
+                let year = parts[2] || '2026';
+
+                let formattedDate = `${year}${month}${day}`;
+
+                let startTime = '070000';
+                let endTime = '150000';
+                let summary = `משמרת ${cleanShift} - פיקוח טכנולוגי`;
+
+                if (cleanShift === 'אבג') {
+                    startTime = '070000';
+                    endTime = '070000';
+                    summary = `משמרת 24 שע' (אבג) - פיקוח טכנולוגי`;
+                } else if (cleanShift === 'אב' || cleanShift === 'בג') {
+                    startTime = '070000';
+                    endTime = '230000';
+                    summary = `משמרת 16 שע' (${cleanShift}) - פיקוח טכנולוגי`;
+                } else if (cleanShift === 'א') {
+                    startTime = '070000';
+                    endTime = '150000';
+                    summary = `משמרת א' - פיקוח טכנולוגי`;
+                } else if (cleanShift.includes('חופשה') || cleanShift.includes('חש') || cleanShift.includes('ח״ש')) {
+                    summary = `יום חופשה - פיקוח טכנולוגי`;
+                }
+
+                if (s.includes('רכב')) {
+                    summary += ' (כולל רכב 🚗)';
+                }
+
+                eventsICal.push(`BEGIN:VEVENT
+SUMMARY:${summary}
+DTSTART:${formattedDate}T${startTime}
+DTEND:${formattedDate}T${endTime}
+DESCRIPTION:סידור עבודה פיקוח טכנולוגי - ${targetOfficer}
+END:VEVENT`);
+                shiftCount++;
+            });
+
+            if (shiftCount === 0) {
+                alert(`אין משמרות מתוכננות עבור ${targetOfficer} בשבוע זה.`);
+                return;
+            }
+
+            const icalContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Police Schedule 2026//HE
+CALSCALE:GREGORIAN
+${eventsICal.join('\n')}
+END:VCALENDAR`;
+
+            const blob = new Blob([icalContent], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `משמרות_${targetOfficer}_שבוע_${weekData.dates[0]}_${weekData.dates[6]}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert(`יוצרו ${shiftCount} משמרות עבור ${targetOfficer}.\nהקובץ ירד למכשירך - לחץ עליו כדי להוסיף את המשמרות ישר ליומן Google!`);
+        }
+
+        function openRequestModal() {
+            document.getElementById('request-modal').classList.remove('hidden');
+        }
+
+        function closeRequestModal() {
+            document.getElementById('request-modal').classList.add('hidden');
+        }
+
+        function sendRequestToWhatsApp(target) {
+            const officerName = document.getElementById('req-officer-name').value;
+            const reqType = document.getElementById('req-type').value;
+            const reqDate = document.getElementById('req-date').value.trim();
+            const reqDetails = document.getElementById('req-details').value.trim();
+
+            if (!reqDate) {
+                alert('אנא הזן תאריך מבוקש לבקשה!');
+                return;
+            }
+
+            let msgText = `📋 *בקשה חדשה בסידור העבודה*\n\n`;
+            msgText += `👤 *מגיש הבקשה:* ${officerName}\n`;
+            msgText += `📌 *סוג הבקשה:* ${reqType}\n`;
+            msgText += `📅 *תאריך מבוקש:* ${reqDate}\n`;
+            if (reqDetails) {
+                msgText += `📝 *פירוט:* ${reqDetails}\n`;
+            }
+            msgText += `\nלטיפולך, תודה! 🙏`;
+
+            const encodedMsg = encodeURIComponent(msgText);
+
+            if (target === 'erez') {
+                window.open(`https://api.whatsapp.com/send?phone=972505069969&text=${encodedMsg}`, '_blank');
+            } else {
+                window.open(`https://api.whatsapp.com/send?phone=972506270112&text=${encodedMsg}`, '_blank');
+            }
+
+            closeRequestModal();
+        }
+
+        function openStatsModal() {
+            const container = document.getElementById('stats-modal-content');
+            container.innerHTML = '';
+
+            const currentWeekData = scheduleData[currentWeekIndex] || { dates: [], shifts: {} };
+            
+            document.getElementById('stats-modal-title').textContent = 'סיכום משמרות שבועי ושנתי לשוטרים';
+
+            let totalStats = {};
+            officers.forEach(o => totalStats[o] = { 
+                weeklyHours: 0, 
+                yearlyVacationDays: 0, 
+                yearlyCarDays: 0, 
+                yearlySickDays: 0 
+            });
+
+            scheduleData.forEach((week, wIdx) => {
+                const isCurrentWeek = (wIdx === currentWeekIndex);
+
+                officers.forEach(o => {
+                    const shifts = week.shifts[o] || [];
+                    shifts.forEach(s => {
+                        if (!s) return;
+
+                        const cleanShift = s.replace('רכב', '').trim();
+                        let hours = 0;
+                        if (cleanShift === 'אבג') hours = 24;
+                        else if (cleanShift === 'אב' || cleanShift === 'בג') hours = 16;
+                        else if (cleanShift === 'א') hours = 8;
+
+                        // חישוב שעות שבועי (לפי השבוע המוצג)
+                        if (isCurrentWeek) {
+                            totalStats[o].weeklyHours += hours;
+                        }
+
+                        // ספירת קטגוריות ברמה שנתית
+                        if (s.includes('רכב')) totalStats[o].yearlyCarDays++;
+                        if (s.includes('חופשה') || s.includes('חש') || s.includes('ח״ש')) totalStats[o].yearlyVacationDays++;
+                        if (s.includes('מחלה')) totalStats[o].yearlySickDays++;
+                    });
+                });
+            });
+
+            let html = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">`;
+            officers.forEach(o => {
+                const stats = totalStats[o];
+                const colorConfig = officerRowColors[o] || { nameBg: 'bg-slate-200 text-slate-800' };
+                
+                // חישוב לוגיקת שעות שבועיות (אדום/התראה/חוסר)
+                const wHours = stats.weeklyHours;
+                let weeklyStyle = '';
+                let weeklyText = '';
+
+                if (wHours < 36) {
+                    const missingTo36 = 36 - wHours;
+                    weeklyStyle = 'bg-rose-100 border-2 border-rose-500 text-rose-900 animate-pulse';
+                    weeklyText = `<span class="font-black">${wHours} / 48 שע'</span> <span class="bg-rose-600 text-white px-2 py-0.5 rounded text-[11px] font-extrabold shadow ml-1">⚠️ חוסר קריטי (חסרות ${missingTo36} שע' ל-36)</span>`;
+                } else if (wHours < 48) {
+                    const missingTo48 = 48 - wHours;
+                    weeklyStyle = 'bg-amber-50 border border-amber-300 text-amber-900';
+                    weeklyText = `<span class="font-black text-blue-900">${wHours} / 48 שע'</span> <span class="text-amber-700 text-[11px] font-bold ml-1">(חסרות ${missingTo48} שע' ל-48)</span>`;
+                } else {
+                    weeklyStyle = 'bg-emerald-50 border border-emerald-300 text-emerald-900';
+                    weeklyText = `<span class="font-black text-emerald-800">${wHours} / 48 שע'</span> <span class="text-emerald-700 text-[11px] font-bold ml-1">✨ עמד במכסה מלאה</span>`;
+                }
+
+                html += `
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-extrabold text-sm px-2.5 py-0.5 rounded ${colorConfig.nameBg}">${o}</span>
+                        </div>
+                        <div class="space-y-1.5 text-xs font-bold text-slate-700">
+                            <div class="flex justify-between items-center p-2 rounded-lg ${weeklyStyle}">
+                                <span class="font-extrabold">1️⃣ סה"כ שבועי:</span>
+                                <div class="flex items-center gap-1">${weeklyText}</div>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
+                                <span>2️⃣ ימי חופשה שנתי (חופשה / ח"ש):</span>
+                                <span class="text-amber-600 font-black">${stats.yearlyVacationDays} ימים</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
+                                <span>3️⃣ ימי רכב שנתי (רכב):</span>
+                                <span class="text-amber-800 font-black">${stats.yearlyCarDays} ימים</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
+                                <span>4️⃣ ימי מחלה שנתי:</span>
+                                <span class="text-rose-600 font-black">${stats.yearlySickDays} ימים</span>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            html += `</div>`;
+
+            container.innerHTML = html;
+            document.getElementById('stats-modal').classList.remove('hidden');
+        }
+
+        function closeStatsModal() {
+            document.getElementById('stats-modal').classList.add('hidden');
+        }
+
+        function renderHolidays() {
+            const tbody = document.getElementById('holidays-body');
+            const addBtn = document.getElementById('add-holiday-btn');
+            const adminCols = document.querySelectorAll('.admin-only-col');
+
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (isAdmin) {
+                if (addBtn) addBtn.classList.remove('hidden');
+                adminCols.forEach(col => col.classList.remove('hidden'));
+            } else {
+                if (addBtn) addBtn.classList.add('hidden');
+                adminCols.forEach(col => col.classList.add('hidden'));
+            }
+
+            holidaysData.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+
+                if (isAdmin) {
+                    tr.innerHTML = `
+                        <td class="p-2">
+                            <input type="text" value="${item.name || ''}" 
+                                onchange="updateHoliday(${index}, 'name', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-police-navy text-xs focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="p-2">
+                            <input type="text" value="${item.date || ''}" 
+                                onchange="updateHoliday(${index}, 'date', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-medium text-slate-700 text-xs focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="p-2">
+                            <input type="text" value="${item.eve || ''}" 
+                                onchange="updateHoliday(${index}, 'eve', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-blue-800 text-xs focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="p-2">
+                            <input type="text" value="${item.day || ''}" 
+                                onchange="updateHoliday(${index}, 'day', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-amber-800 text-xs focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="p-2 text-center">
+                            <button onclick="deleteHoliday(${index})" title="מחק חג" class="text-rose-600 hover:text-rose-800 p-1">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold text-police-navy">${item.name}</td>
+                        <td class="p-3 text-slate-600 font-medium">${item.date}</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg font-bold text-xs">${item.eve || '-'}</span></td>
+                        <td class="p-3"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold text-xs">${item.day || '-'}</span></td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateHoliday(index, field, value) {
+            if (!holidaysData[index]) return;
+            holidaysData[index][field] = value;
+            saveHolidaysLocally();
+        }
+
+        function addNewHoliday() {
+            holidaysData.push({ name: 'חג חדש', date: '01.01.2026', eve: '-', day: '-' });
+            saveHolidaysLocally();
+            renderHolidays();
+        }
+
+        function deleteHoliday(index) {
+            if (confirm('האם למחוק חג זה מלוח החגים?')) {
+                holidaysData.splice(index, 1);
+                saveHolidaysLocally();
+                renderHolidays();
+            }
+        }
+
+        function saveHolidaysLocally() {
+            localStorage.setItem('police_holidays_2026', JSON.stringify(holidaysData));
+        }
+
+        function changeWeek(direction) {
+            if (currentWeekIndex + direction >= 0 && currentWeekIndex + direction < scheduleData.length) {
+                currentWeekIndex += direction;
+                renderSchedule();
+            }
+        }
+
+        function switchTab(tab) {
+            if (tab === 'schedule') {
+                document.getElementById('view-schedule').classList.remove('hidden');
+                document.getElementById('view-holidays').classList.add('hidden');
+                document.getElementById('tab-schedule').className = 'py-2 px-3 rounded-lg bg-white shadow-sm text-police-navy';
+                document.getElementById('tab-holidays').className = 'py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900';
+            } else {
+                document.getElementById('view-schedule').classList.add('hidden');
+                document.getElementById('view-holidays').classList.remove('hidden');
+                document.getElementById('tab-holidays').className = 'py-2 px-3 rounded-lg bg-white shadow-sm text-police-navy';
+                document.getElementById('tab-schedule').className = 'py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900';
+            }
+        }
+    </script>
+</body>
+</html>
