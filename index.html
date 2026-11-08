@@ -719,7 +719,7 @@
             }
         }
 
-        function shareScheduleToWhatsAppText() {
+        async function shareScheduleToWhatsAppText() {
             const weekData = scheduleData[currentWeekIndex];
             if (!weekData || !weekData.dates || weekData.dates.length < 7) {
                 alert('אין נתוני שבוע תקינים לשיתוף.');
@@ -727,8 +727,6 @@
             }
 
             const weekTitle = `${weekData.dates[0]} - ${weekData.dates[6]}`;
-            
-            // בילד ההודעה עם תווים מותאמים למניעת קיטוע בנייד
             let lines = [];
             lines.push(`🚔 *סידור עבודה פיקוח טכנולוגי*`);
             lines.push(`📅 *שבוע:* ${weekTitle}`);
@@ -754,9 +752,7 @@
 
                 lines.push(`📌 *יום ${dayLabel} (${dateLabel}):*`);
                 if (workingOfficers.length > 0) {
-                    workingOfficers.forEach(item => {
-                        lines.push(`  • ${item}`);
-                    });
+                    workingOfficers.forEach(item => lines.push(`  • ${item}`));
                 } else {
                     lines.push(`  • אין משמרות/פעילות`);
                 }
@@ -768,13 +764,28 @@
             }
 
             const fullMsg = lines.join('\n');
+
+            // שימוש ב-Web Share API של הנייד (עוקף לחלוטין מגבלת תווים ב-URL)
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'סידור עבודה שבועי',
+                        text: fullMsg
+                    });
+                    return;
+                } catch (err) {
+                    // ביטול שיתוף על ידי המשתמש
+                }
+            }
+
+            // גיבוי למחשב נייח או דפדפנים ישנים
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(fullMsg);
+                alert('הסידור המלא הועתק ללוח! במידה וההודעה נחתכת ב-WhatsApp, פשוט בצע "הדבק".');
+            }
+
             const encodedMsg = encodeURIComponent(fullMsg);
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            // העתקה אוטומטית ללוח כגיבוי לכל מקרה
-            if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard.writeText(fullMsg).catch(() => {});
-            }
 
             if (isMobile) {
                 window.location.href = `whatsapp://send?text=${encodedMsg}`;
