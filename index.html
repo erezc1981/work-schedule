@@ -84,6 +84,7 @@
         <option value="ח״ש">
         <option value="קורס">
         <option value="מטווח">
+        <option value="מהבית">
     </datalist>
 
     <div>
@@ -368,6 +369,9 @@
         const officers = ['ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'עינב', 'שלומית', 'רעות', 'ליפז'];
         const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
         
+        // רשימת השוטרות שעובדות במשמרות יומיות של 9 שעות (לא 24 שע')
+        const dailyShiftOfficers = ['שלומית', 'רעות', 'ליפז'];
+
         const officerRowColors = {
             'ארז': { row: 'bg-blue-100/70', nameBg: 'bg-blue-300 text-blue-950' },
             'בן זיקרי': { row: 'bg-emerald-100/70', nameBg: 'bg-emerald-300 text-emerald-950' },
@@ -593,7 +597,7 @@
                                 </div>
                             </td>`;
                     } else {
-                        const shiftBadgeClass = getShiftBadgeStyle(shiftVal);
+                        const shiftBadgeClass = getShiftBadgeStyle(shiftVal, officer);
                         rowHTML += `
                             <td class="p-2.5 text-center border-l border-slate-300/60 min-w-[95px]">
                                 ${shiftBadgeClass}
@@ -630,13 +634,20 @@
             renderSchedule();
         }
 
-        function getShiftBadgeStyle(val) {
+        function getShiftBadgeStyle(val, officer = '') {
             if (!val) return '<span class="text-slate-400/60 font-normal">-</span>';
             
             const hasCar = val.includes('רכב') || val.toLowerCase().includes('car');
             let cleanVal = val.replace('רכב', '').trim();
 
             let carBadge = hasCar ? '<span class="bg-amber-500 text-white px-1.5 py-0.5 rounded text-[10px] font-black shadow ml-1">🚗 רכב</span>' : '';
+
+            // טיפול מיוחד עבור שלומית, רעות וליפז
+            if (dailyShiftOfficers.includes(officer)) {
+                if (cleanVal === 'א' || cleanVal.includes('מהבית') || cleanVal === 'יומי') {
+                    return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">${cleanVal} (9ש')</span>${carBadge}</div>`;
+                }
+            }
 
             if (cleanVal === 'אבג' || cleanVal === 'אב' || cleanVal === 'בג') {
                 return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs shadow">${cleanVal || 'משמרת'}</span>${carBadge}</div>`;
@@ -710,7 +721,6 @@
             const weekTitle = `${weekData.dates[0]} - ${weekData.dates[6]}`;
             let msg = `🚔 *סידור עבודה פיקוח טכנולוגי*\n📅 *שבוע:* ${weekTitle}\n\n`;
 
-            // סריקה דינמית של כל השוטרים שמופיעים בנתונים של השבוע
             const allAvailableOfficers = Array.from(new Set([...officers, ...Object.keys(weekData.shifts || {})]));
 
             for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
@@ -745,6 +755,10 @@
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
             if (isMobile) {
+                // העתקה אוטומטית ללוח כגיבוי למקרה שמערכת ההפעלה חותכת הודעות ארוכות
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(msg).catch(() => {});
+                }
                 window.location.href = `whatsapp://send?text=${encodedMsg}`;
             } else {
                 window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
@@ -784,10 +798,14 @@
                 let formattedDate = `${year}${month}${day}`;
 
                 let startTime = '070000';
-                let endTime = '150000';
+                let endTime = '160000';
                 let summary = `משמרת ${cleanShift} - פיקוח טכנולוגי`;
 
-                if (cleanShift === 'אבג') {
+                if (dailyShiftOfficers.includes(targetOfficer)) {
+                    startTime = '070000';
+                    endTime = '160000';
+                    summary = `משמרת יומית 9 שע' (${cleanShift}) - פיקוח טכנולוגי`;
+                } else if (cleanShift === 'אבג') {
                     startTime = '070000';
                     endTime = '070000';
                     summary = `משמרת 24 שע' (אבג) - פיקוח טכנולוגי`;
@@ -908,9 +926,18 @@ END:VCALENDAR`;
 
                         const cleanShift = s.replace('רכב', '').trim();
                         let hours = 0;
-                        if (cleanShift === 'אבג') hours = 24;
-                        else if (cleanShift === 'אב' || cleanShift === 'בג') hours = 16;
-                        else if (cleanShift === 'א') hours = 8;
+
+                        // לוגיקת חישוב שעות מותאמת:
+                        // עבור שלומית, רעות וליפז: משמרות יומית מחושבות כ-9 שעות (אינן 24 שעות)
+                        if (dailyShiftOfficers.includes(o)) {
+                            if (cleanShift === 'א' || cleanShift.includes('מהבית') || cleanShift === 'אבג' || cleanShift === 'אב' || cleanShift === 'בג' || cleanShift === 'יומי') {
+                                hours = 9;
+                            }
+                        } else {
+                            if (cleanShift === 'אבג') hours = 24;
+                            else if (cleanShift === 'אב' || cleanShift === 'בג') hours = 16;
+                            else if (cleanShift === 'א') hours = 8;
+                        }
 
                         // חישוב שעות שבועי (לפי השבוע המוצג)
                         if (isCurrentWeek) {
@@ -929,29 +956,33 @@ END:VCALENDAR`;
             officers.forEach(o => {
                 const stats = totalStats[o];
                 const colorConfig = officerRowColors[o] || { nameBg: 'bg-slate-200 text-slate-800' };
+                const isDailyOfficer = dailyShiftOfficers.includes(o);
                 
-                // חישוב לוגיקת שעות שבועיות (אדום/התראה/חוסר)
+                // חישוב לוגיקת שעות שבועיות ומכסות לפי סוג שוטר/ת
                 const wHours = stats.weeklyHours;
+                const targetQuota = isDailyOfficer ? 45 : 48; // 45 שעות שבועיות למשמרות יומיות
+                const minThreshold = isDailyOfficer ? 36 : 36;
+
                 let weeklyStyle = '';
                 let weeklyText = '';
 
-                if (wHours < 36) {
-                    const missingTo36 = 36 - wHours;
+                if (wHours < minThreshold && !isDailyOfficer) {
+                    const missingTo36 = minThreshold - wHours;
                     weeklyStyle = 'bg-rose-100 border-2 border-rose-500 text-rose-900 animate-pulse';
-                    weeklyText = `<span class="font-black">${wHours} / 48 שע'</span> <span class="bg-rose-600 text-white px-2 py-0.5 rounded text-[11px] font-extrabold shadow ml-1">⚠️ חוסר קריטי (חסרות ${missingTo36} שע' ל-36)</span>`;
-                } else if (wHours < 48) {
-                    const missingTo48 = 48 - wHours;
+                    weeklyText = `<span class="font-black">${wHours} / ${targetQuota} שע'</span> <span class="bg-rose-600 text-white px-2 py-0.5 rounded text-[11px] font-extrabold shadow ml-1">⚠️ חוסר קריטי (חסרות ${missingTo36} שע')</span>`;
+                } else if (wHours < targetQuota) {
+                    const missingToQuota = targetQuota - wHours;
                     weeklyStyle = 'bg-amber-50 border border-amber-300 text-amber-900';
-                    weeklyText = `<span class="font-black text-blue-900">${wHours} / 48 שע'</span> <span class="text-amber-700 text-[11px] font-bold ml-1">(חסרות ${missingTo48} שע' ל-48)</span>`;
+                    weeklyText = `<span class="font-black text-blue-900">${wHours} / ${targetQuota} שע'</span> <span class="text-amber-700 text-[11px] font-bold ml-1">(חסרות ${missingToQuota} שע')</span>`;
                 } else {
                     weeklyStyle = 'bg-emerald-50 border border-emerald-300 text-emerald-900';
-                    weeklyText = `<span class="font-black text-emerald-800">${wHours} / 48 שע'</span> <span class="text-emerald-700 text-[11px] font-bold ml-1">✨ עמד במכסה מלאה</span>`;
+                    weeklyText = `<span class="font-black text-emerald-800">${wHours} / ${targetQuota} שע'</span> <span class="text-emerald-700 text-[11px] font-bold ml-1">✨ עמד במכסה</span>`;
                 }
 
                 html += `
                     <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between shadow-sm">
                         <div class="flex justify-between items-center mb-3">
-                            <span class="font-extrabold text-sm px-2.5 py-0.5 rounded ${colorConfig.nameBg}">${o}</span>
+                            <span class="font-extrabold text-sm px-2.5 py-0.5 rounded ${colorConfig.nameBg}">${o} ${isDailyOfficer ? '(משמרות 9 שעות יומיות)' : ''}</span>
                         </div>
                         <div class="space-y-1.5 text-xs font-bold text-slate-700">
                             <div class="flex justify-between items-center p-2 rounded-lg ${weeklyStyle}">
