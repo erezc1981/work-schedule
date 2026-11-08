@@ -739,7 +739,13 @@
             }
 
             const encodedMsg = encodeURIComponent(msg);
-            window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                window.location.href = `whatsapp://send?text=${encodedMsg}`;
+            } else {
+                window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
+            }
         }
 
         function exportShiftsToCalendar() {
@@ -861,11 +867,13 @@ END:VCALENDAR`;
             msgText += `\nלטיפולך, תודה! 🙏`;
 
             const encodedMsg = encodeURIComponent(msgText);
+            const phone = target === 'erez' ? '972505069969' : '972506270112';
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-            if (target === 'erez') {
-                window.open(`https://api.whatsapp.com/send?phone=972505069969&text=${encodedMsg}`, '_blank');
+            if (isMobile) {
+                window.location.href = `whatsapp://send?phone=${phone}&text=${encodedMsg}`;
             } else {
-                window.open(`https://api.whatsapp.com/send?phone=972506270112&text=${encodedMsg}`, '_blank');
+                window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodedMsg}`, '_blank');
             }
 
             closeRequestModal();
