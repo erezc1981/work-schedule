@@ -66,6 +66,21 @@
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col justify-between">
 
+    <!-- Datalist options for quick shift selection in edit mode -->
+    <datalist id="shift-options">
+        <option value="א">
+        <option value="ב">
+        <option value="ג">
+        <option value="אב">
+        <option value="בג">
+        <option value="אבג">
+        <option value="חופשה">
+        <option value="מחלה">
+        <option value="ח״ש">
+        <option value="קורס">
+        <option value="מטווח">
+    </datalist>
+
     <div>
         <!-- Header -->
         <header class="bg-police-navy text-white shadow-lg no-print sticky top-0 z-50">
@@ -85,6 +100,10 @@
                     <button onclick="openRequestModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                         <span>הגש בקשה</span>
+                    </button>
+                    <button onclick="shareScheduleToWhatsAppText()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5" title="שתף הודעת סידור שבועי ב-WhatsApp">
+                        <i class="fa-brands fa-whatsapp text-xs"></i>
+                        <span>שתף סידור ב-WhatsApp</span>
                     </button>
                     <button onclick="exportShiftsToCalendar()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5" title="ייצא משמרות שבועיות ליומן Google">
                         <i class="fa-solid fa-calendar-plus text-xs"></i>
@@ -332,6 +351,7 @@
         let selectedOfficerFilter = 'ALL';
 
         const officers = ['ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'עינב', 'שלומית', 'רעות', 'ליפז'];
+        const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
         
         const officerRowColors = {
             'ארז': { row: 'bg-blue-100/70', nameBg: 'bg-blue-300 text-blue-950' },
@@ -546,7 +566,7 @@
                         rowHTML += `
                             <td class="p-1 text-center border-l border-slate-300/60 min-w-[100px]">
                                 <div class="flex items-center gap-1">
-                                    <input type="text" value="${shiftVal}" 
+                                    <input type="text" list="shift-options" value="${shiftVal}" 
                                         id="input-${officer}-${day}"
                                         onchange="updateShift('${officer}', ${day}, this.value)"
                                         class="w-full text-center p-1.5 rounded-lg border border-slate-400 text-xs font-bold focus:bg-amber-50 focus:border-amber-400 focus:outline-none shadow-sm">
@@ -615,7 +635,7 @@
             if (cleanVal.includes('מחלה')) {
                 return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
             }
-            if (cleanVal.includes('אילת') || cleanVal.includes('כנס') || cleanVal.includes('מטווח')) {
+            if (cleanVal.includes('אילת') || cleanVal.includes('כנס') || cleanVal.includes('מטווח') || cleanVal.includes('קורס')) {
                 return `<div class="inline-flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-purple-600 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
             }
 
@@ -663,6 +683,45 @@
                     break;
                 }
             }
+        }
+
+        function shareScheduleToWhatsAppText() {
+            const weekData = scheduleData[currentWeekIndex];
+            if (!weekData || !weekData.dates || weekData.dates.length < 7) {
+                alert('אין נתוני שבוע תקינים לשיתוף.');
+                return;
+            }
+
+            const weekTitle = `${weekData.dates[0]} - ${weekData.dates[6]}`;
+            let msg = `🚔 *סידור עבודה פיקוח טכנולוגי*\n📅 *שבוע:* ${weekTitle}\n\n`;
+
+            for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+                const dayLabel = dayNames[dayIdx];
+                const dateLabel = weekData.dates[dayIdx];
+
+                let workingOfficers = [];
+                officers.forEach(off => {
+                    const shifts = weekData.shifts[off] || [];
+                    const shiftVal = shifts[dayIdx];
+                    if (shiftVal && shiftVal.trim() !== '') {
+                        workingOfficers.push(`${off} (${shiftVal})`);
+                    }
+                });
+
+                msg += `📌 *יום ${dayLabel} (${dateLabel}):*\n`;
+                if (workingOfficers.length > 0) {
+                    msg += workingOfficers.map(item => `  • ${item}`).join('\n') + `\n\n`;
+                } else {
+                    msg += `  • אין משמרות/פעילות\n\n`;
+                }
+            }
+
+            if (weekData.notes && weekData.notes.trim() !== '') {
+                msg += `📝 *הערות שבועיות:* ${weekData.notes.trim()}\n`;
+            }
+
+            const encodedMsg = encodeURIComponent(msg);
+            window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
         }
 
         function exportShiftsToCalendar() {
