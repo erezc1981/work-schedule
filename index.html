@@ -370,8 +370,11 @@
         const officers = ['ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'עינב', 'שלומית', 'רעות', 'ליפז'];
         const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
         
-        // רשימת השוטרות שעובדות במשמרות יומיות של 9 שעות (לא 24 שע')
+        // רשימת השוטרות שעובדות במשמרות יומיות של 9 שעות (לא 24 שע' / סמבציוניות)
         const dailyShiftOfficers = ['שלומית', 'רעות', 'ליפז'];
+
+        // רשימת הסמבצבים למשמרות החג
+        const sambacOfficers = officers.filter(o => !dailyShiftOfficers.includes(o));
 
         const officerRowColors = {
             'ארז': { row: 'bg-blue-100/70', nameBg: 'bg-blue-300 text-blue-950' },
@@ -388,15 +391,15 @@
         };
 
         const defaultHolidaysData = [
-            { name: 'פסח', date: '01.04.2026', eve: 'יחיאל', day: 'ולרי' },
-            { name: 'פסח חג שני', date: '07.04.2026', eve: 'ולרי', day: 'ארז' },
-            { name: 'יום העצמאות', date: '21.04.2025', eve: 'ארז', day: 'יניב' },
-            { name: 'שבועות', date: '21.05.2026', eve: 'ארז', day: 'יחיאל' },
-            { name: 'ראש השנה', date: '11.09.2026', eve: 'יחיאל', day: 'ירין' },
-            { name: 'ראש השנה חג שני', date: '13.09.2026', eve: 'עינב', day: '-' },
-            { name: 'יום כיפור', date: '20.10.2026', eve: 'ארז', day: '-' },
-            { name: 'סוכות', date: '25.10.2026', eve: 'ולרי', day: 'יניב' },
-            { name: 'חג שני סוכות', date: '02.10.2026', eve: 'יניב', day: 'ירין' }
+            { name: 'פסח', date: '2026-04-01', eve: 'יחיאל', day: 'ולרי' },
+            { name: 'פסח חג שני', date: '2026-04-07', eve: 'ולרי', day: 'ארז' },
+            { name: 'יום העצמאות', date: '2026-04-21', eve: 'ארז', day: 'יניב' },
+            { name: 'שבועות', date: '2026-05-21', eve: 'ארז', day: 'יחיאל' },
+            { name: 'ראש השנה', date: '2026-09-11', eve: 'יחיאל', day: 'ירין' },
+            { name: 'ראש השנה חג שני', date: '2026-09-13', eve: 'עינב', day: '-' },
+            { name: 'יום כיפור', date: '2026-10-20', eve: 'ארז', day: '-' },
+            { name: 'סוכות', date: '2026-10-25', eve: 'ולרי', day: 'יניב' },
+            { name: 'חג שני סוכות', date: '2026-10-02', eve: 'יניב', day: 'ירין' }
         ];
 
         let holidaysData = JSON.parse(localStorage.getItem('police_holidays_2026')) || defaultHolidaysData;
@@ -765,7 +768,7 @@
 
             const fullMsg = lines.join('\n');
 
-            // שימוש ב-Web Share API של הנייד (עוקף לחלוטין מגבלת תווים ב-URL)
+            // שימוש ב-Web Share API של הנייד
             if (navigator.share) {
                 try {
                     await navigator.share({
@@ -1043,6 +1046,28 @@ END:VCALENDAR`;
             document.getElementById('stats-modal').classList.add('hidden');
         }
 
+        // פונקציה לעזרה בהמרת תאריכים מבוססי נקודות (01.04.2026) לפורמט input date (2026-04-01)
+        function formatDateForInput(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('-')) return dateStr;
+            const parts = dateStr.split('.');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return dateStr;
+        }
+
+        // המרה חזרה מפורמט YYYY-MM-DD לתצוגה נוחה DD.MM.YYYY
+        function formatDateForDisplay(dateStr) {
+            if (!dateStr) return '-';
+            if (dateStr.includes('.')) return dateStr;
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}.${parts[1]}.${parts[0]}`;
+            }
+            return dateStr;
+        }
+
         function renderHolidays() {
             const tbody = document.getElementById('holidays-body');
             const addBtn = document.getElementById('add-holiday-btn');
@@ -1064,6 +1089,19 @@ END:VCALENDAR`;
                 tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
 
                 if (isAdmin) {
+                    const formattedDateVal = formatDateForInput(item.date);
+                    
+                    // בניית ה-Dropdowns עבור הסמב"צים (ללא שלומית, רעות וליפז)
+                    let eveOptionsHTML = `<option value="-">- ללא -</option>`;
+                    let dayOptionsHTML = `<option value="-">- ללא -</option>`;
+
+                    sambacOfficers.forEach(off => {
+                        const eveSelected = (item.eve === off) ? 'selected' : '';
+                        const daySelected = (item.day === off) ? 'selected' : '';
+                        eveOptionsHTML += `<option value="${off}" ${eveSelected}>${off}</option>`;
+                        dayOptionsHTML += `<option value="${off}" ${daySelected}>${off}</option>`;
+                    });
+
                     tr.innerHTML = `
                         <td class="p-2">
                             <input type="text" value="${item.name || ''}" 
@@ -1071,19 +1109,21 @@ END:VCALENDAR`;
                                 class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-police-navy text-xs focus:outline-none focus:border-blue-500">
                         </td>
                         <td class="p-2">
-                            <input type="text" value="${item.date || ''}" 
+                            <input type="date" value="${formattedDateVal}" 
                                 onchange="updateHoliday(${index}, 'date', this.value)"
                                 class="w-full p-1.5 rounded-lg border border-slate-300 font-medium text-slate-700 text-xs focus:outline-none focus:border-blue-500">
                         </td>
                         <td class="p-2">
-                            <input type="text" value="${item.eve || ''}" 
-                                onchange="updateHoliday(${index}, 'eve', this.value)"
+                            <select onchange="updateHoliday(${index}, 'eve', this.value)"
                                 class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-blue-800 text-xs focus:outline-none focus:border-blue-500">
+                                ${eveOptionsHTML}
+                            </select>
                         </td>
                         <td class="p-2">
-                            <input type="text" value="${item.day || ''}" 
-                                onchange="updateHoliday(${index}, 'day', this.value)"
+                            <select onchange="updateHoliday(${index}, 'day', this.value)"
                                 class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-amber-800 text-xs focus:outline-none focus:border-blue-500">
+                                ${dayOptionsHTML}
+                            </select>
                         </td>
                         <td class="p-2 text-center">
                             <button onclick="deleteHoliday(${index})" title="מחק חג" class="text-rose-600 hover:text-rose-800 p-1">
@@ -1092,9 +1132,10 @@ END:VCALENDAR`;
                         </td>
                     `;
                 } else {
+                    const dateDisplay = formatDateForDisplay(item.date);
                     tr.innerHTML = `
                         <td class="p-3 font-bold text-police-navy">${item.name}</td>
-                        <td class="p-3 text-slate-600 font-medium">${item.date}</td>
+                        <td class="p-3 text-slate-600 font-medium">${dateDisplay}</td>
                         <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg font-bold text-xs">${item.eve || '-'}</span></td>
                         <td class="p-3"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold text-xs">${item.day || '-'}</span></td>
                     `;
@@ -1110,7 +1151,7 @@ END:VCALENDAR`;
         }
 
         function addNewHoliday() {
-            holidaysData.push({ name: 'חג חדש', date: '01.01.2026', eve: '-', day: '-' });
+            holidaysData.push({ name: 'חג חדש', date: '2026-01-01', eve: '-', day: '-' });
             saveHolidaysLocally();
             renderHolidays();
         }
