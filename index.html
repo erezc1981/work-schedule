@@ -246,6 +246,16 @@
 
             <!-- Holidays View -->
             <div id="view-holidays" class="hidden space-y-6">
+                
+                <!-- Mobile Scroll Instruction Hint -->
+                <div class="md:hidden flex items-center justify-between bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2 rounded-xl text-xs font-bold mb-2">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrows-left-right text-amber-600"></i>
+                        <span>ניתן לגלול ימינה ושמאלה לצפייה מלאה בלוח החגים</span>
+                    </span>
+                    <i class="fa-solid fa-hand-pointer text-amber-400 animate-pulse"></i>
+                </div>
+
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                     <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
                         <h2 class="text-lg font-bold text-police-navy flex items-center gap-2">
@@ -258,14 +268,14 @@
                         </button>
                     </div>
                     <div class="table-scroll-container">
-                        <table class="w-full text-sm text-right">
+                        <table class="w-full text-sm text-right min-w-[550px]">
                             <thead>
                                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
-                                    <th class="p-3 font-bold">שם החג</th>
-                                    <th class="p-3 font-bold">תאריך</th>
-                                    <th class="p-3 font-bold">ערב חג (משמרת)</th>
-                                    <th class="p-3 font-bold">יום החג (משמרת)</th>
-                                    <th class="p-3 font-bold text-center admin-only-col hidden">פעולות</th>
+                                    <th class="p-3 font-bold min-w-[130px] w-1/3">שם החג</th>
+                                    <th class="p-3 font-bold min-w-[110px]">תאריך</th>
+                                    <th class="p-3 font-bold min-w-[120px]">ערב חג (משמרת)</th>
+                                    <th class="p-3 font-bold min-w-[120px]">יום החג (משמרת)</th>
+                                    <th class="p-3 font-bold text-center admin-only-col hidden min-w-[80px]">פעולות</th>
                                 </tr>
                             </thead>
                             <tbody id="holidays-body" class="divide-y divide-slate-100">
@@ -1103,29 +1113,29 @@ END:VCALENDAR`;
                     });
 
                     tr.innerHTML = `
-                        <td class="p-2">
+                        <td class="p-2 min-w-[130px]">
                             <input type="text" value="${item.name || ''}" 
                                 onchange="updateHoliday(${index}, 'name', this.value)"
                                 class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-police-navy text-xs focus:outline-none focus:border-blue-500">
                         </td>
-                        <td class="p-2">
+                        <td class="p-2 min-w-[110px]">
                             <input type="date" value="${formattedDateVal}" 
                                 onchange="updateHoliday(${index}, 'date', this.value)"
                                 class="w-full p-1.5 rounded-lg border border-slate-300 font-medium text-slate-700 text-xs focus:outline-none focus:border-blue-500">
                         </td>
-                        <td class="p-2">
+                        <td class="p-2 min-w-[120px]">
                             <select onchange="updateHoliday(${index}, 'eve', this.value)"
                                 class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-blue-800 text-xs focus:outline-none focus:border-blue-500">
                                 ${eveOptionsHTML}
                             </select>
                         </td>
-                        <td class="p-2">
+                        <td class="p-2 min-w-[120px]">
                             <select onchange="updateHoliday(${index}, 'day', this.value)"
                                 class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-amber-800 text-xs focus:outline-none focus:border-blue-500">
                                 ${dayOptionsHTML}
                             </select>
                         </td>
-                        <td class="p-2 text-center">
+                        <td class="p-2 text-center min-w-[80px]">
                             <button onclick="deleteHoliday(${index})" title="מחק חג" class="text-rose-600 hover:text-rose-800 p-1">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
@@ -1134,10 +1144,10 @@ END:VCALENDAR`;
                 } else {
                     const dateDisplay = formatDateForDisplay(item.date);
                     tr.innerHTML = `
-                        <td class="p-3 font-bold text-police-navy">${item.name}</td>
-                        <td class="p-3 text-slate-600 font-medium">${dateDisplay}</td>
-                        <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg font-bold text-xs">${item.eve || '-'}</span></td>
-                        <td class="p-3"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold text-xs">${item.day || '-'}</span></td>
+                        <td class="p-3 font-bold text-police-navy min-w-[130px] break-words">${item.name}</td>
+                        <td class="p-3 text-slate-600 font-medium min-w-[110px] whitespace-nowrap">${dateDisplay}</td>
+                        <td class="p-3 min-w-[120px]"><span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg font-bold text-xs inline-block">${item.eve || '-'}</span></td>
+                        <td class="p-3 min-w-[120px]"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold text-xs inline-block">${item.day || '-'}</span></td>
                     `;
                 }
                 tbody.appendChild(tr);
