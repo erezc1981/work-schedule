@@ -710,16 +710,19 @@
             const weekTitle = `${weekData.dates[0]} - ${weekData.dates[6]}`;
             let msg = `🚔 *סידור עבודה פיקוח טכנולוגי*\n📅 *שבוע:* ${weekTitle}\n\n`;
 
+            // סריקה דינמית של כל השוטרים שמופיעים בנתונים של השבוע
+            const allAvailableOfficers = Array.from(new Set([...officers, ...Object.keys(weekData.shifts || {})]));
+
             for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
                 const dayLabel = dayNames[dayIdx];
                 const dateLabel = weekData.dates[dayIdx];
 
                 let workingOfficers = [];
                 
-                officers.forEach(off => {
+                allAvailableOfficers.forEach(off => {
                     const officerShifts = weekData.shifts ? weekData.shifts[off] : null;
                     if (officerShifts && officerShifts[dayIdx]) {
-                        const shiftVal = officerShifts[dayIdx].trim();
+                        const shiftVal = officerShifts[dayIdx].toString().trim();
                         if (shiftVal !== '') {
                             workingOfficers.push(`${off} (${shiftVal})`);
                         }
