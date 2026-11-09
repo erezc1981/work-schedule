@@ -351,7 +351,6 @@
     </footer>
 
     <script>
-        // --- Firebase Realtime Database URL ---
         const FIREBASE_DATABASE_URL = "https://schedule-a9777-default-rtdb.europe-west1.firebasedatabase.app/";
 
         firebase.initializeApp({ databaseURL: FIREBASE_DATABASE_URL });
@@ -383,11 +382,9 @@
             'ליפז': { row: 'bg-lime-100/70', nameBg: 'bg-lime-300 text-lime-950' }
         };
 
-        // --- 🗓️ פונקציה לייצור סידור עבודה ריק ונקי לשנים 2026 עד 2030 ---
         function generateMultiYearCleanSchedule(startYear = 2026, endYear = 2030) {
             const weeks = [];
             let curr = new Date(startYear, 0, 1);
-            // מציאת יום ראשון הראשון
             while (curr.getDay() !== 0) {
                 curr.setDate(curr.getDate() - 1);
             }
@@ -423,29 +420,30 @@
         let scheduleData = defaultScheduleData;
         let holidaysData = defaultHolidaysData;
 
-        // --- 🔵 Realtime Sync & Setup ---
+        // --- 🔵 Realtime Sync & Force Reset Setup ---
         document.addEventListener('DOMContentLoaded', () => {
             populateOfficerFilterOptions();
 
-            // האזנה למשמרות בזמן אמת מ-Firebase
+            // דריסת נתונים ישנים ב-Firebase עם הלוח הנקי המורחב
+            database.ref('police_schedule_2026').set(defaultScheduleData);
+            database.ref('police_holidays_2026').set(defaultHolidaysData);
+            localStorage.removeItem('police_schedule_2026');
+            localStorage.removeItem('police_holidays_2026');
+
+            // האזנה בזמן אמת מתמשכת
             database.ref('police_schedule_2026').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data && Array.isArray(data) && data.length > 0) {
                     scheduleData = data;
-                } else {
-                    database.ref('police_schedule_2026').set(defaultScheduleData);
                 }
                 autoSelectCurrentWeek();
                 renderSchedule();
             });
 
-            // האזנה לחגים בזמן אמת מ-Firebase
             database.ref('police_holidays_2026').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data && Array.isArray(data)) {
                     holidaysData = data;
-                } else {
-                    database.ref('police_holidays_2026').set(defaultHolidaysData);
                 }
                 renderHolidays();
             });
@@ -539,7 +537,7 @@
                     if (dElem) dElem.textContent = currentData.dates[i] || '-';
                 }
 
-                // --- 🔄 עדכון דינמי של השנה בכותרת המשנה ---
+                // עדכון דינמי של השנה בכותרת
                 const firstDateParts = currentData.dates[0].split('.');
                 const currentYear = firstDateParts[2] || new Date().getFullYear();
                 const subTitle = document.getElementById('system-year-subtitle');
