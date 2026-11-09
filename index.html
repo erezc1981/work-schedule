@@ -13,7 +13,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#1e3a8a">
 
-    <!-- Web App Manifest & Custom Icon (Calendar Icon) -->
+    <!-- Web App Manifest & Custom Icon -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/calendar--v1.png">
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/calendar--v1.png">
@@ -41,12 +41,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Firebase Realtime Database SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <style>
         body { font-family: 'Heebo', sans-serif; background-color: #f8fafc; }
         .dimmed-row { opacity: 0.25; filter: grayscale(80%); }
         .focused-row { transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; position: relative; }
         
-        /* Sticky Column & Scroll Setup for Mobile */
         .table-scroll-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -71,7 +75,6 @@
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col justify-between">
 
-    <!-- Datalist options for quick shift selection in edit mode -->
     <datalist id="shift-options">
         <option value="א">
         <option value="ב">
@@ -98,7 +101,13 @@
                     </div>
                     <div>
                         <h1 class="text-xl font-black tracking-wide">סידור עבודה פיקוח טכנולוגי</h1>
-                        <p class="text-xs text-blue-200">מערכת ניהול משמרות 2026</p>
+                        <div class="flex items-center gap-2">
+                            <p class="text-xs text-blue-200">מערכת ניהול משמרות 2026</p>
+                            <span id="sync-status" class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                מסונכרן בלייב (Firebase)
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -108,11 +117,11 @@
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                         <span>הגש בקשה</span>
                     </button>
-                    <button onclick="shareScheduleToWhatsAppText()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5" title="שתף הודעת סידור שבועי ב-WhatsApp">
+                    <button onclick="shareScheduleToWhatsAppText()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-brands fa-whatsapp text-xs"></i>
                         <span>שתף סידור ב-WhatsApp</span>
                     </button>
-                    <button onclick="exportShiftsToCalendar()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5" title="ייצא משמרות שבועיות ליומן Google">
+                    <button onclick="exportShiftsToCalendar()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-calendar-plus text-xs"></i>
                         <span>סנכרן ליומן Google</span>
                     </button>
@@ -135,34 +144,28 @@
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full print-full">
 
-            <!-- Controls & Filters Section -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-6 no-print space-y-4">
-                
                 <div class="flex flex-wrap justify-between items-center gap-4">
-                    <!-- Week Navigation -->
                     <div class="flex items-center gap-2">
-                        <button onclick="changeWeek(-1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע קודם">
+                        <button onclick="changeWeek(-1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm">
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
                         <div class="text-center min-w-[230px] bg-gradient-to-r from-police-navy to-blue-900 text-white px-4 py-2 rounded-2xl shadow-md border-2 border-amber-400/60">
                             <span class="text-[10px] font-bold text-amber-300 block tracking-wider uppercase">✨ שבוע מוצג ✨</span>
                             <span id="week-range-display" class="font-black text-white text-base tracking-wide">טוען...</span>
                         </div>
-                        <button onclick="changeWeek(1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע הבא">
+                        <button onclick="changeWeek(1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm">
                             <i class="fa-solid fa-chevron-left"></i>
                         </button>
                     </div>
 
-                    <!-- Search Bar & Focus Filter -->
                     <div class="flex items-center gap-3 flex-wrap">
-                        <!-- Quick Date/Search Input -->
                         <div class="relative min-w-[180px]">
                             <i class="fa-solid fa-magnifying-glass absolute right-3 top-3 text-slate-400 text-xs"></i>
                             <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="חפש תאריך (למשל 15.03)..." 
                                 class="w-full pr-8 pl-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 transition">
                         </div>
 
-                        <!-- Officer Highlight Select -->
                         <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl">
                             <span class="text-xs font-bold text-slate-500 pr-2"><i class="fa-solid fa-user-tag text-police-blue"></i> הבלט שוטר:</span>
                             <select id="officer-filter" onchange="filterOfficer()" class="bg-white border border-slate-200 text-xs font-bold rounded-lg p-1.5 focus:outline-none">
@@ -170,7 +173,6 @@
                             </select>
                         </div>
 
-                        <!-- Tabs -->
                         <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
                             <button onclick="switchTab('schedule')" id="tab-schedule" class="py-2 px-3 rounded-lg bg-white shadow-sm text-police-navy">סידור שבועי</button>
                             <button onclick="switchTab('holidays')" id="tab-holidays" class="py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900">לוח חגים 2026</button>
@@ -181,8 +183,6 @@
 
             <!-- Schedule View -->
             <div id="view-schedule" class="space-y-6">
-                
-                <!-- Mobile Scroll Instruction Hint -->
                 <div class="md:hidden flex items-center justify-between bg-blue-50 border border-blue-200 text-blue-900 px-3 py-2 rounded-xl text-xs font-bold">
                     <span class="flex items-center gap-1.5">
                         <i class="fa-solid fa-arrows-left-right text-blue-600"></i>
@@ -234,7 +234,6 @@
                     </div>
                 </div>
 
-                <!-- General Notes Section -->
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <h3 class="font-bold text-sm text-police-navy mb-3 flex items-center gap-2">
                         <i class="fa-solid fa-comment-dots text-police-gold"></i>
@@ -246,16 +245,6 @@
 
             <!-- Holidays View -->
             <div id="view-holidays" class="hidden space-y-6">
-                
-                <!-- Mobile Scroll Instruction Hint -->
-                <div class="md:hidden flex items-center justify-between bg-amber-50 border border-amber-200 text-amber-900 px-3 py-2 rounded-xl text-xs font-bold mb-2">
-                    <span class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-arrows-left-right text-amber-600"></i>
-                        <span>ניתן לגלול ימינה ושמאלה לצפייה מלאה בלוח החגים</span>
-                    </span>
-                    <i class="fa-solid fa-hand-pointer text-amber-400 animate-pulse"></i>
-                </div>
-
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
                     <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
                         <h2 class="text-lg font-bold text-police-navy flex items-center gap-2">
@@ -289,7 +278,7 @@
         </main>
     </div>
 
-    <!-- Submit Request Modal -->
+    <!-- Modals -->
     <div id="request-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col">
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
@@ -306,10 +295,8 @@
                 <div>
                     <label class="block text-slate-600 mb-1">שם השוטר המגיש:</label>
                     <select id="req-officer-name" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
-                        <!-- Populated dynamically -->
                     </select>
                 </div>
-
                 <div>
                     <label class="block text-slate-600 mb-1">סוג הבקשה:</label>
                     <select id="req-type" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
@@ -318,17 +305,14 @@
                         <option value="בקשה לשינוי משמרת 🔄">בקשה לשינוי משמרת 🔄</option>
                     </select>
                 </div>
-
                 <div>
                     <label class="block text-slate-600 mb-1">תאריך מבוקש:</label>
                     <input type="text" id="req-date" placeholder="למשל: 15.03.2026 או יום שלישי הקרוב" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
                 </div>
-
                 <div>
                     <label class="block text-slate-600 mb-1">פירוט / סיבת הבקשה:</label>
                     <textarea id="req-details" rows="3" placeholder="פרט כאן את סיבת הבקשה או השינוי המבוקש..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500 resize-none"></textarea>
                 </div>
-
                 <div class="pt-2 border-t border-slate-200">
                     <span class="block text-center text-slate-500 mb-2 font-normal">בחר למי לשלוח את הבקשה ב-WhatsApp:</span>
                     <div class="grid grid-cols-2 gap-3">
@@ -346,7 +330,6 @@
         </div>
     </div>
 
-    <!-- Monthly Summary Modal -->
     <div id="stats-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col">
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
@@ -359,17 +342,21 @@
                 </button>
             </div>
             <div class="p-5 overflow-y-auto flex-grow space-y-4" id="stats-modal-content">
-                <!-- Dynamically populated -->
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="py-4 text-center text-xs text-slate-400 border-t border-slate-200 bg-white no-print">
         כל הזכויות שמורות Erez(c)
     </footer>
 
     <script>
+        // --- Firebase Realtime Database URL ---
+        const FIREBASE_DATABASE_URL = "https://schedule-a9777-default-rtdb.europe-west1.firebasedatabase.app/";
+
+        firebase.initializeApp({ databaseURL: FIREBASE_DATABASE_URL });
+        const database = firebase.database();
+
         const PRIMARY_ADMIN_PWD = 'lior';
         const SECONDARY_ADMIN_PWD = '1981';
 
@@ -379,11 +366,7 @@
 
         const officers = ['ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'עינב', 'שלומית', 'רעות', 'ליפז'];
         const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-        
-        // רשימת השוטרות שעובדות במשמרות יומיות של 9 שעות (לא 24 שע' / סמבציוניות)
         const dailyShiftOfficers = ['שלומית', 'רעות', 'ליפז'];
-
-        // רשימת הסמבצבים למשמרות החג
         const sambacOfficers = officers.filter(o => !dailyShiftOfficers.includes(o));
 
         const officerRowColors = {
@@ -412,7 +395,7 @@
             { name: 'חג שני סוכות', date: '2026-10-02', eve: 'יניב', day: 'ירין' }
         ];
 
-        let holidaysData = JSON.parse(localStorage.getItem('police_holidays_2026')) || defaultHolidaysData;
+        let holidaysData = defaultHolidaysData;
 
         let defaultScheduleData = [
             {"dates": ["28.12", "29.12", "30.12", "31.12", "01.01.2026", "02.01.2026", "03.01.2026"], "shifts": {"ארז": ["אבג", "", "", "", "אבג", "", ""], "בן זיקרי": ["", "אבג", "", "אבג", "", "", ""], "יניב": ["", "", "אבג", "", "", "", "אבג"], "יחיאל": ["", "אבג", "", "", "", "אבג", ""], "ולרי": ["אבג", "", "", "חש", "", "", ""], "ירין": ["א", "א", "א", "חש", "א", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
@@ -472,16 +455,41 @@
 
         let scheduleData = defaultScheduleData;
 
-        try {
-            const stored = localStorage.getItem('police_schedule_2026');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    scheduleData = parsed;
+        // --- 🔵 Realtime Sync & Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            autoSelectCurrentWeek();
+            populateOfficerFilterOptions();
+
+            // האזנה למשמרות בזמן אמת מ-Firebase
+            database.ref('police_schedule_2026').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && Array.isArray(data) && data.length > 0) {
+                    scheduleData = data;
+                } else {
+                    // אם הנתונים ב-Firebase עדיין ריקים, מעלים את הנתונים ההתחלתיים
+                    database.ref('police_schedule_2026').set(defaultScheduleData);
                 }
-            }
-        } catch (e) {
-            console.error('Error loading schedule:', e);
+                renderSchedule();
+            });
+
+            // האזנה לחגים בזמן אמת מ-Firebase
+            database.ref('police_holidays_2026').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data && Array.isArray(data) && data.length > 0) {
+                    holidaysData = data;
+                } else {
+                    database.ref('police_holidays_2026').set(defaultHolidaysData);
+                }
+                renderHolidays();
+            });
+        });
+
+        function saveDataLocally() {
+            database.ref('police_schedule_2026').set(scheduleData);
+        }
+
+        function saveHolidaysLocally() {
+            database.ref('police_holidays_2026').set(holidaysData);
         }
 
         function autoSelectCurrentWeek() {
@@ -498,16 +506,9 @@
                     }
                 }
             }
-            currentWeekIndex = 43; // Nov 2026 default
+            currentWeekIndex = 43; // נובמבר 2026 ברירת מחדל
             if (currentWeekIndex >= scheduleData.length) currentWeekIndex = 0;
         }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            autoSelectCurrentWeek();
-            populateOfficerFilterOptions();
-            renderSchedule();
-            renderHolidays();
-        });
 
         function populateOfficerFilterOptions() {
             const select = document.getElementById('officer-filter');
@@ -653,11 +654,8 @@
             
             const hasCar = val.includes('רכב') || val.toLowerCase().includes('car');
             let cleanVal = val.replace('רכב', '').trim();
-
-            // סימון רכב באייקון נקי, ברור וללא רקע בצמוד למשמרת
             let carBadge = hasCar ? '<span class="text-base inline-block align-middle ml-1" title="כולל רכב">🚗</span>' : '';
 
-            // תצוגת "עבודה מהבית" עבור שלומית, רעות וליפז ללא סוגר שעות בתצוגה
             if (dailyShiftOfficers.includes(officer)) {
                 if (cleanVal.includes('מהבית')) {
                     return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">עבודה מהבית</span>${carBadge}</div>`;
@@ -670,7 +668,6 @@
             if (cleanVal.includes('מהבית')) {
                 return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">עבודה מהבית</span>${carBadge}</div>`;
             }
-
             if (cleanVal === 'אבג' || cleanVal === 'אב' || cleanVal === 'בג') {
                 return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs shadow">${cleanVal || 'משמרת'}</span>${carBadge}</div>`;
             }
@@ -687,9 +684,7 @@
                 return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-purple-600 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
             }
 
-            if (!cleanVal && hasCar) {
-                return carBadge;
-            }
+            if (!cleanVal && hasCar) return carBadge;
 
             return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-slate-700 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
         }
@@ -707,10 +702,6 @@
             if (!scheduleData[currentWeekIndex]) return;
             scheduleData[currentWeekIndex].notes = document.getElementById('general-notes').value;
             saveDataLocally();
-        }
-
-        function saveDataLocally() {
-            localStorage.setItem('police_schedule_2026', JSON.stringify(scheduleData));
         }
 
         function filterOfficer() {
@@ -751,7 +742,6 @@
             for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
                 const dayLabel = dayNames[dayIdx];
                 const dateLabel = weekData.dates[dayIdx];
-
                 let workingOfficers = [];
                 
                 allAvailableOfficers.forEach(off => {
@@ -779,28 +769,20 @@
 
             const fullMsg = lines.join('\n');
 
-            // שימוש ב-Web Share API של הנייד
             if (navigator.share) {
                 try {
-                    await navigator.share({
-                        title: 'סידור עבודה שבועי',
-                        text: fullMsg
-                    });
+                    await navigator.share({ title: 'סידור עבודה שבועי', text: fullMsg });
                     return;
-                } catch (err) {
-                    // ביטול שיתוף על ידי המשתמש
-                }
+                } catch (err) {}
             }
 
-            // גיבוי למחשב נייח או דפדפנים ישנים
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(fullMsg);
-                alert('הסידור המלא הועתק ללוח! במידה וההודעה נחתכת ב-WhatsApp, פשוט בצע "הדבק".');
+                alert('הסידור המלא הועתק ללוח!');
             }
 
             const encodedMsg = encodeURIComponent(fullMsg);
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
             if (isMobile) {
                 window.location.href = `whatsapp://send?text=${encodedMsg}`;
             } else {
@@ -810,7 +792,6 @@
 
         function exportShiftsToCalendar() {
             let targetOfficer = selectedOfficerFilter;
-            
             if (targetOfficer === 'ALL') {
                 targetOfficer = prompt('הכנס את שם השוטר שעבורו תרצה לייצא את המשמרות ליומן Google:', 'ארז');
                 if (!targetOfficer) return;
@@ -828,7 +809,6 @@
 
             shifts.forEach((s, idx) => {
                 if (!s) return;
-
                 const cleanShift = s.replace('רכב', '').trim();
                 if (!cleanShift) return;
 
@@ -837,7 +817,6 @@
                 let day = parts[0].padStart(2, '0');
                 let month = parts[1].padStart(2, '0');
                 let year = parts[2] || '2026';
-
                 let formattedDate = `${year}${month}${day}`;
 
                 let startTime = '070000';
@@ -864,16 +843,9 @@
                     summary = `יום חופשה - פיקוח טכנולוגי`;
                 }
 
-                if (s.includes('רכב')) {
-                    summary += ' (כולל רכב 🚗)';
-                }
+                if (s.includes('רכב')) summary += ' (כולל רכב 🚗)';
 
-                eventsICal.push(`BEGIN:VEVENT
-SUMMARY:${summary}
-DTSTART:${formattedDate}T${startTime}
-DTEND:${formattedDate}T${endTime}
-DESCRIPTION:סידור עבודה פיקוח טכנולוגי - ${targetOfficer}
-END:VEVENT`);
+                eventsICal.push(`BEGIN:VEVENT\nSUMMARY:${summary}\nDTSTART:${formattedDate}T${startTime}\nDTEND:${formattedDate}T${endTime}\nDESCRIPTION:סידור עבודה פיקוח טכנולוגי - ${targetOfficer}\nEND:VEVENT`);
                 shiftCount++;
             });
 
@@ -882,13 +854,7 @@ END:VEVENT`);
                 return;
             }
 
-            const icalContent = `BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Police Schedule 2026//HE
-CALSCALE:GREGORIAN
-${eventsICal.join('\n')}
-END:VCALENDAR`;
-
+            const icalContent = `BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Police Schedule 2026//HE\nCALSCALE:GREGORIAN\n${eventsICal.join('\n')}\nEND:VCALENDAR`;
             const blob = new Blob([icalContent], { type: 'text/calendar;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -898,17 +864,10 @@ END:VCALENDAR`;
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-
-            alert(`יוצרו ${shiftCount} משמרות עבור ${targetOfficer}.\nהקובץ ירד למכשירך - לחץ עליו כדי להוסיף את המשמרות ישר ליומן Google!`);
         }
 
-        function openRequestModal() {
-            document.getElementById('request-modal').classList.remove('hidden');
-        }
-
-        function closeRequestModal() {
-            document.getElementById('request-modal').classList.add('hidden');
-        }
+        function openRequestModal() { document.getElementById('request-modal').classList.remove('hidden'); }
+        function closeRequestModal() { document.getElementById('request-modal').classList.add('hidden'); }
 
         function sendRequestToWhatsApp(target) {
             const officerName = document.getElementById('req-officer-name').value;
@@ -921,13 +880,8 @@ END:VCALENDAR`;
                 return;
             }
 
-            let msgText = `📋 *בקשה חדשה בסידור העבודה*\n\n`;
-            msgText += `👤 *מגיש הבקשה:* ${officerName}\n`;
-            msgText += `📌 *סוג הבקשה:* ${reqType}\n`;
-            msgText += `📅 *תאריך מבוקש:* ${reqDate}\n`;
-            if (reqDetails) {
-                msgText += `📝 *פירוט:* ${reqDetails}\n`;
-            }
+            let msgText = `📋 *בקשה חדשה בסידור העבודה*\n\n👤 *מגיש הבקשה:* ${officerName}\n📌 *סוג הבקשה:* ${reqType}\n📅 *תאריך מבוקש:* ${reqDate}\n`;
+            if (reqDetails) msgText += `📝 *פירוט:* ${reqDetails}\n`;
             msgText += `\nלטיפולך, תודה! 🙏`;
 
             const encodedMsg = encodeURIComponent(msgText);
@@ -939,55 +893,34 @@ END:VCALENDAR`;
             } else {
                 window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodedMsg}`, '_blank');
             }
-
             closeRequestModal();
         }
 
         function openStatsModal() {
             const container = document.getElementById('stats-modal-content');
             container.innerHTML = '';
-
-            const currentWeekData = scheduleData[currentWeekIndex] || { dates: [], shifts: {} };
-            
             document.getElementById('stats-modal-title').textContent = 'סיכום משמרות שבועי ושנתי לשוטרים';
 
             let totalStats = {};
-            officers.forEach(o => totalStats[o] = { 
-                weeklyHours: 0, 
-                yearlyVacationDays: 0, 
-                yearlyCarDays: 0, 
-                yearlySickDays: 0 
-            });
+            officers.forEach(o => totalStats[o] = { weeklyHours: 0, yearlyVacationDays: 0, yearlyCarDays: 0, yearlySickDays: 0 });
 
             scheduleData.forEach((week, wIdx) => {
                 const isCurrentWeek = (wIdx === currentWeekIndex);
-
                 officers.forEach(o => {
                     const shifts = week.shifts[o] || [];
                     shifts.forEach(s => {
                         if (!s) return;
-
                         const cleanShift = s.replace('רכב', '').trim();
                         let hours = 0;
-
-                        // לוגיקת חישוב שעות מותאמת:
-                        // עבור שלומית, רעות וליפז: משמרות יומית מחושבות כ-9 שעות (אינן 24 שעות)
                         if (dailyShiftOfficers.includes(o)) {
-                            if (cleanShift === 'א' || cleanShift.includes('מהבית') || cleanShift === 'אבג' || cleanShift === 'אב' || cleanShift === 'בג' || cleanShift === 'יומי') {
-                                hours = 9;
-                            }
+                            if (cleanShift === 'א' || cleanShift.includes('מהבית') || cleanShift === 'אבג' || cleanShift === 'אב' || cleanShift === 'בג' || cleanShift === 'יומי') hours = 9;
                         } else {
                             if (cleanShift === 'אבג') hours = 24;
                             else if (cleanShift === 'אב' || cleanShift === 'בג') hours = 16;
                             else if (cleanShift === 'א') hours = 8;
                         }
 
-                        // חישוב שעות שבועי (לפי השבוע המוצג)
-                        if (isCurrentWeek) {
-                            totalStats[o].weeklyHours += hours;
-                        }
-
-                        // ספירת קטגוריות ברמה שנתית
+                        if (isCurrentWeek) totalStats[o].weeklyHours += hours;
                         if (s.includes('רכב')) totalStats[o].yearlyCarDays++;
                         if (s.includes('חופשה') || s.includes('חש') || s.includes('ח״ש')) totalStats[o].yearlyVacationDays++;
                         if (s.includes('מחלה')) totalStats[o].yearlySickDays++;
@@ -1000,11 +933,9 @@ END:VCALENDAR`;
                 const stats = totalStats[o];
                 const colorConfig = officerRowColors[o] || { nameBg: 'bg-slate-200 text-slate-800' };
                 const isDailyOfficer = dailyShiftOfficers.includes(o);
-                
-                // חישוב לוגיקת שעות שבועיות ומכסות לפי סוג שוטר/ת
                 const wHours = stats.weeklyHours;
-                const targetQuota = isDailyOfficer ? 45 : 48; // 45 שעות שבועיות למשמרות יומיות
-                const minThreshold = isDailyOfficer ? 36 : 36;
+                const targetQuota = isDailyOfficer ? 45 : 48;
+                const minThreshold = 36;
 
                 let weeklyStyle = '';
                 let weeklyText = '';
@@ -1053,29 +984,21 @@ END:VCALENDAR`;
             document.getElementById('stats-modal').classList.remove('hidden');
         }
 
-        function closeStatsModal() {
-            document.getElementById('stats-modal').classList.add('hidden');
-        }
+        function closeStatsModal() { document.getElementById('stats-modal').classList.add('hidden'); }
 
-        // פונקציה לעזרה בהמרת תאריכים מבוססי נקודות (01.04.2026) לפורמט input date (2026-04-01)
         function formatDateForInput(dateStr) {
             if (!dateStr) return '';
             if (dateStr.includes('-')) return dateStr;
             const parts = dateStr.split('.');
-            if (parts.length === 3) {
-                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-            }
+            if (parts.length === 3) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
             return dateStr;
         }
 
-        // המרה חזרה מפורמט YYYY-MM-DD לתצוגה נוחה DD.MM.YYYY
         function formatDateForDisplay(dateStr) {
             if (!dateStr) return '-';
             if (dateStr.includes('.')) return dateStr;
             const parts = dateStr.split('-');
-            if (parts.length === 3) {
-                return `${parts[2]}.${parts[1]}.${parts[0]}`;
-            }
+            if (parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
             return dateStr;
         }
 
@@ -1083,7 +1006,6 @@ END:VCALENDAR`;
             const tbody = document.getElementById('holidays-body');
             const addBtn = document.getElementById('add-holiday-btn');
             const adminCols = document.querySelectorAll('.admin-only-col');
-
             if (!tbody) return;
             tbody.innerHTML = '';
 
@@ -1101,11 +1023,8 @@ END:VCALENDAR`;
 
                 if (isAdmin) {
                     const formattedDateVal = formatDateForInput(item.date);
-                    
-                    // בניית ה-Dropdowns עבור הסמב"צים (ללא שלומית, רעות וליפז)
                     let eveOptionsHTML = `<option value="-">- ללא -</option>`;
                     let dayOptionsHTML = `<option value="-">- ללא -</option>`;
-
                     sambacOfficers.forEach(off => {
                         const eveSelected = (item.eve === off) ? 'selected' : '';
                         const daySelected = (item.day === off) ? 'selected' : '';
@@ -1115,41 +1034,27 @@ END:VCALENDAR`;
 
                     tr.innerHTML = `
                         <td class="p-2 min-w-[130px]">
-                            <input type="text" value="${item.name || ''}" 
-                                onchange="updateHoliday(${index}, 'name', this.value)"
-                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-police-navy text-xs focus:outline-none focus:border-blue-500">
+                            <input type="text" value="${item.name || ''}" onchange="updateHoliday(${index}, 'name', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-police-navy text-xs focus:outline-none focus:border-blue-500">
                         </td>
                         <td class="p-2 min-w-[110px]">
-                            <input type="date" value="${formattedDateVal}" 
-                                onchange="updateHoliday(${index}, 'date', this.value)"
-                                class="w-full p-1.5 rounded-lg border border-slate-300 font-medium text-slate-700 text-xs focus:outline-none focus:border-blue-500">
+                            <input type="date" value="${formattedDateVal}" onchange="updateHoliday(${index}, 'date', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-medium text-slate-700 text-xs focus:outline-none focus:border-blue-500">
                         </td>
                         <td class="p-2 min-w-[120px]">
-                            <select onchange="updateHoliday(${index}, 'eve', this.value)"
-                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-blue-800 text-xs focus:outline-none focus:border-blue-500">
-                                ${eveOptionsHTML}
-                            </select>
+                            <select onchange="updateHoliday(${index}, 'eve', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-blue-800 text-xs focus:outline-none focus:border-blue-500">${eveOptionsHTML}</select>
                         </td>
                         <td class="p-2 min-w-[120px]">
-                            <select onchange="updateHoliday(${index}, 'day', this.value)"
-                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-amber-800 text-xs focus:outline-none focus:border-blue-500">
-                                ${dayOptionsHTML}
-                            </select>
+                            <select onchange="updateHoliday(${index}, 'day', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-amber-800 text-xs focus:outline-none focus:border-blue-500">${dayOptionsHTML}</select>
                         </td>
                         <td class="p-2 text-center min-w-[80px]">
-                            <button onclick="deleteHoliday(${index})" title="מחק חג" class="text-rose-600 hover:text-rose-800 p-1">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </td>
-                    `;
+                            <button onclick="deleteHoliday(${index})" title="מחק חג" class="text-rose-600 hover:text-rose-800 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>`;
                 } else {
                     const dateDisplay = formatDateForDisplay(item.date);
                     tr.innerHTML = `
                         <td class="p-3 font-bold text-police-navy min-w-[130px] break-words">${item.name}</td>
                         <td class="p-3 text-slate-600 font-medium min-w-[110px] whitespace-nowrap">${dateDisplay}</td>
                         <td class="p-3 min-w-[120px]"><span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg font-bold text-xs inline-block">${item.eve || '-'}</span></td>
-                        <td class="p-3 min-w-[120px]"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold text-xs inline-block">${item.day || '-'}</span></td>
-                    `;
+                        <td class="p-3 min-w-[120px]"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold text-xs inline-block">${item.day || '-'}</span></td>`;
                 }
                 tbody.appendChild(tr);
             });
@@ -1173,10 +1078,6 @@ END:VCALENDAR`;
                 saveHolidaysLocally();
                 renderHolidays();
             }
-        }
-
-        function saveHolidaysLocally() {
-            localStorage.setItem('police_holidays_2026', JSON.stringify(holidaysData));
         }
 
         function changeWeek(direction) {
