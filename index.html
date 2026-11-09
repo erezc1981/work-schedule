@@ -467,7 +467,738 @@
             {"dates": ["06.12.2026", "07.12.2026", "08.12.2026", "09.12.2026", "10.12.2026", "11.12.2026", "12.12.2026"], "shifts": {"ארז": ["אבג", "", "", "אבג", "", "", ""], "בן זיקרי": ["", "אבג", "", "", "אבג", "", ""], "יניב": ["", "", "אבג", "", "", "", "אבג"], "יחיאל": ["", "", "אבג", "", "", "אבג", ""], "ולרי": ["אבג", "", "", "אבג", "", "", ""], "ירין": ["", "אבג", "", "", "אבג", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
             {"dates": ["13.12.2026", "14.12.2026", "15.12.2026", "16.12.2026", "17.12.2026", "18.12.2026", "19.12.2026"], "shifts": {"ארז": ["", "בג", "", "אבג", "", "", ""], "בן זיקרי": ["אבג", "", "", "", "אבג", "", ""], "יניב": ["", "", "אבג", "", "", "אבג", ""], "יחיאל": ["", "", "אבג", "", "", "", "אבג"], "ולרי": ["אבג", "", "", "אבג", "", "", ""], "ירין": ["", "", "", "", "", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
             {"dates": ["20.12.2026", "21.12.2026", "22.12.2026", "23.12.2026", "24.12.2026", "25.12.2026", "26.12.2026"], "shifts": {"ארז": ["אבג", "", "", "אבג", "", "", ""], "בן זיקרי": ["", "", "אבג", "", "", "אבג", ""], "יניב": ["", "אבג", "", "", "אבג", "", ""], "יחיאל": ["", "אבג", "", "", "אבג", "", ""], "ולרי": ["", "", "אבג", "", "", "", "אבג"], "ירין": ["אבג", "", "", "אבג", "", "", ""], "יוסף": ["", "", "", "", "", "", ""], "עינב": ["", "", "", "", "", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""},
-            {"dates": ["27.12.2026", "28.12.2026", "29.12.2026", "30.12.2026", "31.12.2026", "01.01.2027", "02.01.2027"], "shifts": {"ארז": ["", "אבג", "", "", "", "", "אבג"], "בן זיקרי": ["אבג", "", "אבג", "", "", "", ""], "יניב": ["", "", "", "", "", "", ""], "יחיאל": ["", "", "", "בג", "", "אבג", ""], "ולרי": ["אבג", "", "", "", "", "", ""], "ירין": ["אבג",,
-  "response": "```html\n",
-  "status": "VALID"
-}
+            {"dates": ["27.12.2026", "28.12.2026", "29.12.2026", "30.12.2026", "31.12.2026", "01.01.2027", "02.01.2027"], "shifts": {"ארז": ["", "אבג", "", "", "", "", "אבג"], "בן זיקרי": ["אבג", "", "אבג", "", "", "", ""], "יניב": ["", "", "", "", "", "", ""], "יחיאל": ["", "", "", "בג", "", "אבג", ""], "ולרי": ["אבג", "", "", "", "", "", ""], "ירין": ["אבג", "", "", "אבג", "", "חופשה", "חופשה"], "יוסף": ["", "", "אבג", "", "אבג", "", ""], "עינב": ["", "אבג", "", "", "אבג", "", ""], "שלומית": ["", "", "", "", "", "", ""], "רעות": ["", "", "", "", "", "", ""], "ליפז": ["", "", "", "", "", "", ""]}, "notes": ""}
+        ];
+
+        let scheduleData = defaultScheduleData;
+
+        try {
+            const stored = localStorage.getItem('police_schedule_2026');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    scheduleData = parsed;
+                }
+            }
+        } catch (e) {
+            console.error('Error loading schedule:', e);
+        }
+
+        function autoSelectCurrentWeek() {
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const dateStrShort = `${day}.${month}`;
+
+            if (scheduleData && scheduleData.length > 0) {
+                for (let i = 0; i < scheduleData.length; i++) {
+                    if (scheduleData[i].dates && scheduleData[i].dates.some(d => d.includes(dateStrShort))) {
+                        currentWeekIndex = i;
+                        return;
+                    }
+                }
+            }
+            currentWeekIndex = 43; // Nov 2026 default
+            if (currentWeekIndex >= scheduleData.length) currentWeekIndex = 0;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            autoSelectCurrentWeek();
+            populateOfficerFilterOptions();
+            renderSchedule();
+            renderHolidays();
+        });
+
+        function populateOfficerFilterOptions() {
+            const select = document.getElementById('officer-filter');
+            const reqSelect = document.getElementById('req-officer-name');
+            if (!select || !reqSelect) return;
+            select.innerHTML = '<option value="ALL">הצג את כולם</option>';
+            reqSelect.innerHTML = '';
+
+            officers.forEach(off => {
+                const opt = document.createElement('option');
+                opt.value = off;
+                opt.textContent = off;
+                select.appendChild(opt);
+
+                const opt2 = document.createElement('option');
+                opt2.value = off;
+                opt2.textContent = off;
+                reqSelect.appendChild(opt2);
+            });
+        }
+
+        function toggleAdminMode() {
+            if (!isAdmin) {
+                const pwd = prompt('הכנס קוד מנהל/תמיכה:');
+                if (pwd === PRIMARY_ADMIN_PWD || pwd === SECONDARY_ADMIN_PWD) {
+                    isAdmin = true;
+                    const roleText = (pwd === PRIMARY_ADMIN_PWD) ? 'מצב מנהל (ליאור)' : 'מצב תמיכה (1981)';
+                    document.getElementById('admin-btn-text').textContent = roleText;
+                    document.getElementById('admin-toggle-btn').classList.replace('bg-slate-800', 'bg-amber-500');
+                    document.getElementById('admin-toggle-btn').classList.replace('text-amber-400', 'text-slate-900');
+                    document.getElementById('admin-icon').classList.replace('fa-lock', 'fa-lock-open');
+                } else if (pwd !== null) {
+                    alert('סיסמה שגויה!');
+                }
+            } else {
+                isAdmin = false;
+                document.getElementById('admin-btn-text').textContent = 'מצב צפייה';
+                document.getElementById('admin-toggle-btn').classList.replace('bg-amber-500', 'bg-slate-800');
+                document.getElementById('admin-toggle-btn').classList.replace('text-slate-900', 'text-amber-400');
+                document.getElementById('admin-icon').classList.replace('fa-lock-open', 'fa-lock');
+            }
+            renderSchedule();
+            renderHolidays();
+        }
+
+        function renderSchedule() {
+            const tbody = document.getElementById('schedule-body');
+            if (!tbody) return;
+
+            const currentData = scheduleData[currentWeekIndex] || {
+                dates: ['-', '-', '-', '-', '-', '-', '-'],
+                shifts: {},
+                notes: ''
+            };
+
+            if (currentData.dates && currentData.dates.length >= 7) {
+                const weekElem = document.getElementById('week-range-display');
+                if (weekElem) weekElem.textContent = `${currentData.dates[0]} - ${currentData.dates[6]}`;
+                for (let i = 0; i < 7; i++) {
+                    const dElem = document.getElementById(`date-${i}`);
+                    if (dElem) dElem.textContent = currentData.dates[i] || '-';
+                }
+            }
+
+            tbody.innerHTML = '';
+
+            officers.forEach(officer => {
+                const tr = document.createElement('tr');
+                const colorConfig = officerRowColors[officer] || { row: 'bg-white', nameBg: 'bg-slate-200 text-slate-800' };
+                
+                let focusClass = '';
+                if (selectedOfficerFilter !== 'ALL') {
+                    if (selectedOfficerFilter === officer) {
+                        focusClass = 'focused-row border-2 border-police-navy';
+                    } else {
+                        focusClass = 'dimmed-row';
+                    }
+                }
+
+                tr.className = `${colorConfig.row} ${focusClass} hover:opacity-90 transition border-b border-slate-300`;
+
+                let rowHTML = `<td class="p-3 font-extrabold border-l border-slate-300 ${colorConfig.nameBg} text-right shadow-inner sticky-col min-w-[110px] w-32">${officer}</td>`;
+
+                const officerShifts = (currentData.shifts && currentData.shifts[officer]) ? currentData.shifts[officer] : ['', '', '', '', '', '', ''];
+
+                for (let day = 0; day < 7; day++) {
+                    const shiftVal = officerShifts[day] || '';
+                    if (isAdmin) {
+                        rowHTML += `
+                            <td class="p-1 text-center border-l border-slate-300/60 min-w-[95px]">
+                                <div class="flex items-center gap-1">
+                                    <input type="text" list="shift-options" value="${shiftVal}" 
+                                        id="input-${officer}-${day}"
+                                        onchange="updateShift('${officer}', ${day}, this.value)"
+                                        class="w-full text-center p-1.5 rounded-lg border border-slate-400 text-xs font-bold focus:bg-amber-50 focus:border-amber-400 focus:outline-none shadow-sm">
+                                    <button onclick="toggleCarIcon('${officer}', ${day})" 
+                                        title="הוסף/הסר רכב" 
+                                        class="p-1.5 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-bold transition shadow-sm">
+                                        🚗
+                                    </button>
+                                </div>
+                            </td>`;
+                    } else {
+                        const shiftBadgeClass = getShiftBadgeStyle(shiftVal, officer);
+                        rowHTML += `
+                            <td class="p-2.5 text-center border-l border-slate-300/60 min-w-[95px]">
+                                ${shiftBadgeClass}
+                            </td>`;
+                    }
+                }
+
+                tr.innerHTML = rowHTML;
+                tbody.appendChild(tr);
+            });
+
+            const nInput = document.getElementById('general-notes');
+            if (nInput) {
+                nInput.value = currentData.notes || '';
+                nInput.readOnly = !isAdmin;
+            }
+        }
+
+        function toggleCarIcon(officer, dayIndex) {
+            if (!scheduleData[currentWeekIndex]) return;
+            if (!scheduleData[currentWeekIndex].shifts[officer]) {
+                scheduleData[currentWeekIndex].shifts[officer] = ['', '', '', '', '', '', ''];
+            }
+            let currentVal = scheduleData[currentWeekIndex].shifts[officer][dayIndex] || '';
+            
+            if (currentVal.includes('רכב')) {
+                currentVal = currentVal.replace('רכב', '').trim();
+            } else {
+                currentVal = (currentVal + ' רכב').trim();
+            }
+            
+            scheduleData[currentWeekIndex].shifts[officer][dayIndex] = currentVal;
+            saveDataLocally();
+            renderSchedule();
+        }
+
+        function getShiftBadgeStyle(val, officer = '') {
+            if (!val) return '<span class="text-slate-400/60 font-normal">-</span>';
+            
+            const hasCar = val.includes('רכב') || val.toLowerCase().includes('car');
+            let cleanVal = val.replace('רכב', '').trim();
+
+            // סימון רכב באייקון נקי, ברור וללא רקע בצמוד למשמרת
+            let carBadge = hasCar ? '<span class="text-base inline-block align-middle ml-1" title="כולל רכב">🚗</span>' : '';
+
+            // תצוגת "עבודה מהבית" עבור שלומית, רעות וליפז ללא סוגר שעות בתצוגה
+            if (dailyShiftOfficers.includes(officer)) {
+                if (cleanVal.includes('מהבית')) {
+                    return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">עבודה מהבית</span>${carBadge}</div>`;
+                }
+                if (cleanVal === 'א' || cleanVal === 'יומי') {
+                    return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
+                }
+            }
+
+            if (cleanVal.includes('מהבית')) {
+                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">עבודה מהבית</span>${carBadge}</div>`;
+            }
+
+            if (cleanVal === 'אבג' || cleanVal === 'אב' || cleanVal === 'בג') {
+                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs shadow">${cleanVal || 'משמרת'}</span>${carBadge}</div>`;
+            }
+            if (cleanVal === 'א') {
+                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
+            }
+            if (cleanVal.includes('חש') || cleanVal.includes('ח״ש') || cleanVal.includes('חופש')) {
+                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-amber-200 text-amber-900 font-bold text-xs border border-amber-400 shadow-sm">${cleanVal}</span>${carBadge}</div>`;
+            }
+            if (cleanVal.includes('מחלה')) {
+                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
+            }
+            if (cleanVal.includes('אילת') || cleanVal.includes('כנס') || cleanVal.includes('מטווח') || cleanVal.includes('קורס')) {
+                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-purple-600 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
+            }
+
+            if (!cleanVal && hasCar) {
+                return carBadge;
+            }
+
+            return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-slate-700 text-white font-bold text-xs shadow">${cleanVal}</span>${carBadge}</div>`;
+        }
+
+        function updateShift(officer, dayIndex, val) {
+            if (!scheduleData[currentWeekIndex]) return;
+            if (!scheduleData[currentWeekIndex].shifts[officer]) {
+                scheduleData[currentWeekIndex].shifts[officer] = ['', '', '', '', '', '', ''];
+            }
+            scheduleData[currentWeekIndex].shifts[officer][dayIndex] = val;
+            saveDataLocally();
+        }
+
+        function saveNotes() {
+            if (!scheduleData[currentWeekIndex]) return;
+            scheduleData[currentWeekIndex].notes = document.getElementById('general-notes').value;
+            saveDataLocally();
+        }
+
+        function saveDataLocally() {
+            localStorage.setItem('police_schedule_2026', JSON.stringify(scheduleData));
+        }
+
+        function filterOfficer() {
+            selectedOfficerFilter = document.getElementById('officer-filter').value;
+            renderSchedule();
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('search-input').value.trim().toLowerCase();
+            if (!query) return;
+
+            for (let wIndex = 0; wIndex < scheduleData.length; wIndex++) {
+                const week = scheduleData[wIndex];
+                const matchDate = week.dates.some(d => d.toLowerCase().includes(query));
+                if (matchDate) {
+                    currentWeekIndex = wIndex;
+                    renderSchedule();
+                    break;
+                }
+            }
+        }
+
+        async function shareScheduleToWhatsAppText() {
+            const weekData = scheduleData[currentWeekIndex];
+            if (!weekData || !weekData.dates || weekData.dates.length < 7) {
+                alert('אין נתוני שבוע תקינים לשיתוף.');
+                return;
+            }
+
+            const weekTitle = `${weekData.dates[0]} - ${weekData.dates[6]}`;
+            let lines = [];
+            lines.push(`🚔 *סידור עבודה פיקוח טכנולוגי*`);
+            lines.push(`📅 *שבוע:* ${weekTitle}`);
+            lines.push(``);
+
+            const allAvailableOfficers = Array.from(new Set([...officers, ...Object.keys(weekData.shifts || {})]));
+
+            for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+                const dayLabel = dayNames[dayIdx];
+                const dateLabel = weekData.dates[dayIdx];
+
+                let workingOfficers = [];
+                
+                allAvailableOfficers.forEach(off => {
+                    const officerShifts = weekData.shifts ? weekData.shifts[off] : null;
+                    if (officerShifts && officerShifts[dayIdx]) {
+                        const shiftVal = officerShifts[dayIdx].toString().trim();
+                        if (shiftVal !== '') {
+                            workingOfficers.push(`${off} (${shiftVal})`);
+                        }
+                    }
+                });
+
+                lines.push(`📌 *יום ${dayLabel} (${dateLabel}):*`);
+                if (workingOfficers.length > 0) {
+                    workingOfficers.forEach(item => lines.push(`  • ${item}`));
+                } else {
+                    lines.push(`  • אין משמרות/פעילות`);
+                }
+                lines.push(``);
+            }
+
+            if (weekData.notes && weekData.notes.trim() !== '') {
+                lines.push(`📝 *הערות שבועיות:* ${weekData.notes.trim()}`);
+            }
+
+            const fullMsg = lines.join('\n');
+
+            // שימוש ב-Web Share API של הנייד
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'סידור עבודה שבועי',
+                        text: fullMsg
+                    });
+                    return;
+                } catch (err) {
+                    // ביטול שיתוף על ידי המשתמש
+                }
+            }
+
+            // גיבוי למחשב נייח או דפדפנים ישנים
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(fullMsg);
+                alert('הסידור המלא הועתק ללוח! במידה וההודעה נחתכת ב-WhatsApp, פשוט בצע "הדבק".');
+            }
+
+            const encodedMsg = encodeURIComponent(fullMsg);
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                window.location.href = `whatsapp://send?text=${encodedMsg}`;
+            } else {
+                window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
+            }
+        }
+
+        function exportShiftsToCalendar() {
+            let targetOfficer = selectedOfficerFilter;
+            
+            if (targetOfficer === 'ALL') {
+                targetOfficer = prompt('הכנס את שם השוטר שעבורו תרצה לייצא את המשמרות ליומן Google:', 'ארז');
+                if (!targetOfficer) return;
+            }
+
+            const weekData = scheduleData[currentWeekIndex];
+            if (!weekData || !weekData.dates || !weekData.shifts[targetOfficer]) {
+                alert(`לא נמצאו משמרות עבור ${targetOfficer} בשבוע המוצג.`);
+                return;
+            }
+
+            const shifts = weekData.shifts[targetOfficer];
+            let eventsICal = [];
+            let shiftCount = 0;
+
+            shifts.forEach((s, idx) => {
+                if (!s) return;
+
+                const cleanShift = s.replace('רכב', '').trim();
+                if (!cleanShift) return;
+
+                const dateStr = weekData.dates[idx];
+                let parts = dateStr.split('.');
+                let day = parts[0].padStart(2, '0');
+                let month = parts[1].padStart(2, '0');
+                let year = parts[2] || '2026';
+
+                let formattedDate = `${year}${month}${day}`;
+
+                let startTime = '070000';
+                let endTime = '160000';
+                let summary = `משמרת ${cleanShift} - פיקוח טכנולוגי`;
+
+                if (dailyShiftOfficers.includes(targetOfficer)) {
+                    startTime = '070000';
+                    endTime = '160000';
+                    summary = `משמרת יומית (${cleanShift}) - פיקוח טכנולוגי`;
+                } else if (cleanShift === 'אבג') {
+                    startTime = '070000';
+                    endTime = '070000';
+                    summary = `משמרת 24 שע' (אבג) - פיקוח טכנולוגי`;
+                } else if (cleanShift === 'אב' || cleanShift === 'בג') {
+                    startTime = '070000';
+                    endTime = '230000';
+                    summary = `משמרת 16 שע' (${cleanShift}) - פיקוח טכנולוגי`;
+                } else if (cleanShift === 'א') {
+                    startTime = '070000';
+                    endTime = '150000';
+                    summary = `משמרת א' - פיקוח טכנולוגי`;
+                } else if (cleanShift.includes('חופשה') || cleanShift.includes('חש') || cleanShift.includes('ח״ש')) {
+                    summary = `יום חופשה - פיקוח טכנולוגי`;
+                }
+
+                if (s.includes('רכב')) {
+                    summary += ' (כולל רכב 🚗)';
+                }
+
+                eventsICal.push(`BEGIN:VEVENT
+SUMMARY:${summary}
+DTSTART:${formattedDate}T${startTime}
+DTEND:${formattedDate}T${endTime}
+DESCRIPTION:סידור עבודה פיקוח טכנולוגי - ${targetOfficer}
+END:VEVENT`);
+                shiftCount++;
+            });
+
+            if (shiftCount === 0) {
+                alert(`אין משמרות מתוכננות עבור ${targetOfficer} בשבוע זה.`);
+                return;
+            }
+
+            const icalContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Police Schedule 2026//HE
+CALSCALE:GREGORIAN
+${eventsICal.join('\n')}
+END:VCALENDAR`;
+
+            const blob = new Blob([icalContent], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `משמרות_${targetOfficer}_שבוע_${weekData.dates[0]}_${weekData.dates[6]}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert(`יוצרו ${shiftCount} משמרות עבור ${targetOfficer}.\nהקובץ ירד למכשירך - לחץ עליו כדי להוסיף את המשמרות ישר ליומן Google!`);
+        }
+
+        function openRequestModal() {
+            document.getElementById('request-modal').classList.remove('hidden');
+        }
+
+        function closeRequestModal() {
+            document.getElementById('request-modal').classList.add('hidden');
+        }
+
+        function sendRequestToWhatsApp(target) {
+            const officerName = document.getElementById('req-officer-name').value;
+            const reqType = document.getElementById('req-type').value;
+            const reqDate = document.getElementById('req-date').value.trim();
+            const reqDetails = document.getElementById('req-details').value.trim();
+
+            if (!reqDate) {
+                alert('אנא הזן תאריך מבוקש לבקשה!');
+                return;
+            }
+
+            let msgText = `📋 *בקשה חדשה בסידור העבודה*\n\n`;
+            msgText += `👤 *מגיש הבקשה:* ${officerName}\n`;
+            msgText += `📌 *סוג הבקשה:* ${reqType}\n`;
+            msgText += `📅 *תאריך מבוקש:* ${reqDate}\n`;
+            if (reqDetails) {
+                msgText += `📝 *פירוט:* ${reqDetails}\n`;
+            }
+            msgText += `\nלטיפולך, תודה! 🙏`;
+
+            const encodedMsg = encodeURIComponent(msgText);
+            const phone = target === 'erez' ? '972505069969' : '972506270112';
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                window.location.href = `whatsapp://send?phone=${phone}&text=${encodedMsg}`;
+            } else {
+                window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodedMsg}`, '_blank');
+            }
+
+            closeRequestModal();
+        }
+
+        function openStatsModal() {
+            const container = document.getElementById('stats-modal-content');
+            container.innerHTML = '';
+
+            const currentWeekData = scheduleData[currentWeekIndex] || { dates: [], shifts: {} };
+            
+            document.getElementById('stats-modal-title').textContent = 'סיכום משמרות שבועי ושנתי לשוטרים';
+
+            let totalStats = {};
+            officers.forEach(o => totalStats[o] = { 
+                weeklyHours: 0, 
+                yearlyVacationDays: 0, 
+                yearlyCarDays: 0, 
+                yearlySickDays: 0 
+            });
+
+            scheduleData.forEach((week, wIdx) => {
+                const isCurrentWeek = (wIdx === currentWeekIndex);
+
+                officers.forEach(o => {
+                    const shifts = week.shifts[o] || [];
+                    shifts.forEach(s => {
+                        if (!s) return;
+
+                        const cleanShift = s.replace('רכב', '').trim();
+                        let hours = 0;
+
+                        // לוגיקת חישוב שעות מותאמת:
+                        // עבור שלומית, רעות וליפז: משמרות יומית מחושבות כ-9 שעות (אינן 24 שעות)
+                        if (dailyShiftOfficers.includes(o)) {
+                            if (cleanShift === 'א' || cleanShift.includes('מהבית') || cleanShift === 'אבג' || cleanShift === 'אב' || cleanShift === 'בג' || cleanShift === 'יומי') {
+                                hours = 9;
+                            }
+                        } else {
+                            if (cleanShift === 'אבג') hours = 24;
+                            else if (cleanShift === 'אב' || cleanShift === 'בג') hours = 16;
+                            else if (cleanShift === 'א') hours = 8;
+                        }
+
+                        // חישוב שעות שבועי (לפי השבוע המוצג)
+                        if (isCurrentWeek) {
+                            totalStats[o].weeklyHours += hours;
+                        }
+
+                        // ספירת קטגוריות ברמה שנתית
+                        if (s.includes('רכב')) totalStats[o].yearlyCarDays++;
+                        if (s.includes('חופשה') || s.includes('חש') || s.includes('ח״ש')) totalStats[o].yearlyVacationDays++;
+                        if (s.includes('מחלה')) totalStats[o].yearlySickDays++;
+                    });
+                });
+            });
+
+            let html = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">`;
+            officers.forEach(o => {
+                const stats = totalStats[o];
+                const colorConfig = officerRowColors[o] || { nameBg: 'bg-slate-200 text-slate-800' };
+                const isDailyOfficer = dailyShiftOfficers.includes(o);
+                
+                // חישוב לוגיקת שעות שבועיות ומכסות לפי סוג שוטר/ת
+                const wHours = stats.weeklyHours;
+                const targetQuota = isDailyOfficer ? 45 : 48; // 45 שעות שבועיות למשמרות יומיות
+                const minThreshold = isDailyOfficer ? 36 : 36;
+
+                let weeklyStyle = '';
+                let weeklyText = '';
+
+                if (wHours < minThreshold && !isDailyOfficer) {
+                    const missingTo36 = minThreshold - wHours;
+                    weeklyStyle = 'bg-rose-100 border-2 border-rose-500 text-rose-900 animate-pulse';
+                    weeklyText = `<span class="font-black">${wHours} / ${targetQuota} שע'</span> <span class="bg-rose-600 text-white px-2 py-0.5 rounded text-[11px] font-extrabold shadow ml-1">⚠️ חוסר קריטי (חסרות ${missingTo36} שע')</span>`;
+                } else if (wHours < targetQuota) {
+                    const missingToQuota = targetQuota - wHours;
+                    weeklyStyle = 'bg-amber-50 border border-amber-300 text-amber-900';
+                    weeklyText = `<span class="font-black text-blue-900">${wHours} / ${targetQuota} שע'</span> <span class="text-amber-700 text-[11px] font-bold ml-1">(חסרות ${missingToQuota} שע')</span>`;
+                } else {
+                    weeklyStyle = 'bg-emerald-50 border border-emerald-300 text-emerald-900';
+                    weeklyText = `<span class="font-black text-emerald-800">${wHours} / ${targetQuota} שע'</span> <span class="text-emerald-700 text-[11px] font-bold ml-1">✨ עמד במכסה</span>`;
+                }
+
+                html += `
+                    <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-extrabold text-sm px-2.5 py-0.5 rounded ${colorConfig.nameBg}">${o} ${isDailyOfficer ? '(משמרות יומיות)' : ''}</span>
+                        </div>
+                        <div class="space-y-1.5 text-xs font-bold text-slate-700">
+                            <div class="flex justify-between items-center p-2 rounded-lg ${weeklyStyle}">
+                                <span class="font-extrabold">1️⃣ סה"כ שבועי:</span>
+                                <div class="flex items-center gap-1">${weeklyText}</div>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
+                                <span>2️⃣ ימי חופשה שנתי (חופשה / ח"ש):</span>
+                                <span class="text-amber-600 font-black">${stats.yearlyVacationDays} ימים</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
+                                <span>3️⃣ ימי רכב שנתי (רכב):</span>
+                                <span class="text-amber-800 font-black">${stats.yearlyCarDays} ימים</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
+                                <span>4️⃣ ימי מחלה שנתי:</span>
+                                <span class="text-rose-600 font-black">${stats.yearlySickDays} ימים</span>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            html += `</div>`;
+
+            container.innerHTML = html;
+            document.getElementById('stats-modal').classList.remove('hidden');
+        }
+
+        function closeStatsModal() {
+            document.getElementById('stats-modal').classList.add('hidden');
+        }
+
+        // פונקציה לעזרה בהמרת תאריכים מבוססי נקודות (01.04.2026) לפורמט input date (2026-04-01)
+        function formatDateForInput(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('-')) return dateStr;
+            const parts = dateStr.split('.');
+            if (parts.length === 3) {
+                return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+            return dateStr;
+        }
+
+        // המרה חזרה מפורמט YYYY-MM-DD לתצוגה נוחה DD.MM.YYYY
+        function formatDateForDisplay(dateStr) {
+            if (!dateStr) return '-';
+            if (dateStr.includes('.')) return dateStr;
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}.${parts[1]}.${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        function renderHolidays() {
+            const tbody = document.getElementById('holidays-body');
+            const addBtn = document.getElementById('add-holiday-btn');
+            const adminCols = document.querySelectorAll('.admin-only-col');
+
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (isAdmin) {
+                if (addBtn) addBtn.classList.remove('hidden');
+                adminCols.forEach(col => col.classList.remove('hidden'));
+            } else {
+                if (addBtn) addBtn.classList.add('hidden');
+                adminCols.forEach(col => col.classList.add('hidden'));
+            }
+
+            holidaysData.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+
+                if (isAdmin) {
+                    const formattedDateVal = formatDateForInput(item.date);
+                    
+                    // בניית ה-Dropdowns עבור הסמב"צים (ללא שלומית, רעות וליפז)
+                    let eveOptionsHTML = `<option value="-">- ללא -</option>`;
+                    let dayOptionsHTML = `<option value="-">- ללא -</option>`;
+
+                    sambacOfficers.forEach(off => {
+                        const eveSelected = (item.eve === off) ? 'selected' : '';
+                        const daySelected = (item.day === off) ? 'selected' : '';
+                        eveOptionsHTML += `<option value="${off}" ${eveSelected}>${off}</option>`;
+                        dayOptionsHTML += `<option value="${off}" ${daySelected}>${off}</option>`;
+                    });
+
+                    tr.innerHTML = `
+                        <td class="p-2 min-w-[130px]">
+                            <input type="text" value="${item.name || ''}" 
+                                onchange="updateHoliday(${index}, 'name', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-police-navy text-xs focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="p-2 min-w-[110px]">
+                            <input type="date" value="${formattedDateVal}" 
+                                onchange="updateHoliday(${index}, 'date', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-medium text-slate-700 text-xs focus:outline-none focus:border-blue-500">
+                        </td>
+                        <td class="p-2 min-w-[120px]">
+                            <select onchange="updateHoliday(${index}, 'eve', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-blue-800 text-xs focus:outline-none focus:border-blue-500">
+                                ${eveOptionsHTML}
+                            </select>
+                        </td>
+                        <td class="p-2 min-w-[120px]">
+                            <select onchange="updateHoliday(${index}, 'day', this.value)"
+                                class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-amber-800 text-xs focus:outline-none focus:border-blue-500">
+                                ${dayOptionsHTML}
+                            </select>
+                        </td>
+                        <td class="p-2 text-center min-w-[80px]">
+                            <button onclick="deleteHoliday(${index})" title="מחק חג" class="text-rose-600 hover:text-rose-800 p-1">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    `;
+                } else {
+                    const dateDisplay = formatDateForDisplay(item.date);
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold text-police-navy min-w-[130px] break-words">${item.name}</td>
+                        <td class="p-3 text-slate-600 font-medium min-w-[110px] whitespace-nowrap">${dateDisplay}</td>
+                        <td class="p-3 min-w-[120px]"><span class="bg-blue-100 text-blue-800 px-2.5 py-1 rounded-lg font-bold text-xs inline-block">${item.eve || '-'}</span></td>
+                        <td class="p-3 min-w-[120px]"><span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg font-bold text-xs inline-block">${item.day || '-'}</span></td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateHoliday(index, field, value) {
+            if (!holidaysData[index]) return;
+            holidaysData[index][field] = value;
+            saveHolidaysLocally();
+        }
+
+        function addNewHoliday() {
+            holidaysData.push({ name: 'חג חדש', date: '2026-01-01', eve: '-', day: '-' });
+            saveHolidaysLocally();
+            renderHolidays();
+        }
+
+        function deleteHoliday(index) {
+            if (confirm('האם למחוק חג זה מלוח החגים?')) {
+                holidaysData.splice(index, 1);
+                saveHolidaysLocally();
+                renderHolidays();
+            }
+        }
+
+        function saveHolidaysLocally() {
+            localStorage.setItem('police_holidays_2026', JSON.stringify(holidaysData));
+        }
+
+        function changeWeek(direction) {
+            if (currentWeekIndex + direction >= 0 && currentWeekIndex + direction < scheduleData.length) {
+                currentWeekIndex += direction;
+                renderSchedule();
+            }
+        }
+
+        function switchTab(tab) {
+            if (tab === 'schedule') {
+                document.getElementById('view-schedule').classList.remove('hidden');
+                document.getElementById('view-holidays').classList.add('hidden');
+                document.getElementById('tab-schedule').className = 'py-2 px-3 rounded-lg bg-white shadow-sm text-police-navy';
+                document.getElementById('tab-holidays').className = 'py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900';
+            } else {
+                document.getElementById('view-schedule').classList.add('hidden');
+                document.getElementById('view-holidays').classList.remove('hidden');
+                document.getElementById('tab-holidays').className = 'py-2 px-3 rounded-lg bg-white shadow-sm text-police-navy';
+                document.getElementById('tab-schedule').className = 'py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900';
+            }
+        }
+    </script>
+</body>
+</html>
