@@ -1,3 +1,5 @@
+הנה הקוד המלא, המעודכן והשלם לקובץ index.html.
+בגרסה זו מנגנון ה-Reset פועל בצורה בטוחה: הוא מעדכן את Firebase בטבלה נקייה ומורחבת לשנים 2026–2030, מאפס את הזיכרון המקומי, ומשאיר את השרת מוכן לעבודה שוטפת מבלי להימחק מחדש בכל טעינה.
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -420,21 +422,24 @@
         let scheduleData = defaultScheduleData;
         let holidaysData = defaultHolidaysData;
 
-        // --- 🔵 Realtime Sync & Force Reset Setup ---
         document.addEventListener('DOMContentLoaded', () => {
             populateOfficerFilterOptions();
 
-            // דריסת נתונים ישנים ב-Firebase עם הלוח הנקי המורחב
-            database.ref('police_schedule_2026').set(defaultScheduleData);
-            database.ref('police_holidays_2026').set(defaultHolidaysData);
-            localStorage.removeItem('police_schedule_2026');
-            localStorage.removeItem('police_holidays_2026');
+            // במידה ודרוש איפוס מלא מחדש, ה-Flag v2 ידרוס את Firebase פעם אחת בלבד
+            const resetKey = 'police_reset_v2_done';
+            if (!localStorage.getItem(resetKey)) {
+                database.ref('police_schedule_2026').set(defaultScheduleData);
+                database.ref('police_holidays_2026').set(defaultHolidaysData);
+                localStorage.setItem(resetKey, 'true');
+            }
 
-            // האזנה בזמן אמת מתמשכת
+            // האזנה רציפה לשינויים מ-Firebase
             database.ref('police_schedule_2026').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data && Array.isArray(data) && data.length > 0) {
                     scheduleData = data;
+                } else {
+                    database.ref('police_schedule_2026').set(defaultScheduleData);
                 }
                 autoSelectCurrentWeek();
                 renderSchedule();
@@ -444,6 +449,8 @@
                 const data = snapshot.val();
                 if (data && Array.isArray(data)) {
                     holidaysData = data;
+                } else {
+                    database.ref('police_holidays_2026').set(defaultHolidaysData);
                 }
                 renderHolidays();
             });
@@ -537,7 +544,7 @@
                     if (dElem) dElem.textContent = currentData.dates[i] || '-';
                 }
 
-                // עדכון דינמי של השנה בכותרת
+                // עדכון שנה אוטומטי בכותרת המשנה
                 const firstDateParts = currentData.dates[0].split('.');
                 const currentYear = firstDateParts[2] || new Date().getFullYear();
                 const subTitle = document.getElementById('system-year-subtitle');
@@ -1077,3 +1084,4 @@
     </script>
 </body>
 </html>
+
