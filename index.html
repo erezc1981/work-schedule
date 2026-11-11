@@ -349,7 +349,7 @@
     </div>
 
     <footer class="py-4 text-center text-xs text-slate-400 border-t border-slate-200 bg-white no-print">
-        כל הזכויות שמורות Erez(c)
+        Created by Erez <span class="text-xs inline-block">©</span>
     </footer>
 
     <script>
@@ -364,7 +364,7 @@
         let isAdmin = false;
         let currentWeekIndex = 0;
         let selectedOfficerFilter = 'ALL';
-        let isInitialLoadDone = false; // דגל למניעת קפיצות שבוע בזמן עדכונים
+        let isInitialLoadDone = false;
 
         const officers = ['אמיר', 'ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'עינב', 'שלומית', 'רעות', 'ליפז'];
         const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
@@ -435,7 +435,6 @@
                     database.ref('police_schedule_2026').set(defaultScheduleData);
                 }
                 
-                // הפעלה חד-פעמית בלבד בטעינת הדף
                 if (!isInitialLoadDone) {
                     autoSelectCurrentWeek();
                     isInitialLoadDone = true;
