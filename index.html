@@ -423,20 +423,13 @@
         document.addEventListener('DOMContentLoaded', () => {
             populateOfficerFilterOptions();
 
-            // במידה ודרוש איפוס מלא מחדש, ה-Flag v2 ידרוס את Firebase פעם אחת בלבד
-            const resetKey = 'police_reset_v2_done';
-            if (!localStorage.getItem(resetKey)) {
-                database.ref('police_schedule_2026').set(defaultScheduleData);
-                database.ref('police_holidays_2026').set(defaultHolidaysData);
-                localStorage.setItem(resetKey, 'true');
-            }
-
-            // האזנה רציפה לשינויים מ-Firebase
+            // האזנה בטוחה לשינויים מ-Firebase בלבד - ללא דריסה אוטומטית!
             database.ref('police_schedule_2026').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data && Array.isArray(data) && data.length > 0) {
                     scheduleData = data;
                 } else {
+                    // מאתחל רק אם מסד הנתונים בענן ריק לגמרי (null)
                     database.ref('police_schedule_2026').set(defaultScheduleData);
                 }
                 autoSelectCurrentWeek();
@@ -542,7 +535,6 @@
                     if (dElem) dElem.textContent = currentData.dates[i] || '-';
                 }
 
-                // עדכון שנה אוטומטי בכותרת המשנה
                 const firstDateParts = currentData.dates[0].split('.');
                 const currentYear = firstDateParts[2] || new Date().getFullYear();
                 const subTitle = document.getElementById('system-year-subtitle');
