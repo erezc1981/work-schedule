@@ -364,8 +364,8 @@
         let isAdmin = false;
         let currentWeekIndex = 0;
         let selectedOfficerFilter = 'ALL';
+        let isInitialLoadDone = false; // דגל למניעת קפיצות שבוע בזמן עדכונים
 
-        // הוספת אמיר לרשימת השוטרים
         const officers = ['אמיר', 'ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'עינב', 'שלומית', 'רעות', 'ליפז'];
         const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
         const dailyShiftOfficers = ['שלומית', 'רעות', 'ליפז'];
@@ -434,7 +434,13 @@
                 } else {
                     database.ref('police_schedule_2026').set(defaultScheduleData);
                 }
-                autoSelectCurrentWeek();
+                
+                // הפעלה חד-פעמית בלבד בטעינת הדף
+                if (!isInitialLoadDone) {
+                    autoSelectCurrentWeek();
+                    isInitialLoadDone = true;
+                }
+                
                 renderSchedule();
             });
 
