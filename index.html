@@ -284,7 +284,7 @@
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
                 <h3 class="font-bold text-base flex items-center gap-2">
                     <i class="fa-solid fa-paper-plane text-amber-400"></i>
-                    <span>הגשת בקשה לרכב / חופשה / כוננות / שינוי משמרת</span>
+                    <span>הגשת בקשה לרכב / חופשה / ח.תורן / שינוי משמרת</span>
                 </h3>
                 <button onclick="closeRequestModal()" class="text-white hover:text-amber-400 text-lg p-1">
                     <i class="fa-solid fa-xmark"></i>
@@ -301,7 +301,7 @@
                     <label class="block text-slate-600 mb-1">סוג הבקשה:</label>
                     <select id="req-type" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
                         <option value="בקשה לרכב 🚗">בקשה לרכב 🚗</option>
-                        <option value="בקשת כוננות 👮‍♂️">בקשת כוננות 👮‍♂️</option>
+                        <option value="בקשת ח.תורן 👮‍♂️">בקשת ח.תורן 👮‍♂️</option>
                         <option value="בקשת יום חופשה 🏖️">בקשת יום חופשה 🏖️</option>
                         <option value="בקשה לשינוי משמרת 🔄">בקשה לשינוי משמרת 🔄</option>
                     </select>
@@ -585,8 +585,8 @@
                                         class="p-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-bold transition shadow-sm">
                                         🚗
                                     </button>
-                                    <button onclick="toggleConanIcon('${officer}', ${day})" 
-                                        title="הוסף/הסר כונן" 
+                                    <button onclick="toggleHToranIcon('${officer}', ${day})" 
+                                        title="הוסף/הסר ח.תורן" 
                                         class="p-1 bg-indigo-200 hover:bg-indigo-300 text-indigo-900 rounded-lg text-xs font-bold transition shadow-sm">
                                         👮‍♂️
                                     </button>
@@ -630,17 +630,17 @@
             renderSchedule();
         }
 
-        function toggleConanIcon(officer, dayIndex) {
+        function toggleHToranIcon(officer, dayIndex) {
             if (!scheduleData[currentWeekIndex]) return;
             if (!scheduleData[currentWeekIndex].shifts[officer]) {
                 scheduleData[currentWeekIndex].shifts[officer] = ['', '', '', '', '', '', ''];
             }
             let currentVal = scheduleData[currentWeekIndex].shifts[officer][dayIndex] || '';
             
-            if (currentVal.includes('👮‍♂️') || currentVal.includes('כונן')) {
-                currentVal = currentVal.replace('👮‍♂️', '').replace('כונן', '').trim();
+            if (currentVal.includes('👮‍♂️') || currentVal.includes('ח.תורן') || currentVal.includes('כונן')) {
+                currentVal = currentVal.replace('👮‍♂️', '').replace('ח.תורן', '').replace('כונן', '').trim();
             } else {
-                currentVal = (currentVal + ' 👮‍♂️ כונן').trim();
+                currentVal = (currentVal + ' 👮‍♂️ ח.תורן').trim();
             }
             
             scheduleData[currentWeekIndex].shifts[officer][dayIndex] = currentVal;
@@ -652,13 +652,13 @@
             if (!val) return '<span class="text-slate-400/60 font-normal">-</span>';
             
             const hasCar = val.includes('🚗') || val.includes('רכב') || val.toLowerCase().includes('car');
-            const hasConan = val.includes('👮‍♂️') || val.includes('כונן');
+            const hasHToran = val.includes('👮‍♂️') || val.includes('ח.תורן') || val.includes('כונן');
 
-            let cleanVal = val.replace('🚗', '').replace('רכב', '').replace('👮‍♂️', '').replace('כונן', '').trim();
+            let cleanVal = val.replace('🚗', '').replace('רכב', '').replace('👮‍♂️', '').replace('ח.תורן', '').replace('כונן', '').trim();
 
             let carBadge = hasCar ? '<span class="text-base inline-block align-middle ml-1" title="כולל רכב">🚗</span>' : '';
-            let conanBadge = hasConan ? '<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-900 border border-indigo-300 text-[11px] font-extrabold shadow-sm" title="כונן">👮‍♂️ כונן</span>' : '';
-            let extraBadges = carBadge + conanBadge;
+            let hToranBadge = hasHToran ? '<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-900 border border-indigo-300 text-[11px] font-extrabold shadow-sm" title="ח.תורן">👮‍♂️ ח.תורן</span>' : '';
+            let extraBadges = carBadge + hToranBadge;
 
             if (dailyShiftOfficers.includes(officer)) {
                 if (cleanVal.includes('מהבית')) {
@@ -813,8 +813,8 @@
 
             shifts.forEach((s, idx) => {
                 if (!s) return;
-                const cleanShift = s.replace('🚗', '').replace('רכב', '').replace('👮‍♂️', '').replace('כונן', '').trim();
-                if (!cleanShift && !s.includes('כונן') && !s.includes('👮‍♂️')) return;
+                const cleanShift = s.replace('🚗', '').replace('רכב', '').replace('👮‍♂️', '').replace('ח.תורן', '').replace('כונן', '').trim();
+                if (!cleanShift && !s.includes('ח.תורן') && !s.includes('כונן') && !s.includes('👮‍♂️')) return;
 
                 const dateStr = weekData.dates[idx];
                 let parts = dateStr.split('.');
@@ -825,7 +825,7 @@
 
                 let startTime = '070000';
                 let endTime = '160000';
-                let summary = cleanShift ? `משמרת ${cleanShift} - פיקוח טכנולוגי` : `כוננות - פיקוח טכנולוגי`;
+                let summary = cleanShift ? `משמרת ${cleanShift} - פיקוח טכנולוגי` : `ח.תורן - פיקוח טכנולוגי`;
 
                 if (dailyShiftOfficers.includes(targetOfficer) && cleanShift) {
                     startTime = '070000';
@@ -849,7 +849,7 @@
 
                 let extras = [];
                 if (s.includes('🚗') || s.includes('רכב')) extras.push('רכב 🚗');
-                if (s.includes('👮‍♂️') || s.includes('כונן')) extras.push('כונן 👮‍♂️');
+                if (s.includes('👮‍♂️') || s.includes('ח.תורן') || s.includes('כונן')) extras.push('ח.תורן 👮‍♂️');
                 if (extras.length > 0) summary += ` (${extras.join(', ')})`;
 
                 eventsICal.push(`BEGIN:VEVENT\nSUMMARY:${summary}\nDTSTART:${formattedDate}T${startTime}\nDTEND:${formattedDate}T${endTime}\nDESCRIPTION:סידור עבודה פיקוח טכנולוגי - ${targetOfficer}\nEND:VEVENT`);
@@ -909,7 +909,7 @@
             document.getElementById('stats-modal-title').textContent = 'סיכום משמרות שבועי ושנתי לשוטרים';
 
             let totalStats = {};
-            officers.forEach(o => totalStats[o] = { weeklyHours: 0, yearlyVacationDays: 0, yearlyCarDays: 0, yearlyConanDays: 0, yearlySickDays: 0 });
+            officers.forEach(o => totalStats[o] = { weeklyHours: 0, yearlyVacationDays: 0, yearlyCarDays: 0, yearlyHToranDays: 0, yearlySickDays: 0 });
 
             scheduleData.forEach((week, wIdx) => {
                 const isCurrentWeek = (wIdx === currentWeekIndex);
@@ -917,7 +917,7 @@
                     const shifts = week.shifts[o] || [];
                     shifts.forEach(s => {
                         if (!s) return;
-                        const cleanShift = s.replace('🚗', '').replace('רכב', '').replace('👮‍♂️', '').replace('כונן', '').trim();
+                        const cleanShift = s.replace('🚗', '').replace('רכב', '').replace('👮‍♂️', '').replace('ח.תורן', '').replace('כונן', '').trim();
                         let hours = 0;
                         if (dailyShiftOfficers.includes(o)) {
                             if (cleanShift === 'א' || cleanShift.includes('מהבית') || cleanShift === 'אבג' || cleanShift === 'אב' || cleanShift === 'בג' || cleanShift === 'יומי') hours = 9;
@@ -929,7 +929,7 @@
 
                         if (isCurrentWeek) totalStats[o].weeklyHours += hours;
                         if (s.includes('🚗') || s.includes('רכב')) totalStats[o].yearlyCarDays++;
-                        if (s.includes('👮‍♂️') || s.includes('כונן')) totalStats[o].yearlyConanDays++;
+                        if (s.includes('👮‍♂️') || s.includes('ח.תורן') || s.includes('כונן')) totalStats[o].yearlyHToranDays++;
                         if (s.includes('חופשה') || s.includes('חש') || s.includes('ח״ש')) totalStats[o].yearlyVacationDays++;
                         if (s.includes('מחלה')) totalStats[o].yearlySickDays++;
                     });
@@ -980,8 +980,8 @@
                                 <span class="text-amber-800 font-black">${stats.yearlyCarDays} ימים</span>
                             </div>
                             <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
-                                <span>4️⃣ ימי כוננות שנתי (👮‍♂️ כונן):</span>
-                                <span class="text-indigo-700 font-black">${stats.yearlyConanDays} ימים</span>
+                                <span>4️⃣ ימי ח.תורן שנתי (👮‍♂️ ח.תורן):</span>
+                                <span class="text-indigo-700 font-black">${stats.yearlyHToranDays} ימים</span>
                             </div>
                             <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
                                 <span>5️⃣ ימי מחלה שנתי:</span>
