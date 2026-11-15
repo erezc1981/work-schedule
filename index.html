@@ -87,7 +87,6 @@
         <option value="ח״ש">
         <option value="קורס">
         <option value="מטווח">
-        <option value="מהבית">
         <option value="עבודה מהבית">
         <option value="חו״ל">
     </datalist>
@@ -132,7 +131,7 @@
                     </button>
                     <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold py-2 px-3 rounded-lg border border-amber-500/30 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-lock text-xs" id="admin-icon"></i>
-                        <span id="admin-btn-text">מצב צפייה</span>
+                        <span id="admin-btn-text">מצב עריכה</span>
                     </button>
                     <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-print text-xs"></i>
@@ -285,7 +284,7 @@
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
                 <h3 class="font-bold text-base flex items-center gap-2">
                     <i class="fa-solid fa-paper-plane text-amber-400"></i>
-                    <span>הגשת בקשה לרכב / חופשה / טיסה / שינוי משמרת</span>
+                    <span>הגשת בקשה לרכב / חופשה / כוננות / שינוי משמרת</span>
                 </h3>
                 <button onclick="closeRequestModal()" class="text-white hover:text-amber-400 text-lg p-1">
                     <i class="fa-solid fa-xmark"></i>
@@ -302,7 +301,7 @@
                     <label class="block text-slate-600 mb-1">סוג הבקשה:</label>
                     <select id="req-type" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
                         <option value="בקשה לרכב 🚗">בקשה לרכב 🚗</option>
-                        <option value="בקשת טיסה/חו״ל ✈️">בקשת טיסה/חו״ל ✈️</option>
+                        <option value="בקשת כוננות 👮‍♂️">בקשת כוננות 👮‍♂️</option>
                         <option value="בקשת יום חופשה 🏖️">בקשת יום חופשה 🏖️</option>
                         <option value="בקשה לשינוי משמרת 🔄">בקשה לשינוי משמרת 🔄</option>
                     </select>
@@ -358,7 +357,7 @@
         firebase.initializeApp({ databaseURL: FIREBASE_DATABASE_URL });
         const database = firebase.database();
 
-        const PRIMARY_ADMIN_PWD = 'lior';
+        const PRIMARY_ADMIN_PWD = '1978';
         const SECONDARY_ADMIN_PWD = '1981';
 
         let isAdmin = false;
@@ -515,7 +514,7 @@
                 }
             } else {
                 isAdmin = false;
-                document.getElementById('admin-btn-text').textContent = 'מצב צפייה';
+                document.getElementById('admin-btn-text').textContent = 'מצב עריכה';
                 document.getElementById('admin-toggle-btn').classList.replace('bg-amber-500', 'bg-slate-800');
                 document.getElementById('admin-toggle-btn').classList.replace('text-slate-900', 'text-amber-400');
                 document.getElementById('admin-icon').classList.replace('fa-lock-open', 'fa-lock');
@@ -586,10 +585,10 @@
                                         class="p-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-bold transition shadow-sm">
                                         🚗
                                     </button>
-                                    <button onclick="togglePlaneIcon('${officer}', ${day})" 
-                                        title="הוסף/הסר מטוס/טיסה" 
-                                        class="p-1 bg-sky-200 hover:bg-sky-300 text-sky-900 rounded-lg text-xs font-bold transition shadow-sm">
-                                        ✈️
+                                    <button onclick="toggleConanIcon('${officer}', ${day})" 
+                                        title="הוסף/הסר כונן" 
+                                        class="p-1 bg-indigo-200 hover:bg-indigo-300 text-indigo-900 rounded-lg text-xs font-bold transition shadow-sm">
+                                        👮‍♂️
                                     </button>
                                 </div>
                             </td>`;
@@ -631,17 +630,17 @@
             renderSchedule();
         }
 
-        function togglePlaneIcon(officer, dayIndex) {
+        function toggleConanIcon(officer, dayIndex) {
             if (!scheduleData[currentWeekIndex]) return;
             if (!scheduleData[currentWeekIndex].shifts[officer]) {
                 scheduleData[currentWeekIndex].shifts[officer] = ['', '', '', '', '', '', ''];
             }
             let currentVal = scheduleData[currentWeekIndex].shifts[officer][dayIndex] || '';
             
-            if (currentVal.includes('✈️') || currentVal.includes('טיסה')) {
-                currentVal = currentVal.replace('✈️', '').replace('טיסה', '').trim();
+            if (currentVal.includes('👮‍♂️') || currentVal.includes('כונן')) {
+                currentVal = currentVal.replace('👮‍♂️', '').replace('כונן', '').trim();
             } else {
-                currentVal = (currentVal + ' ✈️').trim();
+                currentVal = (currentVal + ' 👮‍♂️ כונן').trim();
             }
             
             scheduleData[currentWeekIndex].shifts[officer][dayIndex] = currentVal;
@@ -653,45 +652,45 @@
             if (!val) return '<span class="text-slate-400/60 font-normal">-</span>';
             
             const hasCar = val.includes('🚗') || val.includes('רכב') || val.toLowerCase().includes('car');
-            const hasPlane = val.includes('✈️') || val.includes('טיסה') || val.includes('חו״ל');
+            const hasConan = val.includes('👮‍♂️') || val.includes('כונן');
 
-            let cleanVal = val.replace('🚗', '').replace('רכב', '').replace('✈️', '').replace('טיסה', '').trim();
+            let cleanVal = val.replace('🚗', '').replace('רכב', '').replace('👮‍♂️', '').replace('כונן', '').trim();
 
             let carBadge = hasCar ? '<span class="text-base inline-block align-middle ml-1" title="כולל רכב">🚗</span>' : '';
-            let planeBadge = hasPlane ? '<span class="text-base inline-block align-middle ml-1" title="טיסה/חו״ל">✈️</span>' : '';
-            let extraBadges = carBadge + planeBadge;
+            let conanBadge = hasConan ? '<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-900 border border-indigo-300 text-[11px] font-extrabold shadow-sm" title="כונן">👮‍♂️ כונן</span>' : '';
+            let extraBadges = carBadge + conanBadge;
 
             if (dailyShiftOfficers.includes(officer)) {
                 if (cleanVal.includes('מהבית')) {
-                    return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">עבודה מהבית</span>${extraBadges}</div>`;
+                    return `<div class="inline-flex flex-wrap items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">עבודה מהבית</span>${extraBadges}</div>`;
                 }
                 if (cleanVal === 'א' || cleanVal === 'יומי') {
-                    return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">${cleanVal}</span>${extraBadges}</div>`;
+                    return `<div class="inline-flex flex-wrap items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">${cleanVal}</span>${extraBadges}</div>`;
                 }
             }
 
             if (cleanVal.includes('מהבית')) {
-                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">עבודה מהבית</span>${extraBadges}</div>`;
+                return `<div class="inline-flex flex-wrap items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-teal-600 text-white font-bold text-xs shadow">עבודה מהבית</span>${extraBadges}</div>`;
             }
             if (cleanVal === 'אבג' || cleanVal === 'אב' || cleanVal === 'בג') {
-                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs shadow">${cleanVal || 'משמרת'}</span>${extraBadges}</div>`;
+                return `<div class="inline-flex flex-wrap items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs shadow">${cleanVal || 'משמרת'}</span>${extraBadges}</div>`;
             }
             if (cleanVal === 'א') {
-                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow">${cleanVal}</span>${extraBadges}</div>`;
+                return `<div class="inline-flex flex-wrap items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-xs shadow">${cleanVal}</span>${extraBadges}</div>`;
             }
             if (cleanVal.includes('חש') || cleanVal.includes('ח״ש') || cleanVal.includes('חופש')) {
-                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-amber-200 text-amber-900 font-bold text-xs border border-amber-400 shadow-sm">${cleanVal}</span>${extraBadges}</div>`;
+                return `<div class="inline-flex flex-wrap items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-amber-200 text-amber-900 font-bold text-xs border border-amber-400 shadow-sm">${cleanVal}</span>${extraBadges}</div>`;
             }
             if (cleanVal.includes('מחלה')) {
-                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold text-xs shadow">${cleanVal}</span>${extraBadges}</div>`;
+                return `<div class="inline-flex flex-wrap items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-rose-600 text-white font-bold text-xs shadow">${cleanVal}</span>${extraBadges}</div>`;
             }
             if (cleanVal.includes('אילת') || cleanVal.includes('כנס') || cleanVal.includes('מטווח') || cleanVal.includes('קורס') || cleanVal.includes('חו״ל')) {
-                return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-purple-600 text-white font-bold text-xs shadow">${cleanVal}</span>${extraBadges}</div>`;
+                return `<div class="inline-flex flex-wrap items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-purple-600 text-white font-bold text-xs shadow">${cleanVal}</span>${extraBadges}</div>`;
             }
 
-            if (!cleanVal && extraBadges) return extraBadges;
+            if (!cleanVal && extraBadges) return `<div class="inline-flex flex-wrap items-center justify-center gap-1">${extraBadges}</div>`;
 
-            return `<div class="inline-flex items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-slate-700 text-white font-bold text-xs shadow">${cleanVal}</span>${extraBadges}</div>`;
+            return `<div class="inline-flex flex-wrap items-center justify-center gap-1"><span class="px-2.5 py-1 rounded-lg bg-slate-700 text-white font-bold text-xs shadow">${cleanVal}</span>${extraBadges}</div>`;
         }
 
         function updateShift(officer, dayIndex, val) {
@@ -814,8 +813,8 @@
 
             shifts.forEach((s, idx) => {
                 if (!s) return;
-                const cleanShift = s.replace('🚗', '').replace('רכב', '').replace('✈️', '').replace('טיסה', '').trim();
-                if (!cleanShift) return;
+                const cleanShift = s.replace('🚗', '').replace('רכב', '').replace('👮‍♂️', '').replace('כונן', '').trim();
+                if (!cleanShift && !s.includes('כונן') && !s.includes('👮‍♂️')) return;
 
                 const dateStr = weekData.dates[idx];
                 let parts = dateStr.split('.');
@@ -826,9 +825,9 @@
 
                 let startTime = '070000';
                 let endTime = '160000';
-                let summary = `משמרת ${cleanShift} - פיקוח טכנולוגי`;
+                let summary = cleanShift ? `משמרת ${cleanShift} - פיקוח טכנולוגי` : `כוננות - פיקוח טכנולוגי`;
 
-                if (dailyShiftOfficers.includes(targetOfficer)) {
+                if (dailyShiftOfficers.includes(targetOfficer) && cleanShift) {
                     startTime = '070000';
                     endTime = '160000';
                     summary = `משמרת יומית (${cleanShift}) - פיקוח טכנולוגי`;
@@ -850,7 +849,7 @@
 
                 let extras = [];
                 if (s.includes('🚗') || s.includes('רכב')) extras.push('רכב 🚗');
-                if (s.includes('✈️') || s.includes('טיסה')) extras.push('טיסה/חו״ל ✈️');
+                if (s.includes('👮‍♂️') || s.includes('כונן')) extras.push('כונן 👮‍♂️');
                 if (extras.length > 0) summary += ` (${extras.join(', ')})`;
 
                 eventsICal.push(`BEGIN:VEVENT\nSUMMARY:${summary}\nDTSTART:${formattedDate}T${startTime}\nDTEND:${formattedDate}T${endTime}\nDESCRIPTION:סידור עבודה פיקוח טכנולוגי - ${targetOfficer}\nEND:VEVENT`);
@@ -910,7 +909,7 @@
             document.getElementById('stats-modal-title').textContent = 'סיכום משמרות שבועי ושנתי לשוטרים';
 
             let totalStats = {};
-            officers.forEach(o => totalStats[o] = { weeklyHours: 0, yearlyVacationDays: 0, yearlyCarDays: 0, yearlyPlaneDays: 0, yearlySickDays: 0 });
+            officers.forEach(o => totalStats[o] = { weeklyHours: 0, yearlyVacationDays: 0, yearlyCarDays: 0, yearlyConanDays: 0, yearlySickDays: 0 });
 
             scheduleData.forEach((week, wIdx) => {
                 const isCurrentWeek = (wIdx === currentWeekIndex);
@@ -918,7 +917,7 @@
                     const shifts = week.shifts[o] || [];
                     shifts.forEach(s => {
                         if (!s) return;
-                        const cleanShift = s.replace('🚗', '').replace('רכב', '').replace('✈️', '').replace('טיסה', '').trim();
+                        const cleanShift = s.replace('🚗', '').replace('רכב', '').replace('👮‍♂️', '').replace('כונן', '').trim();
                         let hours = 0;
                         if (dailyShiftOfficers.includes(o)) {
                             if (cleanShift === 'א' || cleanShift.includes('מהבית') || cleanShift === 'אבג' || cleanShift === 'אב' || cleanShift === 'בג' || cleanShift === 'יומי') hours = 9;
@@ -930,7 +929,7 @@
 
                         if (isCurrentWeek) totalStats[o].weeklyHours += hours;
                         if (s.includes('🚗') || s.includes('רכב')) totalStats[o].yearlyCarDays++;
-                        if (s.includes('✈️') || s.includes('טיסה')) totalStats[o].yearlyPlaneDays++;
+                        if (s.includes('👮‍♂️') || s.includes('כונן')) totalStats[o].yearlyConanDays++;
                         if (s.includes('חופשה') || s.includes('חש') || s.includes('ח״ש')) totalStats[o].yearlyVacationDays++;
                         if (s.includes('מחלה')) totalStats[o].yearlySickDays++;
                     });
@@ -981,8 +980,8 @@
                                 <span class="text-amber-800 font-black">${stats.yearlyCarDays} ימים</span>
                             </div>
                             <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
-                                <span>4️⃣ ימי טיסה/חו״ל שנתי (✈️):</span>
-                                <span class="text-sky-700 font-black">${stats.yearlyPlaneDays} ימים</span>
+                                <span>4️⃣ ימי כוננות שנתי (👮‍♂️ כונן):</span>
+                                <span class="text-indigo-700 font-black">${stats.yearlyConanDays} ימים</span>
                             </div>
                             <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
                                 <span>5️⃣ ימי מחלה שנתי:</span>
