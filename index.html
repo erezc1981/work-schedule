@@ -65,6 +65,11 @@
         th.sticky-col {
             z-index: 30;
         }
+        .today-col-cell {
+            background-color: rgba(254, 243, 199, 0.45);
+            border-right: 2px solid #f59e0b !important;
+            border-left: 2px solid #f59e0b !important;
+        }
 
         @media print {
             .no-print { display: none !important; }
@@ -113,6 +118,10 @@
 
                 <!-- Actions & Mode Switch -->
                 <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="openTodayCommandModal()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-extrabold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-tower-broadcast text-xs"></i>
+                        <span>מי עובד היום?</span>
+                    </button>
                     <button onclick="openRequestModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                         <span>הגש בקשה</span>
@@ -175,6 +184,10 @@
                             <select id="officer-filter" onchange="filterOfficer()" class="bg-white border border-slate-200 text-xs font-bold rounded-lg p-1.5 focus:outline-none">
                                 <option value="ALL">הצג את כולם</option>
                             </select>
+                            <button onclick="toggleDefaultOfficer()" id="pin-officer-btn" title="שמור שוטר זה כברירת מחדל במכשיר" class="px-2 py-1.5 bg-white hover:bg-amber-50 text-slate-500 border border-slate-200 rounded-lg text-[11px] font-bold transition flex items-center gap-1">
+                                <i class="fa-solid fa-thumbtack"></i>
+                                <span id="pin-officer-text">שמור קבוע</span>
+                            </button>
                         </div>
 
                         <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
@@ -187,12 +200,15 @@
 
             <!-- Schedule View -->
             <div id="view-schedule" class="space-y-6">
-                <div class="md:hidden flex items-center justify-between bg-blue-50 border border-blue-200 text-blue-900 px-3 py-2 rounded-xl text-xs font-bold">
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-blue-50 border border-blue-200 text-blue-900 px-3 py-2 rounded-xl text-xs font-bold no-print">
                     <span class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-arrows-left-right text-blue-600"></i>
-                        <span>ניתן לגלול ימינה ושמאלה לצפייה בכל הימים</span>
+                        <i class="fa-solid fa-hand-pointer text-blue-600"></i>
+                        <span>טיפ: לחיצה על כל יום בשורה של שוטר פותחת הגשת בקשה לאותו תאריך אוטומטית</span>
                     </span>
-                    <i class="fa-solid fa-hand-pointer text-blue-400 animate-pulse"></i>
+                    <span class="md:hidden text-[11px] text-blue-700 flex items-center gap-1">
+                        <i class="fa-solid fa-arrows-left-right"></i>
+                        <span>גלול לצדדים לכל הימים</span>
+                    </span>
                 </div>
 
                 <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-2">
@@ -201,33 +217,40 @@
                             <thead>
                                 <tr class="bg-police-navy text-white text-center text-xs">
                                     <th class="p-3.5 font-bold border-b border-slate-700 text-right min-w-[110px] w-32 bg-slate-900 sticky-col">שם השוטר</th>
-                                    <th class="p-3 border-b border-slate-700 min-w-[110px]">
-                                        <div>ראשון</div>
+                                    <th id="th-day-0" class="p-3 border-b border-slate-700 min-w-[115px]">
+                                        <div id="day-title-0">ראשון</div>
                                         <div id="date-0" class="text-[10px] text-blue-200 font-normal">-</div>
+                                        <div id="holiday-badge-0" class="mt-1"></div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 min-w-[110px]">
-                                        <div>שני</div>
+                                    <th id="th-day-1" class="p-3 border-b border-slate-700 min-w-[115px]">
+                                        <div id="day-title-1">שני</div>
                                         <div id="date-1" class="text-[10px] text-blue-200 font-normal">-</div>
+                                        <div id="holiday-badge-1" class="mt-1"></div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 min-w-[110px]">
-                                        <div>שלישי</div>
+                                    <th id="th-day-2" class="p-3 border-b border-slate-700 min-w-[115px]">
+                                        <div id="day-title-2">שלישי</div>
                                         <div id="date-2" class="text-[10px] text-blue-200 font-normal">-</div>
+                                        <div id="holiday-badge-2" class="mt-1"></div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 min-w-[110px]">
-                                        <div>רביעי</div>
+                                    <th id="th-day-3" class="p-3 border-b border-slate-700 min-w-[115px]">
+                                        <div id="day-title-3">רביעי</div>
                                         <div id="date-3" class="text-[10px] text-blue-200 font-normal">-</div>
+                                        <div id="holiday-badge-3" class="mt-1"></div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 min-w-[110px]">
-                                        <div>חמישי</div>
+                                    <th id="th-day-4" class="p-3 border-b border-slate-700 min-w-[115px]">
+                                        <div id="day-title-4">חמישי</div>
                                         <div id="date-4" class="text-[10px] text-blue-200 font-normal">-</div>
+                                        <div id="holiday-badge-4" class="mt-1"></div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 bg-blue-900/60 min-w-[110px]">
-                                        <div>שישי</div>
+                                    <th id="th-day-5" class="p-3 border-b border-slate-700 bg-blue-900/60 min-w-[115px]">
+                                        <div id="day-title-5">שישי</div>
                                         <div id="date-5" class="text-[10px] text-amber-300 font-normal">-</div>
+                                        <div id="holiday-badge-5" class="mt-1"></div>
                                     </th>
-                                    <th class="p-3 border-b border-slate-700 bg-blue-900/60 min-w-[110px]">
-                                        <div>שבת</div>
+                                    <th id="th-day-6" class="p-3 border-b border-slate-700 bg-blue-900/60 min-w-[115px]">
+                                        <div id="day-title-6">שבת</div>
                                         <div id="date-6" class="text-[10px] text-amber-300 font-normal">-</div>
+                                        <div id="holiday-badge-6" class="mt-1"></div>
                                     </th>
                                 </tr>
                             </thead>
@@ -253,7 +276,7 @@
                     <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
                         <h2 class="text-lg font-bold text-police-navy flex items-center gap-2">
                             <i class="fa-solid fa-star text-amber-500"></i>
-                            <span>שיבוץ חגים וערבי חג</span>
+                            <span>שיבוץ חגים וערבי חג (מוצג אוטומטית גם בטבלה השבועית)</span>
                         </h2>
                         <button id="add-holiday-btn" onclick="addNewHoliday()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
                             <i class="fa-solid fa-plus"></i>
@@ -282,7 +305,24 @@
         </main>
     </div>
 
-    <!-- Modals -->
+    <!-- Today Command Modal ("מי עובד היום?") -->
+    <div id="today-command-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+            <div class="bg-police-navy text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-tower-broadcast text-cyan-400"></i>
+                    <span>לוח פיקוד - מי עובד היום ומחר</span>
+                </h3>
+                <button onclick="closeTodayCommandModal()" class="text-white hover:text-amber-400 text-lg p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-grow space-y-4" id="today-command-content">
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Modal -->
     <div id="request-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col">
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
@@ -335,6 +375,7 @@
         </div>
     </div>
 
+    <!-- Stats Modal -->
     <div id="stats-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[88vh] overflow-hidden flex flex-col">
             <div class="bg-police-navy text-white p-4 flex flex-wrap justify-between items-center gap-3">
@@ -368,6 +409,7 @@
 
         const PRIMARY_ADMIN_PWD = '1978';
         const SECONDARY_ADMIN_PWD = '1981';
+        const SAVED_OFFICER_STORAGE_KEY = 'police_schedule_pinned_officer';
 
         let isAdmin = false;
         let currentWeekIndex = 0;
@@ -436,6 +478,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             populateOfficerFilterOptions();
+            loadPinnedOfficer();
 
             database.ref('police_schedule_2026').on('value', (snapshot) => {
                 const data = snapshot.val();
@@ -461,6 +504,7 @@
                     database.ref('police_holidays_2026').set(defaultHolidaysData);
                 }
                 renderHolidays();
+                renderSchedule();
             });
         });
 
@@ -472,12 +516,25 @@
             database.ref('police_holidays_2026').set(holidaysData);
         }
 
-        function autoSelectCurrentWeek() {
+        function getTodayFormatted() {
             const today = new Date();
             const day = String(today.getDate()).padStart(2, '0');
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const year = today.getFullYear();
-            const dateStrShort = `${day}.${month}.${year}`;
+            return `${day}.${month}.${year}`;
+        }
+
+        function getTomorrowFormatted() {
+            const tmr = new Date();
+            tmr.setDate(tmr.getDate() + 1);
+            const day = String(tmr.getDate()).padStart(2, '0');
+            const month = String(tmr.getMonth() + 1).padStart(2, '0');
+            const year = tmr.getFullYear();
+            return `${day}.${month}.${year}`;
+        }
+
+        function autoSelectCurrentWeek() {
+            const dateStrShort = getTodayFormatted();
 
             if (scheduleData && scheduleData.length > 0) {
                 for (let i = 0; i < scheduleData.length; i++) {
@@ -515,6 +572,58 @@
             });
         }
 
+        function loadPinnedOfficer() {
+            const saved = localStorage.getItem(SAVED_OFFICER_STORAGE_KEY);
+            if (saved && officers.includes(saved)) {
+                selectedOfficerFilter = saved;
+                const select = document.getElementById('officer-filter');
+                const reqSelect = document.getElementById('req-officer-name');
+                if (select) select.value = saved;
+                if (reqSelect) reqSelect.value = saved;
+            }
+            updatePinButtonUI();
+        }
+
+        function toggleDefaultOfficer() {
+            const saved = localStorage.getItem(SAVED_OFFICER_STORAGE_KEY);
+            if (selectedOfficerFilter === 'ALL') {
+                if (saved) {
+                    localStorage.removeItem(SAVED_OFFICER_STORAGE_KEY);
+                    alert('ברירת המחדל הוסרה ממכשיר זה.');
+                } else {
+                    alert('בחר קודם את שמך ברשימה מימין, ואז לחץ על "שמור קבוע".');
+                }
+            } else {
+                if (saved === selectedOfficerFilter) {
+                    localStorage.removeItem(SAVED_OFFICER_STORAGE_KEY);
+                    alert(`הוסרה השמירה הקבועה עבור ${selectedOfficerFilter}.`);
+                } else {
+                    localStorage.setItem(SAVED_OFFICER_STORAGE_KEY, selectedOfficerFilter);
+                    const reqSelect = document.getElementById('req-officer-name');
+                    if (reqSelect) reqSelect.value = selectedOfficerFilter;
+                    alert(`הוגדר בהצלחה! בכל כניסה ממכשיר זה, ${selectedOfficerFilter} יובלט אוטומטית.`);
+                }
+            }
+            updatePinButtonUI();
+        }
+
+        function updatePinButtonUI() {
+            const btn = document.getElementById('pin-officer-btn');
+            const txt = document.getElementById('pin-officer-text');
+            if (!btn || !txt) return;
+            const saved = localStorage.getItem(SAVED_OFFICER_STORAGE_KEY);
+            if (saved && saved === selectedOfficerFilter) {
+                btn.className = 'px-2 py-1.5 bg-amber-400 text-slate-950 border border-amber-500 rounded-lg text-[11px] font-extrabold transition flex items-center gap-1 shadow-sm';
+                txt.textContent = `קבוע: ${saved}`;
+            } else if (saved) {
+                btn.className = 'px-2 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold transition flex items-center gap-1';
+                txt.textContent = `קבוע: ${saved}`;
+            } else {
+                btn.className = 'px-2 py-1.5 bg-white hover:bg-amber-50 text-slate-600 border border-slate-200 rounded-lg text-[11px] font-bold transition flex items-center gap-1';
+                txt.textContent = 'שמור קבוע';
+            }
+        }
+
         function toggleAdminMode() {
             if (!isAdmin) {
                 const pwd = prompt('הכנס קוד מנהל/תמיכה:');
@@ -539,9 +648,35 @@
             renderHolidays();
         }
 
+        function getHolidayInfoForDate(dateStrDDMMYYYY) {
+            if (!dateStrDDMMYYYY || !holidaysData || holidaysData.length === 0) return null;
+            const parts = dateStrDDMMYYYY.split('.');
+            if (parts.length !== 3) return null;
+            const targetDate = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+
+            for (const h of holidaysData) {
+                if (!h.date) continue;
+                const hDisplay = formatDateForDisplay(h.date);
+                const hParts = hDisplay.split('.');
+                if (hParts.length !== 3) continue;
+                const holidayDate = new Date(parseInt(hParts[2], 10), parseInt(hParts[1], 10) - 1, parseInt(hParts[0], 10));
+
+                const diffDays = Math.round((holidayDate - targetDate) / (1000 * 60 * 60 * 24));
+                if (diffDays === 0) {
+                    return { type: 'day', name: h.name, officer: h.day };
+                } else if (diffDays === 1) {
+                    return { type: 'eve', name: `ערב ${h.name}`, officer: h.eve };
+                }
+            }
+            return null;
+        }
+
         function renderSchedule() {
             const tbody = document.getElementById('schedule-body');
             if (!tbody) return;
+
+            const todayStr = getTodayFormatted();
+            let todayColIndex = -1;
 
             const currentData = scheduleData[currentWeekIndex] || {
                 dates: ['-', '-', '-', '-', '-', '-', '-'],
@@ -552,9 +687,40 @@
             if (currentData.dates && currentData.dates.length >= 7) {
                 const weekElem = document.getElementById('week-range-display');
                 if (weekElem) weekElem.textContent = `${currentData.dates[0]} - ${currentData.dates[6]}`;
+                
                 for (let i = 0; i < 7; i++) {
+                    const dateVal = currentData.dates[i] || '-';
+                    const isToday = (dateVal === todayStr);
+                    if (isToday) todayColIndex = i;
+
+                    const thElem = document.getElementById(`th-day-${i}`);
+                    const titleElem = document.getElementById(`day-title-${i}`);
                     const dElem = document.getElementById(`date-${i}`);
-                    if (dElem) dElem.textContent = currentData.dates[i] || '-';
+                    const hBadgeElem = document.getElementById(`holiday-badge-${i}`);
+
+                    if (titleElem) {
+                        titleElem.innerHTML = isToday 
+                            ? `<span class="inline-flex items-center gap-1 bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full text-[11px] font-black shadow">📍 ${dayNames[i]} (היום)</span>` 
+                            : dayNames[i];
+                    }
+                    if (thElem) {
+                        if (isToday) {
+                            thElem.classList.add('ring-2', 'ring-amber-400', 'bg-amber-900/50');
+                        } else {
+                            thElem.classList.remove('ring-2', 'ring-amber-400', 'bg-amber-900/50');
+                        }
+                    }
+                    if (dElem) dElem.textContent = dateVal;
+
+                    if (hBadgeElem) {
+                        const hInfo = getHolidayInfoForDate(dateVal);
+                        if (hInfo) {
+                            const offLabel = (hInfo.officer && hInfo.officer !== '-') ? ` (${hInfo.officer})` : '';
+                            hBadgeElem.innerHTML = `<span class="inline-block bg-amber-300/95 text-slate-950 px-1.5 py-0.5 rounded text-[10px] font-extrabold shadow-sm leading-tight">✡️ ${hInfo.name}${offLabel}</span>`;
+                        } else {
+                            hBadgeElem.innerHTML = '';
+                        }
+                    }
                 }
 
                 const firstDateParts = currentData.dates[0].split('.');
@@ -580,7 +746,7 @@
                     }
                 }
 
-                tr.className = `${colorConfig.row} ${focusClass} hover:opacity-90 transition border-b border-slate-300`;
+                tr.className = `${colorConfig.row} ${focusClass} hover:opacity-95 transition border-b border-slate-300`;
 
                 let rowHTML = `<td class="p-3 font-extrabold border-l border-slate-300 ${colorConfig.nameBg} text-right shadow-inner sticky-col min-w-[110px] w-32">${officer}</td>`;
 
@@ -588,9 +754,12 @@
 
                 for (let day = 0; day < 7; day++) {
                     const shiftVal = officerShifts[day] || '';
+                    const todayCellClass = (day === todayColIndex) ? 'today-col-cell' : '';
+                    const cellDate = (currentData.dates && currentData.dates[day]) ? currentData.dates[day] : '';
+
                     if (isAdmin) {
                         rowHTML += `
-                            <td class="p-1 text-center border-l border-slate-300/60 min-w-[110px]">
+                            <td class="p-1 text-center border-l border-slate-300/60 min-w-[115px] ${todayCellClass}">
                                 <div class="flex items-center gap-1">
                                     <input type="text" list="shift-options" value="${shiftVal}" 
                                         id="input-${officer}-${day}"
@@ -611,7 +780,9 @@
                     } else {
                         const shiftBadgeClass = getShiftBadgeStyle(shiftVal, officer);
                         rowHTML += `
-                            <td class="p-2.5 text-center border-l border-slate-300/60 min-w-[110px]">
+                            <td onclick="openRequestForCell('${officer}', '${cellDate}', ${day})" 
+                                title="לחץ להגשת בקשה עבור ${officer} בתאריך ${cellDate}"
+                                class="p-2.5 text-center border-l border-slate-300/60 min-w-[115px] cursor-pointer hover:bg-amber-200/40 transition ${todayCellClass}">
                                 ${shiftBadgeClass}
                             </td>`;
                     }
@@ -626,6 +797,86 @@
                 nInput.value = currentData.notes || '';
                 nInput.readOnly = !isAdmin;
             }
+        }
+
+        function openRequestForCell(officer, dateStr, dayIndex) {
+            const reqOfficer = document.getElementById('req-officer-name');
+            const reqDate = document.getElementById('req-date');
+            if (reqOfficer) reqOfficer.value = officer;
+            if (reqDate && dateStr && dateStr !== '-') {
+                reqDate.value = `${dateStr} (יום ${dayNames[dayIndex]})`;
+            }
+            openRequestModal();
+        }
+
+        function openTodayCommandModal() {
+            const container = document.getElementById('today-command-content');
+            container.innerHTML = '';
+
+            const todayStr = getTodayFormatted();
+            const tomorrowStr = getTomorrowFormatted();
+
+            const targets = [
+                { label: 'היום', dateStr: todayStr, badgeColor: 'bg-amber-400 text-slate-950' },
+                { label: 'מחר', dateStr: tomorrowStr, badgeColor: 'bg-blue-600 text-white' }
+            ];
+
+            let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+
+            targets.forEach(t => {
+                let foundShifts = [];
+                let dayNameLabel = '';
+                let holidayInfo = getHolidayInfoForDate(t.dateStr);
+
+                for (const week of scheduleData) {
+                    if (!week.dates) continue;
+                    const idx = week.dates.indexOf(t.dateStr);
+                    if (idx !== -1) {
+                        dayNameLabel = dayNames[idx];
+                        officers.forEach(off => {
+                            const val = (week.shifts && week.shifts[off]) ? (week.shifts[off][idx] || '').trim() : '';
+                            if (val !== '') {
+                                foundShifts.push({ officer: off, shift: val });
+                            }
+                        });
+                        break;
+                    }
+                }
+
+                html += `
+                    <div class="border border-slate-200 rounded-2xl bg-slate-50 overflow-hidden shadow-sm flex flex-col">
+                        <div class="bg-slate-900 text-white p-3 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-xs font-black ${t.badgeColor}">${t.label}</span>
+                                <span class="font-bold text-sm">יום ${dayNameLabel} (${t.dateStr})</span>
+                            </div>
+                        </div>
+                        ${holidayInfo ? `<div class="bg-amber-100 text-amber-950 px-3 py-1.5 text-xs font-extrabold border-b border-amber-200">✡️ ${holidayInfo.name} ${holidayInfo.officer && holidayInfo.officer !== '-' ? `- משובץ: ${holidayInfo.officer}` : ''}</div>` : ''}
+                        <div class="p-3 space-y-2 flex-grow">`;
+
+                if (foundShifts.length === 0) {
+                    html += `<div class="text-center text-slate-400 text-xs py-6 font-bold">אין שיבוצים רשומים ליום זה</div>`;
+                } else {
+                    foundShifts.forEach(item => {
+                        const colorCfg = officerRowColors[item.officer] || { nameBg: 'bg-slate-200 text-slate-800' };
+                        html += `
+                            <div class="flex items-center justify-between bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+                                <span class="font-extrabold text-xs px-2.5 py-1 rounded-lg ${colorCfg.nameBg}">${item.officer}</span>
+                                <div>${getShiftBadgeStyle(item.shift, item.officer)}</div>
+                            </div>`;
+                    });
+                }
+
+                html += `</div></div>`;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+            document.getElementById('today-command-modal').classList.remove('hidden');
+        }
+
+        function closeTodayCommandModal() {
+            document.getElementById('today-command-modal').classList.add('hidden');
         }
 
         function toggleCarIcon(officer, dayIndex) {
@@ -726,6 +977,11 @@
 
         function filterOfficer() {
             selectedOfficerFilter = document.getElementById('officer-filter').value;
+            if (selectedOfficerFilter !== 'ALL') {
+                const reqSelect = document.getElementById('req-officer-name');
+                if (reqSelect) reqSelect.value = selectedOfficerFilter;
+            }
+            updatePinButtonUI();
             renderSchedule();
         }
 
@@ -827,7 +1083,8 @@
         function exportShiftsToCalendar() {
             let targetOfficer = selectedOfficerFilter;
             if (targetOfficer === 'ALL') {
-                targetOfficer = prompt('הכנס את שם השוטר שעבורו תרצה לייצא את המשמרות ליומן Google:', 'ארז');
+                const saved = localStorage.getItem(SAVED_OFFICER_STORAGE_KEY) || 'ארז';
+                targetOfficer = prompt('הכנס את שם השוטר שעבורו תרצה לייצא את המשמרות ליומן Google:', saved);
                 if (!targetOfficer) return;
             }
 
@@ -1189,6 +1446,7 @@
             if (!holidaysData[index]) return;
             holidaysData[index][field] = value;
             saveHolidaysLocally();
+            renderSchedule();
         }
 
         function addNewHoliday() {
@@ -1196,6 +1454,7 @@
             holidaysData.push({ name: 'חג חדש', date: `${currentYear}-01-01`, eve: '-', day: '-' });
             saveHolidaysLocally();
             renderHolidays();
+            renderSchedule();
         }
 
         function deleteHoliday(index) {
@@ -1203,6 +1462,7 @@
                 holidaysData.splice(index, 1);
                 saveHolidaysLocally();
                 renderHolidays();
+                renderSchedule();
             }
         }
 
