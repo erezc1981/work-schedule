@@ -146,23 +146,27 @@
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-6 no-print space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-4">
-                    <div class="flex items-center gap-2">
-                        <button onclick="changeWeek(-1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="changeWeek(-1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע קודם">
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
                         <div class="text-center min-w-[230px] bg-gradient-to-r from-police-navy to-blue-900 text-white px-4 py-2 rounded-2xl shadow-md border-2 border-amber-400/60">
                             <span class="text-[10px] font-bold text-amber-300 block tracking-wider uppercase">✨ שבוע מוצג ✨</span>
                             <span id="week-range-display" class="font-black text-white text-base tracking-wide">טוען...</span>
                         </div>
-                        <button onclick="changeWeek(1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm">
+                        <button onclick="changeWeek(1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע הבא">
                             <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <button onclick="goToCurrentWeek()" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-police-navy border border-blue-200 rounded-xl text-xs font-extrabold transition shadow-sm flex items-center gap-1.5" title="חזור לשבוע הנוכחי">
+                            <i class="fa-solid fa-calendar-day text-police-blue"></i>
+                            <span>השבוע הנוכחי</span>
                         </button>
                     </div>
 
                     <div class="flex items-center gap-3 flex-wrap">
-                        <div class="relative min-w-[180px]">
+                        <div class="relative min-w-[210px]">
                             <i class="fa-solid fa-magnifying-glass absolute right-3 top-3 text-slate-400 text-xs"></i>
-                            <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="חפש תאריך (למשל 15.03)..." 
+                            <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="חפש תאריך או טקסט (למשל חופשה)..." 
                                 class="w-full pr-8 pl-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 transition">
                         </div>
 
@@ -332,15 +336,20 @@
     </div>
 
     <div id="stats-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col">
-            <div class="bg-police-navy text-white p-4 flex justify-between items-center">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[88vh] overflow-hidden flex flex-col">
+            <div class="bg-police-navy text-white p-4 flex flex-wrap justify-between items-center gap-3">
                 <h3 class="font-bold text-base flex items-center gap-2">
                     <i class="fa-solid fa-chart-pie text-amber-400"></i>
-                    <span id="stats-modal-title">סיכום משמרות שבועי ושנתי לשוטרים</span>
+                    <span id="stats-modal-title">סיכום משמרות שבועי, חודשי ושנתי לשוטרים</span>
                 </h3>
-                <button onclick="closeStatsModal()" class="text-white hover:text-amber-400 text-lg p-1">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <div class="flex items-center gap-2">
+                    <label for="stats-month-select" class="text-xs text-blue-200 font-bold">חודש לסיכום:</label>
+                    <select id="stats-month-select" onchange="renderStatsContent()" class="bg-slate-800 text-white border border-blue-400/50 rounded-lg px-2.5 py-1 text-xs font-bold focus:outline-none">
+                    </select>
+                    <button onclick="closeStatsModal()" class="text-white hover:text-amber-400 text-lg p-1 mr-2">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
             </div>
             <div class="p-5 overflow-y-auto flex-grow space-y-4" id="stats-modal-content">
             </div>
@@ -367,6 +376,7 @@
 
         const officers = ['אמיר', 'ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'עינב', 'שלומית', 'רעות', 'ליפז', 'לינוי'];
         const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+        const hebrewMonths = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
         const dailyShiftOfficers = ['שלומית', 'רעות', 'ליפז', 'לינוי'];
         const sambacOfficers = officers.filter(o => !dailyShiftOfficers.includes(o));
 
@@ -478,6 +488,11 @@
                 }
             }
             currentWeekIndex = 0;
+        }
+
+        function goToCurrentWeek() {
+            autoSelectCurrentWeek();
+            renderSchedule();
         }
 
         function populateOfficerFilterOptions() {
@@ -720,8 +735,22 @@
 
             for (let wIndex = 0; wIndex < scheduleData.length; wIndex++) {
                 const week = scheduleData[wIndex];
-                const matchDate = week.dates.some(d => d.toLowerCase().includes(query));
-                if (matchDate) {
+                const matchDate = week.dates && week.dates.some(d => d.toLowerCase().includes(query));
+                const matchNotes = week.notes && week.notes.toLowerCase().includes(query);
+                
+                let matchShifts = false;
+                if (week.shifts) {
+                    const officersToCheck = (selectedOfficerFilter !== 'ALL') ? [selectedOfficerFilter] : Object.keys(week.shifts);
+                    for (const off of officersToCheck) {
+                        const arr = week.shifts[off] || [];
+                        if (arr.some(s => s && s.toLowerCase().includes(query))) {
+                            matchShifts = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (matchDate || matchNotes || matchShifts) {
                     currentWeekIndex = wIndex;
                     renderSchedule();
                     break;
@@ -905,19 +934,75 @@
         }
 
         function openStatsModal() {
+            const monthSelect = document.getElementById('stats-month-select');
+            const currentWeek = scheduleData[currentWeekIndex];
+            let defaultMonthKey = '';
+            if (currentWeek && currentWeek.dates && currentWeek.dates[0]) {
+                const p = currentWeek.dates[0].split('.');
+                if (p.length === 3) defaultMonthKey = `${p[1]}.${p[2]}`;
+            }
+
+            const monthKeysSet = new Set();
+            scheduleData.forEach(w => {
+                if (w.dates) {
+                    w.dates.forEach(d => {
+                        const parts = d.split('.');
+                        if (parts.length === 3) {
+                            monthKeysSet.add(`${parts[1]}.${parts[2]}`);
+                        }
+                    });
+                }
+            });
+
+            monthSelect.innerHTML = '';
+            Array.from(monthKeysSet).forEach(mk => {
+                const [mm, yyyy] = mk.split('.');
+                const mName = hebrewMonths[parseInt(mm, 10) - 1] || mm;
+                const opt = document.createElement('option');
+                opt.value = mk;
+                opt.textContent = `${mName} ${yyyy}`;
+                if (mk === defaultMonthKey) opt.selected = true;
+                monthSelect.appendChild(opt);
+            });
+
+            renderStatsContent();
+            document.getElementById('stats-modal').classList.remove('hidden');
+        }
+
+        function renderStatsContent() {
             const container = document.getElementById('stats-modal-content');
+            const selectedMonthKey = document.getElementById('stats-month-select').value;
+            const [selMonth, selYear] = selectedMonthKey.split('.');
+            const selectedMonthLabel = `${hebrewMonths[parseInt(selMonth, 10) - 1] || selMonth} ${selYear}`;
+
             container.innerHTML = '';
-            document.getElementById('stats-modal-title').textContent = 'סיכום משמרות שבועי ושנתי לשוטרים';
 
             let totalStats = {};
-            officers.forEach(o => totalStats[o] = { weeklyHours: 0, yearlyVacationDays: 0, yearlyCarDays: 0, yearlyHToranDays: 0, yearlySickDays: 0 });
+            officers.forEach(o => {
+                totalStats[o] = {
+                    weeklyHours: 0,
+                    monthlyHours: 0,
+                    monthlyCarDays: 0,
+                    monthlyHToranDays: 0,
+                    monthlyVacationDays: 0,
+                    monthlySickDays: 0,
+                    yearlyVacationDays: 0,
+                    yearlyCarDays: 0,
+                    yearlyHToranDays: 0,
+                    yearlySickDays: 0
+                };
+            });
 
             scheduleData.forEach((week, wIdx) => {
                 const isCurrentWeek = (wIdx === currentWeekIndex);
                 officers.forEach(o => {
                     const shifts = week.shifts[o] || [];
-                    shifts.forEach(s => {
+                    shifts.forEach((s, dayIdx) => {
                         if (!s) return;
+                        const dateStr = (week.dates && week.dates[dayIdx]) ? week.dates[dayIdx] : '';
+                        const dParts = dateStr.split('.');
+                        const isSelectedMonth = (dParts.length === 3 && `${dParts[1]}.${dParts[2]}` === selectedMonthKey);
+
                         const cleanShift = s.replace('🚗', '').replace('רכב', '').replace('👮‍♂️', '').replace('ח.תורן', '').replace('כונן', '').trim();
                         let hours = 0;
                         if (dailyShiftOfficers.includes(o)) {
@@ -928,11 +1013,25 @@
                             else if (cleanShift === 'א') hours = 8;
                         }
 
+                        const hasCar = s.includes('🚗') || s.includes('רכב');
+                        const hasHToran = s.includes('👮‍♂️') || s.includes('ח.תורן') || s.includes('כונן');
+                        const hasVac = s.includes('חופשה') || s.includes('חש') || s.includes('ח״ש');
+                        const hasSick = s.includes('מחלה');
+
                         if (isCurrentWeek) totalStats[o].weeklyHours += hours;
-                        if (s.includes('🚗') || s.includes('רכב')) totalStats[o].yearlyCarDays++;
-                        if (s.includes('👮‍♂️') || s.includes('ח.תורן') || s.includes('כונן')) totalStats[o].yearlyHToranDays++;
-                        if (s.includes('חופשה') || s.includes('חש') || s.includes('ח״ש')) totalStats[o].yearlyVacationDays++;
-                        if (s.includes('מחלה')) totalStats[o].yearlySickDays++;
+
+                        if (isSelectedMonth) {
+                            totalStats[o].monthlyHours += hours;
+                            if (hasCar) totalStats[o].monthlyCarDays++;
+                            if (hasHToran) totalStats[o].monthlyHToranDays++;
+                            if (hasVac) totalStats[o].monthlyVacationDays++;
+                            if (hasSick) totalStats[o].monthlySickDays++;
+                        }
+
+                        if (hasCar) totalStats[o].yearlyCarDays++;
+                        if (hasHToran) totalStats[o].yearlyHToranDays++;
+                        if (hasVac) totalStats[o].yearlyVacationDays++;
+                        if (hasSick) totalStats[o].yearlySickDays++;
                     });
                 });
             });
@@ -969,24 +1068,38 @@
                         </div>
                         <div class="space-y-1.5 text-xs font-bold text-slate-700">
                             <div class="flex justify-between items-center p-2 rounded-lg ${weeklyStyle}">
-                                <span class="font-extrabold">1️⃣ סה"כ שבועי:</span>
+                                <span class="font-extrabold">📅 סה"כ שבועי:</span>
                                 <div class="flex items-center gap-1">${weeklyText}</div>
                             </div>
-                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
-                                <span>2️⃣ ימי חופשה שנתי (חופשה / ח"ש):</span>
-                                <span class="text-amber-600 font-black">${stats.yearlyVacationDays} ימים</span>
+                            <div class="bg-blue-50/80 border border-blue-200 p-2 rounded-lg space-y-1">
+                                <div class="text-police-navy font-black text-[11px] border-b border-blue-200 pb-1">📆 סיכום חודשי (${selectedMonthLabel}):</div>
+                                <div class="flex justify-between">
+                                    <span>שעות עבודה בחודש:</span>
+                                    <span class="text-blue-900 font-black">${stats.monthlyHours} שעות</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>רכב 🚗 / ח.תורן 👮‍♂️:</span>
+                                    <span class="text-indigo-800 font-black">${stats.monthlyCarDays} רכב | ${stats.monthlyHToranDays} ח.תורן</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>חופשה / מחלה:</span>
+                                    <span class="text-slate-800 font-black">${stats.monthlyVacationDays} חופשה | ${stats.monthlySickDays} מחלה</span>
+                                </div>
                             </div>
-                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
-                                <span>3️⃣ ימי רכב שנתי (רכב 🚗):</span>
-                                <span class="text-amber-800 font-black">${stats.yearlyCarDays} ימים</span>
-                            </div>
-                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
-                                <span>4️⃣ ימי ח.תורן שנתי (👮‍♂️ ח.תורן):</span>
-                                <span class="text-indigo-700 font-black">${stats.yearlyHToranDays} ימים</span>
-                            </div>
-                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-slate-100">
-                                <span>5️⃣ ימי מחלה שנתי:</span>
-                                <span class="text-rose-600 font-black">${stats.yearlySickDays} ימים</span>
+                            <div class="bg-white p-2 rounded-lg border border-slate-200 space-y-1">
+                                <div class="text-slate-500 font-black text-[11px] border-b border-slate-100 pb-1">📊 מצטבר שנתי:</div>
+                                <div class="flex justify-between">
+                                    <span>ימי חופשה (חופשה / ח"ש):</span>
+                                    <span class="text-amber-600 font-black">${stats.yearlyVacationDays} ימים</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>ימי רכב (🚗) / ח.תורן (👮‍♂️):</span>
+                                    <span class="text-indigo-700 font-black">${stats.yearlyCarDays} רכב | ${stats.yearlyHToranDays} ח.תורן</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>ימי מחלה:</span>
+                                    <span class="text-rose-600 font-black">${stats.yearlySickDays} ימים</span>
+                                </div>
                             </div>
                         </div>
                     </div>`;
@@ -994,7 +1107,6 @@
             html += `</div>`;
 
             container.innerHTML = html;
-            document.getElementById('stats-modal').classList.remove('hidden');
         }
 
         function closeStatsModal() { document.getElementById('stats-modal').classList.add('hidden'); }
