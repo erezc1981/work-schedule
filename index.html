@@ -49,18 +49,26 @@
     <style>
         body { font-family: 'Heebo', sans-serif; background-color: #f8fafc; }
         .dimmed-row { opacity: 0.25; filter: grayscale(80%); }
-        .focused-row { transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; position: relative; }
+        .focused-row { box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; position: relative; }
         
         .table-scroll-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             max-width: 100%;
+            position: relative;
+        }
+        #schedule-table {
+            border-collapse: separate;
+            border-spacing: 0;
         }
         .sticky-col {
+            position: -webkit-sticky;
             position: sticky;
             right: 0;
             z-index: 20;
-            box-shadow: -3px 0 6px -2px rgba(0, 0, 0, 0.15);
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+            box-shadow: -3px 0 6px -2px rgba(0, 0, 0, 0.18);
         }
         th.sticky-col {
             z-index: 30;
@@ -74,7 +82,7 @@
         @media print {
             .no-print { display: none !important; }
             .print-full { width: 100% !important; max-width: none !important; margin: 0 !important; }
-            .sticky-col { position: static !important; box-shadow: none !important; }
+            .sticky-col { position: static !important; box-shadow: none !important; transform: none !important; }
         }
     </style>
 </head>
@@ -211,12 +219,12 @@
                     </span>
                 </div>
 
-                <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden p-2">
-                    <div class="table-scroll-container">
-                        <table class="w-full text-sm text-right border-collapse" id="schedule-table">
+                <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-2">
+                    <div class="table-scroll-container rounded-xl">
+                        <table class="w-full text-sm text-right" id="schedule-table">
                             <thead>
                                 <tr class="bg-police-navy text-white text-center text-xs">
-                                    <th class="p-3.5 font-bold border-b border-slate-700 text-right min-w-[110px] w-32 bg-slate-900 sticky-col">שם השוטר</th>
+                                    <th class="p-3.5 font-bold border-b border-slate-700 text-right min-w-[105px] w-28 bg-slate-900 sticky-col">שם השוטר</th>
                                     <th id="th-day-0" class="p-3 border-b border-slate-700 min-w-[115px]">
                                         <div id="day-title-0">ראשון</div>
                                         <div id="date-0" class="text-[10px] text-blue-200 font-normal">-</div>
@@ -254,7 +262,7 @@
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody id="schedule-body" class="divide-y divide-slate-300">
+                            <tbody id="schedule-body">
                                 <!-- Populated dynamically -->
                             </tbody>
                         </table>
@@ -740,15 +748,15 @@
                 let focusClass = '';
                 if (selectedOfficerFilter !== 'ALL') {
                     if (selectedOfficerFilter === officer) {
-                        focusClass = 'focused-row border-2 border-police-navy';
+                        focusClass = 'focused-row';
                     } else {
                         focusClass = 'dimmed-row';
                     }
                 }
 
-                tr.className = `${colorConfig.row} ${focusClass} hover:opacity-95 transition border-b border-slate-300`;
+                tr.className = `${colorConfig.row} ${focusClass} transition`;
 
-                let rowHTML = `<td class="p-3 font-extrabold border-l border-slate-300 ${colorConfig.nameBg} text-right shadow-inner sticky-col min-w-[110px] w-32">${officer}</td>`;
+                let rowHTML = `<td class="p-3 font-extrabold border-b border-l border-slate-300 ${colorConfig.nameBg} text-right sticky-col min-w-[105px] w-28">${officer}</td>`;
 
                 const officerShifts = (currentData.shifts && currentData.shifts[officer]) ? currentData.shifts[officer] : ['', '', '', '', '', '', ''];
 
@@ -759,7 +767,7 @@
 
                     if (isAdmin) {
                         rowHTML += `
-                            <td class="p-1 text-center border-l border-slate-300/60 min-w-[115px] ${todayCellClass}">
+                            <td class="p-1 text-center border-b border-l border-slate-300/60 min-w-[115px] ${todayCellClass}">
                                 <div class="flex items-center gap-1">
                                     <input type="text" list="shift-options" value="${shiftVal}" 
                                         id="input-${officer}-${day}"
@@ -782,7 +790,7 @@
                         rowHTML += `
                             <td onclick="openRequestForCell('${officer}', '${cellDate}', ${day})" 
                                 title="לחץ להגשת בקשה עבור ${officer} בתאריך ${cellDate}"
-                                class="p-2.5 text-center border-l border-slate-300/60 min-w-[115px] cursor-pointer hover:bg-amber-200/40 transition ${todayCellClass}">
+                                class="p-2.5 text-center border-b border-l border-slate-300/60 min-w-[115px] cursor-pointer hover:bg-amber-200/40 transition ${todayCellClass}">
                                 ${shiftBadgeClass}
                             </td>`;
                     }
