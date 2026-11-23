@@ -51,6 +51,7 @@
             font-family: 'Heebo', sans-serif;
             background-color: #f8fafc;
             padding-bottom: env(safe-area-inset-bottom);
+            overflow-x: hidden;
         }
         header {
             padding-top: env(safe-area-inset-top);
@@ -58,13 +59,33 @@
         .dimmed-row { opacity: 0.25; filter: grayscale(80%); }
         .focused-row { box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; position: relative; }
         
-        /* גלילה אופקית בלבד במיכל הטבלה — גלילה אנכית שייכת לדף כולו כדי שהאצבע לא תיתקע */
-        .schedule-viewport {
+        /* מבנה מפוצל: עמודת שמות נעולה מימין + גלילה אופקית נקייה לימים */
+        .schedule-split-wrapper {
+            display: flex;
+            width: 100%;
+            align-items: stretch;
+        }
+        .fixed-officers-pane {
+            flex: 0 0 98px;
+            width: 98px;
+            z-index: 20;
+            box-shadow: -4px 0 8px -2px rgba(0, 0, 0, 0.16);
+        }
+        .scrollable-days-pane {
+            flex: 1 1 auto;
+            min-width: 0;
             overflow-x: auto;
-            overflow-y: visible;
             -webkit-overflow-scrolling: touch;
-            max-width: 100%;
-            position: relative;
+        }
+
+        /* סנכרון גובה קשיח בין שורות השמות לשורות המשמרות */
+        .sched-head-cell {
+            height: 68px;
+            box-sizing: border-box;
+        }
+        .sched-body-cell {
+            height: 52px;
+            box-sizing: border-box;
         }
 
         .table-scroll-container {
@@ -74,51 +95,14 @@
             position: relative;
         }
 
-        #schedule-table {
+        #officers-fixed-table,
+        #schedule-days-table {
             border-collapse: separate;
             border-spacing: 0;
         }
 
-        /* קיבוע שורת הימים העליונה ביחס לחלון המסך */
-        #schedule-table thead th.sticky-day-header {
-            position: -webkit-sticky;
-            position: sticky;
-            top: 0;
-            z-index: 30;
-            background-color: #1e3a8a;
-            transform: translate3d(0, 0, 0);
-            -webkit-transform: translate3d(0, 0, 0);
-            box-shadow: 0 2px 5px -1px rgba(0, 0, 0, 0.25);
-        }
-        #schedule-table thead th.sticky-day-header.weekend-col {
-            background-color: #172554;
-        }
-        #schedule-table thead th.sticky-day-header.today-th {
-            background-color: #78350f;
-        }
-
-        /* קיבוע עמודת שם השוטר מימין (גלילה אופקית) */
-        .sticky-col {
-            position: -webkit-sticky;
-            position: sticky;
-            right: 0;
-            z-index: 20;
-            transform: translate3d(0, 0, 0);
-            -webkit-transform: translate3d(0, 0, 0);
-            box-shadow: -3px 0 6px -2px rgba(0, 0, 0, 0.18);
-        }
-
-        /* קיבוע כפול לתא הפינה "שם השוטר" (למעלה + ימין) */
-        #schedule-table thead th.sticky-corner {
-            position: -webkit-sticky;
-            position: sticky;
-            top: 0;
-            right: 0;
-            z-index: 40;
-            background-color: #0f172a;
-            transform: translate3d(0, 0, 0);
-            -webkit-transform: translate3d(0, 0, 0);
-            box-shadow: -3px 2px 6px -1px rgba(0, 0, 0, 0.3);
+        .today-th {
+            background-color: #78350f !important;
         }
 
         .today-col-cell {
@@ -130,12 +114,8 @@
         @media print {
             .no-print { display: none !important; }
             .print-full { width: 100% !important; max-width: none !important; margin: 0 !important; }
-            .schedule-viewport { overflow: visible !important; }
-            .sticky-col, .sticky-day-header, .sticky-corner {
-                position: static !important;
-                box-shadow: none !important;
-                transform: none !important;
-            }
+            .scrollable-days-pane { overflow: visible !important; }
+            .fixed-officers-pane { box-shadow: none !important; }
         }
     </style>
 </head>
@@ -262,57 +242,73 @@
             <!-- Schedule View -->
             <div id="view-schedule" class="space-y-4 sm:space-y-6">
                 <div class="flex md:hidden items-center justify-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-1.5 rounded-xl text-[11px] font-bold no-print">
-                    <i class="fa-solid fa-arrows-up-down-left-right"></i>
-                    <span>גלול לכל הכיוונים — הימים והשמות מקובעים</span>
+                    <i class="fa-solid fa-arrows-left-right"></i>
+                    <span>החלק ימינה ושמאלה בימים — שמות השוטרים נעולים מימין</span>
                 </div>
 
-                <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-1.5 sm:p-2">
-                    <div class="schedule-viewport rounded-xl">
-                        <table class="w-full text-sm text-right" id="schedule-table">
-                            <thead>
-                                <tr class="text-white text-center text-xs">
-                                    <th class="p-3 font-bold border-b border-l border-slate-700 text-right min-w-[100px] w-28 sticky-corner">שם השוטר</th>
-                                    <th id="th-day-0" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header">
-                                        <div id="day-title-0">ראשון</div>
-                                        <div id="date-0" class="text-[10px] text-blue-200 font-normal">-</div>
-                                        <div id="holiday-badge-0" class="mt-1"></div>
-                                    </th>
-                                    <th id="th-day-1" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header">
-                                        <div id="day-title-1">שני</div>
-                                        <div id="date-1" class="text-[10px] text-blue-200 font-normal">-</div>
-                                        <div id="holiday-badge-1" class="mt-1"></div>
-                                    </th>
-                                    <th id="th-day-2" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header">
-                                        <div id="day-title-2">שלישי</div>
-                                        <div id="date-2" class="text-[10px] text-blue-200 font-normal">-</div>
-                                        <div id="holiday-badge-2" class="mt-1"></div>
-                                    </th>
-                                    <th id="th-day-3" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header">
-                                        <div id="day-title-3">רביעי</div>
-                                        <div id="date-3" class="text-[10px] text-blue-200 font-normal">-</div>
-                                        <div id="holiday-badge-3" class="mt-1"></div>
-                                    </th>
-                                    <th id="th-day-4" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header">
-                                        <div id="day-title-4">חמישי</div>
-                                        <div id="date-4" class="text-[10px] text-blue-200 font-normal">-</div>
-                                        <div id="holiday-badge-4" class="mt-1"></div>
-                                    </th>
-                                    <th id="th-day-5" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header weekend-col">
-                                        <div id="day-title-5">שישי</div>
-                                        <div id="date-5" class="text-[10px] text-amber-300 font-normal">-</div>
-                                        <div id="holiday-badge-5" class="mt-1"></div>
-                                    </th>
-                                    <th id="th-day-6" class="p-2.5 sm:p-3 border-b border-slate-700 min-w-[112px] sticky-day-header weekend-col">
-                                        <div id="day-title-6">שבת</div>
-                                        <div id="date-6" class="text-[10px] text-amber-300 font-normal">-</div>
-                                        <div id="holiday-badge-6" class="mt-1"></div>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody id="schedule-body">
-                                <!-- Populated dynamically -->
-                            </tbody>
-                        </table>
+                <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-1.5 sm:p-2 overflow-hidden">
+                    <div class="schedule-split-wrapper rounded-xl overflow-hidden border border-slate-200">
+                        <!-- עמודת שמות השוטרים נעולה מימין -->
+                        <div class="fixed-officers-pane bg-white">
+                            <table class="w-full text-sm text-right" id="officers-fixed-table">
+                                <thead>
+                                    <tr class="text-white text-xs">
+                                        <th class="px-2.5 font-bold border-b border-l border-slate-700 text-right bg-police-dark sched-head-cell align-middle">שם השוטר</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="officers-fixed-body">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- אזור הימים נגלל אופקית בחופשיות -->
+                        <div class="scrollable-days-pane">
+                            <table class="w-full text-sm text-right" id="schedule-days-table">
+                                <thead>
+                                    <tr class="text-white text-center text-xs">
+                                        <th id="th-day-0" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
+                                            <div id="day-title-0">ראשון</div>
+                                            <div id="date-0" class="text-[10px] text-blue-200 font-normal">-</div>
+                                            <div id="holiday-badge-0" class="mt-0.5"></div>
+                                        </th>
+                                        <th id="th-day-1" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
+                                            <div id="day-title-1">שני</div>
+                                            <div id="date-1" class="text-[10px] text-blue-200 font-normal">-</div>
+                                            <div id="holiday-badge-1" class="mt-0.5"></div>
+                                        </th>
+                                        <th id="th-day-2" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
+                                            <div id="day-title-2">שלישי</div>
+                                            <div id="date-2" class="text-[10px] text-blue-200 font-normal">-</div>
+                                            <div id="holiday-badge-2" class="mt-0.5"></div>
+                                        </th>
+                                        <th id="th-day-3" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
+                                            <div id="day-title-3">רביעי</div>
+                                            <div id="date-3" class="text-[10px] text-blue-200 font-normal">-</div>
+                                            <div id="holiday-badge-3" class="mt-0.5"></div>
+                                        </th>
+                                        <th id="th-day-4" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
+                                            <div id="day-title-4">חמישי</div>
+                                            <div id="date-4" class="text-[10px] text-blue-200 font-normal">-</div>
+                                            <div id="holiday-badge-4" class="mt-0.5"></div>
+                                        </th>
+                                        <th id="th-day-5" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-blue-950 sched-head-cell align-middle">
+                                            <div id="day-title-5">שישי</div>
+                                            <div id="date-5" class="text-[10px] text-amber-300 font-normal">-</div>
+                                            <div id="holiday-badge-5" class="mt-0.5"></div>
+                                        </th>
+                                        <th id="th-day-6" class="px-2 border-b border-slate-700 min-w-[112px] bg-blue-950 sched-head-cell align-middle">
+                                            <div id="day-title-6">שבת</div>
+                                            <div id="date-6" class="text-[10px] text-amber-300 font-normal">-</div>
+                                            <div id="holiday-badge-6" class="mt-0.5"></div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schedule-body">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -727,8 +723,9 @@
         }
 
         function renderSchedule() {
-            const tbody = document.getElementById('schedule-body');
-            if (!tbody) return;
+            const fixedTbody = document.getElementById('officers-fixed-body');
+            const daysTbody = document.getElementById('schedule-body');
+            if (!fixedTbody || !daysTbody) return;
 
             const todayStr = getTodayFormatted();
             let todayColIndex = -1;
@@ -786,10 +783,10 @@
                 }
             }
 
-            tbody.innerHTML = '';
+            fixedTbody.innerHTML = '';
+            daysTbody.innerHTML = '';
 
             officers.forEach(officer => {
-                const tr = document.createElement('tr');
                 const colorConfig = officerRowColors[officer] || { row: 'bg-white', nameBg: 'bg-slate-200 text-slate-800' };
                 
                 let focusClass = '';
@@ -801,10 +798,17 @@
                     }
                 }
 
-                tr.className = `${colorConfig.row} ${focusClass} transition`;
+                // שורת שם השוטר בטבלה הימנית הנעולה
+                const nameTr = document.createElement('tr');
+                nameTr.className = `${focusClass} transition`;
+                nameTr.innerHTML = `<td class="px-2.5 font-extrabold border-b border-l border-slate-300 ${colorConfig.nameBg} text-right sched-body-cell align-middle whitespace-nowrap">${officer}</td>`;
+                fixedTbody.appendChild(nameTr);
 
-                let rowHTML = `<td class="p-3 font-extrabold border-b border-l border-slate-300 ${colorConfig.nameBg} text-right sticky-col min-w-[100px] w-28">${officer}</td>`;
+                // שורת המשמרות בטבלה השמאלית הנגללת
+                const daysTr = document.createElement('tr');
+                daysTr.className = `${colorConfig.row} ${focusClass} transition`;
 
+                let rowHTML = '';
                 const officerShifts = (currentData.shifts && currentData.shifts[officer]) ? currentData.shifts[officer] : ['', '', '', '', '', '', ''];
 
                 for (let day = 0; day < 7; day++) {
@@ -813,7 +817,7 @@
 
                     if (isAdmin) {
                         rowHTML += `
-                            <td class="p-1 text-center border-b border-l border-slate-300/60 min-w-[112px] ${todayCellClass}">
+                            <td class="px-1 text-center border-b border-l border-slate-300/60 min-w-[112px] sched-body-cell align-middle ${todayCellClass}">
                                 <div class="flex items-center gap-1">
                                     <input type="text" list="shift-options" value="${shiftVal}" 
                                         id="input-${officer}-${day}"
@@ -834,14 +838,14 @@
                     } else {
                         const shiftBadgeClass = getShiftBadgeStyle(shiftVal, officer);
                         rowHTML += `
-                            <td class="p-2.5 text-center border-b border-l border-slate-300/60 min-w-[112px] ${todayCellClass}">
+                            <td class="px-2 text-center border-b border-l border-slate-300/60 min-w-[112px] sched-body-cell align-middle ${todayCellClass}">
                                 ${shiftBadgeClass}
                             </td>`;
                     }
                 }
 
-                tr.innerHTML = rowHTML;
-                tbody.appendChild(tr);
+                daysTr.innerHTML = rowHTML;
+                daysTbody.appendChild(daysTr);
             });
 
             const nInput = document.getElementById('general-notes');
