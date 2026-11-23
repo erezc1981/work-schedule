@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>סידור עבודה פיקוח טכנולוגי</title>
     
     <!-- App & Mobile Home Screen Meta Tags & Custom Icon -->
@@ -47,20 +47,63 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
     <style>
-        body { font-family: 'Heebo', sans-serif; background-color: #f8fafc; }
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #f8fafc;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        header {
+            padding-top: env(safe-area-inset-top);
+        }
         .dimmed-row { opacity: 0.25; filter: grayscale(80%); }
         .focused-row { box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; position: relative; }
         
+        /* מיכל גלילה דו-כיווני מותאם לאייפון ולאנדרואיד */
+        .schedule-viewport {
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            max-width: 100%;
+            max-height: 68vh;
+            position: relative;
+        }
+        @media (min-width: 768px) {
+            .schedule-viewport {
+                max-height: 75vh;
+            }
+        }
+
         .table-scroll-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             max-width: 100%;
             position: relative;
         }
+
         #schedule-table {
             border-collapse: separate;
             border-spacing: 0;
         }
+
+        /* קיבוע שורת הימים העליונה (גלילה אנכית) */
+        #schedule-table thead th.sticky-day-header {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background-color: #1e3a8a;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+            box-shadow: 0 2px 5px -1px rgba(0, 0, 0, 0.25);
+        }
+        #schedule-table thead th.sticky-day-header.weekend-col {
+            background-color: #172554;
+        }
+        #schedule-table thead th.sticky-day-header.today-th {
+            background-color: #78350f;
+        }
+
+        /* קיבוע עמודת שם השוטר מימין (גלילה אופקית) */
         .sticky-col {
             position: -webkit-sticky;
             position: sticky;
@@ -70,11 +113,22 @@
             -webkit-transform: translate3d(0, 0, 0);
             box-shadow: -3px 0 6px -2px rgba(0, 0, 0, 0.18);
         }
-        th.sticky-col {
-            z-index: 30;
+
+        /* קיבוע כפול לתא הפינה "שם השוטר" (למעלה + ימין) */
+        #schedule-table thead th.sticky-corner {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            right: 0;
+            z-index: 40;
+            background-color: #0f172a;
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+            box-shadow: -3px 2px 6px -1px rgba(0, 0, 0, 0.3);
         }
+
         .today-col-cell {
-            background-color: rgba(254, 243, 199, 0.45);
+            background-color: rgba(254, 243, 199, 0.55);
             border-right: 2px solid #f59e0b !important;
             border-left: 2px solid #f59e0b !important;
         }
@@ -82,7 +136,12 @@
         @media print {
             .no-print { display: none !important; }
             .print-full { width: 100% !important; max-width: none !important; margin: 0 !important; }
-            .sticky-col { position: static !important; box-shadow: none !important; transform: none !important; }
+            .schedule-viewport { max-height: none !important; overflow: visible !important; }
+            .sticky-col, .sticky-day-header, .sticky-corner {
+                position: static !important;
+                box-shadow: none !important;
+                transform: none !important;
+            }
         }
     </style>
 </head>
@@ -106,16 +165,16 @@
 
     <div>
         <!-- Header -->
-        <header class="bg-police-navy text-white shadow-lg no-print sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="bg-police-gold text-slate-900 font-bold p-2.5 rounded-xl shadow">
-                        <i class="fa-solid fa-shield-halved text-xl"></i>
+        <header class="bg-police-navy text-white shadow-lg no-print">
+            <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 sm:py-3 flex flex-wrap justify-between items-center gap-2 sm:gap-4">
+                <div class="flex items-center gap-2.5 sm:gap-3">
+                    <div class="bg-police-gold text-slate-900 font-bold p-2 sm:p-2.5 rounded-xl shadow">
+                        <i class="fa-solid fa-shield-halved text-lg sm:text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-xl font-black tracking-wide">סידור עבודה פיקוח טכנולוגי</h1>
+                        <h1 class="text-lg sm:text-xl font-black tracking-wide">סידור עבודה פיקוח טכנולוגי</h1>
                         <div class="flex items-center gap-2">
-                            <p id="system-year-subtitle" class="text-xs text-blue-200">מערכת ניהול משמרות 2026</p>
+                            <p id="system-year-subtitle" class="text-[11px] sm:text-xs text-blue-200">מערכת ניהול משמרות 2026</p>
                             <span id="sync-status" class="bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                                 מסונכרן בלייב (Firebase)
@@ -125,32 +184,32 @@
                 </div>
 
                 <!-- Actions & Mode Switch -->
-                <div class="flex items-center gap-2 flex-wrap">
-                    <button onclick="openTodayCommandModal()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-extrabold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <button onclick="openTodayCommandModal()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-[11px] sm:text-xs font-extrabold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-tower-broadcast text-xs"></i>
                         <span>מי עובד היום?</span>
                     </button>
-                    <button onclick="openRequestModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="openRequestModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                         <span>הגש בקשה</span>
                     </button>
-                    <button onclick="shareScheduleToWhatsAppText()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="shareScheduleToWhatsAppText()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-brands fa-whatsapp text-xs"></i>
                         <span>שתף סידור ב-WhatsApp</span>
                     </button>
-                    <button onclick="exportShiftsToCalendar()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="exportShiftsToCalendar()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-calendar-plus text-xs"></i>
                         <span>סנכרן ליומן Google</span>
                     </button>
-                    <button onclick="openStatsModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="openStatsModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-chart-pie text-xs"></i>
                         <span>סיכום חודשי</span>
                     </button>
-                    <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-xs font-bold py-2 px-3 rounded-lg border border-amber-500/30 transition flex items-center gap-1.5">
+                    <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg border border-amber-500/30 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-lock text-xs" id="admin-icon"></i>
                         <span id="admin-btn-text">מצב עריכה</span>
                     </button>
-                    <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold py-2 px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-print text-xs"></i>
                         <span>הדפסה</span>
                     </button>
@@ -159,17 +218,17 @@
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full print-full">
+        <main class="max-w-7xl mx-auto px-2.5 sm:px-4 py-4 sm:py-6 flex-grow w-full print-full">
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-6 no-print space-y-4">
-                <div class="flex flex-wrap justify-between items-center gap-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-4 mb-4 sm:mb-6 no-print space-y-3 sm:space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-3">
                     <div class="flex items-center gap-2 flex-wrap">
                         <button onclick="changeWeek(-1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע קודם">
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
-                        <div class="text-center min-w-[230px] bg-gradient-to-r from-police-navy to-blue-900 text-white px-4 py-2 rounded-2xl shadow-md border-2 border-amber-400/60">
+                        <div class="text-center min-w-[205px] sm:min-w-[230px] bg-gradient-to-r from-police-navy to-blue-900 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl shadow-md border-2 border-amber-400/60">
                             <span class="text-[10px] font-bold text-amber-300 block tracking-wider uppercase">✨ שבוע מוצג ✨</span>
-                            <span id="week-range-display" class="font-black text-white text-base tracking-wide">טוען...</span>
+                            <span id="week-range-display" class="font-black text-white text-sm sm:text-base tracking-wide">טוען...</span>
                         </div>
                         <button onclick="changeWeek(1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע הבא">
                             <i class="fa-solid fa-chevron-left"></i>
@@ -180,8 +239,8 @@
                         </button>
                     </div>
 
-                    <div class="flex items-center gap-3 flex-wrap">
-                        <div class="relative min-w-[210px]">
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <div class="relative min-w-[195px] sm:min-w-[210px]">
                             <i class="fa-solid fa-magnifying-glass absolute right-3 top-3 text-slate-400 text-xs"></i>
                             <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="חפש תאריך או טקסט (למשל חופשה)..." 
                                 class="w-full pr-8 pl-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 transition">
@@ -207,55 +266,55 @@
             </div>
 
             <!-- Schedule View -->
-            <div id="view-schedule" class="space-y-6">
+            <div id="view-schedule" class="space-y-4 sm:space-y-6">
                 <div class="flex flex-wrap items-center justify-between gap-2 bg-blue-50 border border-blue-200 text-blue-900 px-3 py-2 rounded-xl text-xs font-bold no-print">
                     <span class="flex items-center gap-1.5">
                         <i class="fa-solid fa-hand-pointer text-blue-600"></i>
                         <span>טיפ: לחיצה על כל יום בשורה של שוטר פותחת הגשת בקשה לאותו תאריך אוטומטית</span>
                     </span>
                     <span class="md:hidden text-[11px] text-blue-700 flex items-center gap-1">
-                        <i class="fa-solid fa-arrows-left-right"></i>
-                        <span>גלול לצדדים לכל הימים</span>
+                        <i class="fa-solid fa-arrows-up-down-left-right"></i>
+                        <span>גלול לכל הכיוונים — הימים והשמות מקובעים</span>
                     </span>
                 </div>
 
-                <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-2">
-                    <div class="table-scroll-container rounded-xl">
+                <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-1.5 sm:p-2">
+                    <div class="schedule-viewport rounded-xl">
                         <table class="w-full text-sm text-right" id="schedule-table">
                             <thead>
-                                <tr class="bg-police-navy text-white text-center text-xs">
-                                    <th class="p-3.5 font-bold border-b border-slate-700 text-right min-w-[105px] w-28 bg-slate-900 sticky-col">שם השוטר</th>
-                                    <th id="th-day-0" class="p-3 border-b border-slate-700 min-w-[115px]">
+                                <tr class="text-white text-center text-xs">
+                                    <th class="p-3 font-bold border-b border-l border-slate-700 text-right min-w-[100px] w-28 sticky-corner">שם השוטר</th>
+                                    <th id="th-day-0" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header">
                                         <div id="day-title-0">ראשון</div>
                                         <div id="date-0" class="text-[10px] text-blue-200 font-normal">-</div>
                                         <div id="holiday-badge-0" class="mt-1"></div>
                                     </th>
-                                    <th id="th-day-1" class="p-3 border-b border-slate-700 min-w-[115px]">
+                                    <th id="th-day-1" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header">
                                         <div id="day-title-1">שני</div>
                                         <div id="date-1" class="text-[10px] text-blue-200 font-normal">-</div>
                                         <div id="holiday-badge-1" class="mt-1"></div>
                                     </th>
-                                    <th id="th-day-2" class="p-3 border-b border-slate-700 min-w-[115px]">
+                                    <th id="th-day-2" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header">
                                         <div id="day-title-2">שלישי</div>
                                         <div id="date-2" class="text-[10px] text-blue-200 font-normal">-</div>
                                         <div id="holiday-badge-2" class="mt-1"></div>
                                     </th>
-                                    <th id="th-day-3" class="p-3 border-b border-slate-700 min-w-[115px]">
+                                    <th id="th-day-3" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header">
                                         <div id="day-title-3">רביעי</div>
                                         <div id="date-3" class="text-[10px] text-blue-200 font-normal">-</div>
                                         <div id="holiday-badge-3" class="mt-1"></div>
                                     </th>
-                                    <th id="th-day-4" class="p-3 border-b border-slate-700 min-w-[115px]">
+                                    <th id="th-day-4" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header">
                                         <div id="day-title-4">חמישי</div>
                                         <div id="date-4" class="text-[10px] text-blue-200 font-normal">-</div>
                                         <div id="holiday-badge-4" class="mt-1"></div>
                                     </th>
-                                    <th id="th-day-5" class="p-3 border-b border-slate-700 bg-blue-900/60 min-w-[115px]">
+                                    <th id="th-day-5" class="p-2.5 sm:p-3 border-b border-l border-slate-700 min-w-[112px] sticky-day-header weekend-col">
                                         <div id="day-title-5">שישי</div>
                                         <div id="date-5" class="text-[10px] text-amber-300 font-normal">-</div>
                                         <div id="holiday-badge-5" class="mt-1"></div>
                                     </th>
-                                    <th id="th-day-6" class="p-3 border-b border-slate-700 bg-blue-900/60 min-w-[115px]">
+                                    <th id="th-day-6" class="p-2.5 sm:p-3 border-b border-slate-700 min-w-[112px] sticky-day-header weekend-col">
                                         <div id="day-title-6">שבת</div>
                                         <div id="date-6" class="text-[10px] text-amber-300 font-normal">-</div>
                                         <div id="holiday-badge-6" class="mt-1"></div>
@@ -269,7 +328,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <h3 class="font-bold text-sm text-police-navy mb-3 flex items-center gap-2">
                         <i class="fa-solid fa-comment-dots text-police-gold"></i>
                         <span>הערות שבועיות ודגשים</span>
@@ -280,9 +339,9 @@
 
             <!-- Holidays View -->
             <div id="view-holidays" class="hidden space-y-6">
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
                     <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-                        <h2 class="text-lg font-bold text-police-navy flex items-center gap-2">
+                        <h2 class="text-base sm:text-lg font-bold text-police-navy flex items-center gap-2">
                             <i class="fa-solid fa-star text-amber-500"></i>
                             <span>שיבוץ חגים וערבי חג (מוצג אוטומטית גם בטבלה השבועית)</span>
                         </h2>
@@ -713,9 +772,9 @@
                     }
                     if (thElem) {
                         if (isToday) {
-                            thElem.classList.add('ring-2', 'ring-amber-400', 'bg-amber-900/50');
+                            thElem.classList.add('today-th', 'ring-2', 'ring-amber-400');
                         } else {
-                            thElem.classList.remove('ring-2', 'ring-amber-400', 'bg-amber-900/50');
+                            thElem.classList.remove('today-th', 'ring-2', 'ring-amber-400');
                         }
                     }
                     if (dElem) dElem.textContent = dateVal;
@@ -756,7 +815,7 @@
 
                 tr.className = `${colorConfig.row} ${focusClass} transition`;
 
-                let rowHTML = `<td class="p-3 font-extrabold border-b border-l border-slate-300 ${colorConfig.nameBg} text-right sticky-col min-w-[105px] w-28">${officer}</td>`;
+                let rowHTML = `<td class="p-3 font-extrabold border-b border-l border-slate-300 ${colorConfig.nameBg} text-right sticky-col min-w-[100px] w-28">${officer}</td>`;
 
                 const officerShifts = (currentData.shifts && currentData.shifts[officer]) ? currentData.shifts[officer] : ['', '', '', '', '', '', ''];
 
@@ -767,7 +826,7 @@
 
                     if (isAdmin) {
                         rowHTML += `
-                            <td class="p-1 text-center border-b border-l border-slate-300/60 min-w-[115px] ${todayCellClass}">
+                            <td class="p-1 text-center border-b border-l border-slate-300/60 min-w-[112px] ${todayCellClass}">
                                 <div class="flex items-center gap-1">
                                     <input type="text" list="shift-options" value="${shiftVal}" 
                                         id="input-${officer}-${day}"
@@ -790,7 +849,7 @@
                         rowHTML += `
                             <td onclick="openRequestForCell('${officer}', '${cellDate}', ${day})" 
                                 title="לחץ להגשת בקשה עבור ${officer} בתאריך ${cellDate}"
-                                class="p-2.5 text-center border-b border-l border-slate-300/60 min-w-[115px] cursor-pointer hover:bg-amber-200/40 transition ${todayCellClass}">
+                                class="p-2.5 text-center border-b border-l border-slate-300/60 min-w-[112px] cursor-pointer hover:bg-amber-200/40 transition ${todayCellClass}">
                                 ${shiftBadgeClass}
                             </td>`;
                     }
