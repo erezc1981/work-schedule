@@ -58,19 +58,13 @@
         .dimmed-row { opacity: 0.25; filter: grayscale(80%); }
         .focused-row { box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; position: relative; }
         
-        /* מיכל גלילה דו-כיווני מותאם לאייפון ולאנדרואיד */
+        /* גלילה אופקית בלבד במיכל הטבלה — גלילה אנכית שייכת לדף כולו כדי שהאצבע לא תיתקע */
         .schedule-viewport {
-            overflow: auto;
+            overflow-x: auto;
+            overflow-y: visible;
             -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
             max-width: 100%;
-            max-height: 68vh;
             position: relative;
-        }
-        @media (min-width: 768px) {
-            .schedule-viewport {
-                max-height: 75vh;
-            }
         }
 
         .table-scroll-container {
@@ -85,7 +79,7 @@
             border-spacing: 0;
         }
 
-        /* קיבוע שורת הימים העליונה (גלילה אנכית) */
+        /* קיבוע שורת הימים העליונה ביחס לחלון המסך */
         #schedule-table thead th.sticky-day-header {
             position: -webkit-sticky;
             position: sticky;
@@ -136,7 +130,7 @@
         @media print {
             .no-print { display: none !important; }
             .print-full { width: 100% !important; max-width: none !important; margin: 0 !important; }
-            .schedule-viewport { max-height: none !important; overflow: visible !important; }
+            .schedule-viewport { overflow: visible !important; }
             .sticky-col, .sticky-day-header, .sticky-corner {
                 position: static !important;
                 box-shadow: none !important;
