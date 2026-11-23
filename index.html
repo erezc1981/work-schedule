@@ -267,15 +267,9 @@
 
             <!-- Schedule View -->
             <div id="view-schedule" class="space-y-4 sm:space-y-6">
-                <div class="flex flex-wrap items-center justify-between gap-2 bg-blue-50 border border-blue-200 text-blue-900 px-3 py-2 rounded-xl text-xs font-bold no-print">
-                    <span class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-hand-pointer text-blue-600"></i>
-                        <span>טיפ: לחיצה על כל יום בשורה של שוטר פותחת הגשת בקשה לאותו תאריך אוטומטית</span>
-                    </span>
-                    <span class="md:hidden text-[11px] text-blue-700 flex items-center gap-1">
-                        <i class="fa-solid fa-arrows-up-down-left-right"></i>
-                        <span>גלול לכל הכיוונים — הימים והשמות מקובעים</span>
-                    </span>
+                <div class="flex md:hidden items-center justify-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-1.5 rounded-xl text-[11px] font-bold no-print">
+                    <i class="fa-solid fa-arrows-up-down-left-right"></i>
+                    <span>גלול לכל הכיוונים — הימים והשמות מקובעים</span>
                 </div>
 
                 <div id="schedule-capture-area" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-1.5 sm:p-2">
@@ -822,7 +816,6 @@
                 for (let day = 0; day < 7; day++) {
                     const shiftVal = officerShifts[day] || '';
                     const todayCellClass = (day === todayColIndex) ? 'today-col-cell' : '';
-                    const cellDate = (currentData.dates && currentData.dates[day]) ? currentData.dates[day] : '';
 
                     if (isAdmin) {
                         rowHTML += `
@@ -847,9 +840,7 @@
                     } else {
                         const shiftBadgeClass = getShiftBadgeStyle(shiftVal, officer);
                         rowHTML += `
-                            <td onclick="openRequestForCell('${officer}', '${cellDate}', ${day})" 
-                                title="לחץ להגשת בקשה עבור ${officer} בתאריך ${cellDate}"
-                                class="p-2.5 text-center border-b border-l border-slate-300/60 min-w-[112px] cursor-pointer hover:bg-amber-200/40 transition ${todayCellClass}">
+                            <td class="p-2.5 text-center border-b border-l border-slate-300/60 min-w-[112px] ${todayCellClass}">
                                 ${shiftBadgeClass}
                             </td>`;
                     }
@@ -864,16 +855,6 @@
                 nInput.value = currentData.notes || '';
                 nInput.readOnly = !isAdmin;
             }
-        }
-
-        function openRequestForCell(officer, dateStr, dayIndex) {
-            const reqOfficer = document.getElementById('req-officer-name');
-            const reqDate = document.getElementById('req-date');
-            if (reqOfficer) reqOfficer.value = officer;
-            if (reqDate && dateStr && dateStr !== '-') {
-                reqDate.value = `${dateStr} (יום ${dayNames[dayIndex]})`;
-            }
-            openRequestModal();
         }
 
         function openTodayCommandModal() {
