@@ -32,3 +32,13 @@
 
 האתר שומר עותק של הסידור האחרון במכשיר ו-Service Worker (`sw.js`) שומר את קבצי האתר.
 בלי חיבור רואים את הסידור האחרון שנטען; עריכה דורשת חיבור.
+
+## אבטחה
+
+- **Content-Security-Policy** בכל עמוד: הדפדפן טוען קוד רק מהמקורות המותרים.
+- **Subresource Integrity:** קבצי Firebase ו-Font Awesome נטענים עם hash. אם תעדכנו גרסה, צריך לחשב hash חדש.
+- **כללי Firebase** (`database.rules.json`) בודקים גם את מבנה הנתונים ואת אורכם. אחרי כל שינוי בקובץ צריך לפרסם אותו ב-Firebase Console → Realtime Database → Rules.
+
+## עמודים משפטיים
+
+`terms.html`, `privacy.html`, `accessibility.html`. כשמשנים תוכן, מעדכנים גם את תאריך "עודכן לאחרונה".

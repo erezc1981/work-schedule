@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>סידור עבודה פיקוח טכנולוגי</title>
+    <!-- אבטחה: מגביל מאילו מקורות הדף רשאי לטעון קוד, עיצוב ולהתחבר -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://*.firebasedatabase.app https://*.firebaseio.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://*.googleapis.com https://*.firebasedatabase.app wss://*.firebasedatabase.app https://*.firebaseio.com wss://*.firebaseio.com; frame-src https://schedule-a9777.firebaseapp.com https://accounts.google.com https://*.firebasedatabase.app; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'none'; object-src 'none'">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <script>
+        // מניעת הטמעה של האתר בתוך אתר אחר (clickjacking)
+        if (window.top !== window.self) { window.top.location = window.self.location.href; }
+    </script>
     
     <!-- App & Mobile Home Screen Meta Tags & Custom Icon -->
     <meta name="apple-mobile-web-app-title" content="סידור עבודה">
@@ -22,14 +29,15 @@
     <!-- Tailwind CSS (נבנה מ-src/input.css ע"י npm run build:css, ובאופן אוטומטי ב-GitHub Actions) -->
     <link rel="stylesheet" href="tailwind.css">
     <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha384-iw3OoTErCYJJB9mCa8LNS2hbsQ7M3C0EpIsO/H5+EGAkPGc6rk+V8i04oW/K5xq0" crossorigin="anonymous" referrerpolicy="no-referrer">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
     <!-- Firebase Realtime Database SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <!-- integrity: הדפדפן יסרב להריץ את הקובץ אם מישהו שינה אותו בשרת המקור -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" integrity="sha384-ajMUFBUFMCyjh8uxJg6bkGcKe9RTolyjwbxB3yES0QQMenP3Oztj/W9vA2SJPcIh" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js" integrity="sha384-f6/UpzjTjIXASlp20cArQsaRh1EvHVJd5kegy/gYR9W2D0a32TnEqUEiW4Zm/5O0" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js" integrity="sha384-xD1t9dGSVKobUztxDkv6xUI0H4AnFz0NxwlgDJJ7FDlblG9xxr1Z9iauCZuJYj6p" crossorigin="anonymous"></script>
 
     <style>
         body {
@@ -41,7 +49,15 @@
         header {
             padding-top: env(safe-area-inset-top);
         }
-        .dimmed-row { opacity: 0.25; filter: grayscale(80%); }
+        .dimmed-row { opacity: 0.45; filter: grayscale(80%); }
+
+        /* נגישות: מסגרת פוקוס ברורה לניווט במקלדת (גוברת על focus:outline-none) */
+        :focus-visible { outline: 3px solid #f59e0b !important; outline-offset: 2px !important; }
+        .skip-link { position: absolute; right: 0.5rem; top: -100px; z-index: 100; background: #f59e0b; color: #0f172a; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 800; }
+        .skip-link:focus { top: 0.5rem; }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+        }
         .focused-row { box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10; position: relative; }
         
         /* מבנה מפוצל: עמודת שמות נעולה מימין + גלילה אופקית נקייה לימים */
@@ -105,6 +121,7 @@
     </style>
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col justify-between">
+    <a href="#main-content" class="skip-link">דלג לתוכן הראשי</a>
 
     <datalist id="shift-options">
         <option value="א">
@@ -134,7 +151,7 @@
                         <h1 class="text-lg sm:text-xl font-black tracking-wide">סידור עבודה פיקוח טכנולוגי</h1>
                         <div class="flex items-center gap-2">
                             <p id="system-year-subtitle" class="text-[11px] sm:text-xs text-blue-200">מערכת ניהול משמרות 2026</p>
-                            <span id="sync-status" class="bg-slate-500/20 text-slate-300 border border-slate-400/40 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                            <span id="sync-status" role="status" aria-live="polite" class="bg-slate-500/20 text-slate-300 border border-slate-400/40 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
                                 <span id="sync-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
                                 <span id="sync-text">מתחבר...</span>
                             </span>
@@ -181,19 +198,19 @@
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-2.5 sm:px-4 py-4 sm:py-6 flex-grow w-full print-full">
+        <main id="main-content" tabindex="-1" class="max-w-7xl mx-auto px-2.5 sm:px-4 py-4 sm:py-6 flex-grow w-full print-full">
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-4 mb-4 sm:mb-6 no-print space-y-3 sm:space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-3">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="changeWeek(-1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע קודם">
+                        <button onclick="changeWeek(-1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע קודם" aria-label="שבוע קודם">
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
                         <div class="text-center min-w-[205px] sm:min-w-[230px] bg-gradient-to-r from-police-navy to-blue-900 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-2xl shadow-md border-2 border-amber-400/60">
                             <span class="text-[10px] font-bold text-amber-300 block tracking-wider uppercase">✨ שבוע מוצג ✨</span>
                             <span id="week-range-display" class="font-black text-white text-sm sm:text-base tracking-wide">טוען...</span>
                         </div>
-                        <button onclick="changeWeek(1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע הבא">
+                        <button onclick="changeWeek(1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע הבא" aria-label="שבוע הבא">
                             <i class="fa-solid fa-chevron-left"></i>
                         </button>
                         <button onclick="goToCurrentWeek()" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-police-navy border border-blue-200 rounded-xl text-xs font-extrabold transition shadow-sm flex items-center gap-1.5" title="חזור לשבוע הנוכחי">
@@ -205,12 +222,12 @@
                     <div class="flex items-center gap-2.5 flex-wrap">
                         <div class="relative min-w-[195px] sm:min-w-[210px]">
                             <i class="fa-solid fa-magnifying-glass absolute right-3 top-3 text-slate-400 text-xs"></i>
-                            <input type="search" id="search-input" onkeydown="if (event.key === 'Enter') handleSearch()" placeholder="חפש תאריך או טקסט ולחץ Enter..."
+                            <input type="search" id="search-input" aria-label="חיפוש בסידור לפי תאריך או טקסט" onkeydown="if (event.key === 'Enter') handleSearch()" placeholder="חפש תאריך או טקסט ולחץ Enter..."
                                 class="w-full pr-8 pl-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:border-blue-500 transition">
                         </div>
 
                         <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 p-1 rounded-xl">
-                            <span class="text-xs font-bold text-slate-500 pr-2"><i class="fa-solid fa-user-tag text-police-blue"></i> הבלט שוטר:</span>
+                            <label for="officer-filter" class="text-xs font-bold text-slate-600 pr-2"><i class="fa-solid fa-user-tag text-police-blue"></i> הבלט שוטר:</label>
                             <select id="officer-filter" onchange="filterOfficer()" class="bg-white border border-slate-200 text-xs font-bold rounded-lg p-1.5 focus:outline-none">
                                 <option value="ALL">הצג את כולם</option>
                             </select>
@@ -240,9 +257,10 @@
                         <!-- עמודת שמות השוטרים נעולה מימין -->
                         <div class="fixed-officers-pane bg-white">
                             <table class="w-full text-sm text-right" id="officers-fixed-table">
+                                <caption class="sr-only">שמות השוטרים</caption>
                                 <thead>
                                     <tr class="text-white text-xs">
-                                        <th class="px-2.5 font-bold border-b border-l border-slate-700 text-right bg-police-dark sched-head-cell align-middle">שם השוטר</th>
+                                        <th scope="col" class="px-2.5 font-bold border-b border-l border-slate-700 text-right bg-police-dark sched-head-cell align-middle">שם השוטר</th>
                                     </tr>
                                 </thead>
                                 <tbody id="officers-fixed-body">
@@ -254,39 +272,40 @@
                         <!-- אזור הימים נגלל אופקית בחופשיות -->
                         <div class="scrollable-days-pane">
                             <table class="w-full text-sm text-right" id="schedule-days-table">
+                                <caption class="sr-only">משמרות השבוע לפי יום</caption>
                                 <thead>
                                     <tr class="text-white text-center text-xs">
-                                        <th id="th-day-0" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
+                                        <th scope="col" id="th-day-0" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
                                             <div id="day-title-0">ראשון</div>
                                             <div id="date-0" class="text-[10px] text-blue-200 font-normal">-</div>
                                             <div id="holiday-badge-0" class="mt-0.5"></div>
                                         </th>
-                                        <th id="th-day-1" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
+                                        <th scope="col" id="th-day-1" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
                                             <div id="day-title-1">שני</div>
                                             <div id="date-1" class="text-[10px] text-blue-200 font-normal">-</div>
                                             <div id="holiday-badge-1" class="mt-0.5"></div>
                                         </th>
-                                        <th id="th-day-2" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
+                                        <th scope="col" id="th-day-2" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
                                             <div id="day-title-2">שלישי</div>
                                             <div id="date-2" class="text-[10px] text-blue-200 font-normal">-</div>
                                             <div id="holiday-badge-2" class="mt-0.5"></div>
                                         </th>
-                                        <th id="th-day-3" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
+                                        <th scope="col" id="th-day-3" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
                                             <div id="day-title-3">רביעי</div>
                                             <div id="date-3" class="text-[10px] text-blue-200 font-normal">-</div>
                                             <div id="holiday-badge-3" class="mt-0.5"></div>
                                         </th>
-                                        <th id="th-day-4" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
+                                        <th scope="col" id="th-day-4" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-police-navy sched-head-cell align-middle">
                                             <div id="day-title-4">חמישי</div>
                                             <div id="date-4" class="text-[10px] text-blue-200 font-normal">-</div>
                                             <div id="holiday-badge-4" class="mt-0.5"></div>
                                         </th>
-                                        <th id="th-day-5" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-blue-950 sched-head-cell align-middle">
+                                        <th scope="col" id="th-day-5" class="px-2 border-b border-l border-slate-700 min-w-[112px] bg-blue-950 sched-head-cell align-middle">
                                             <div id="day-title-5">שישי</div>
                                             <div id="date-5" class="text-[10px] text-amber-300 font-normal">-</div>
                                             <div id="holiday-badge-5" class="mt-0.5"></div>
                                         </th>
-                                        <th id="th-day-6" class="px-2 border-b border-slate-700 min-w-[112px] bg-blue-950 sched-head-cell align-middle">
+                                        <th scope="col" id="th-day-6" class="px-2 border-b border-slate-700 min-w-[112px] bg-blue-950 sched-head-cell align-middle">
                                             <div id="day-title-6">שבת</div>
                                             <div id="date-6" class="text-[10px] text-amber-300 font-normal">-</div>
                                             <div id="holiday-badge-6" class="mt-0.5"></div>
@@ -306,7 +325,7 @@
                         <i class="fa-solid fa-comment-dots text-police-gold"></i>
                         <span>הערות שבועיות ודגשים</span>
                     </h3>
-                    <textarea id="general-notes" readonly rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none resize-none" placeholder="אין הערות מיוחדות לשבוע זה..." onchange="saveNotes()"></textarea>
+                    <textarea id="general-notes" aria-label="הערות שבועיות ודגשים" readonly rows="2" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none resize-none" placeholder="אין הערות מיוחדות לשבוע זה..." onchange="saveNotes()"></textarea>
                 </div>
             </div>
 
@@ -327,11 +346,11 @@
                         <table class="w-full text-sm text-right min-w-[550px]">
                             <thead>
                                 <tr class="bg-slate-100 text-slate-700 text-xs border-b border-slate-200">
-                                    <th class="p-3 font-bold min-w-[130px] w-1/3">שם החג</th>
-                                    <th class="p-3 font-bold min-w-[110px]">תאריך</th>
-                                    <th class="p-3 font-bold min-w-[120px]">ערב חג (משמרת)</th>
-                                    <th class="p-3 font-bold min-w-[120px]">יום החג (משמרת)</th>
-                                    <th class="p-3 font-bold text-center admin-only-col hidden min-w-[80px]">פעולות</th>
+                                    <th scope="col" class="p-3 font-bold min-w-[130px] w-1/3">שם החג</th>
+                                    <th scope="col" class="p-3 font-bold min-w-[110px]">תאריך</th>
+                                    <th scope="col" class="p-3 font-bold min-w-[120px]">ערב חג (משמרת)</th>
+                                    <th scope="col" class="p-3 font-bold min-w-[120px]">יום החג (משמרת)</th>
+                                    <th scope="col" class="p-3 font-bold text-center admin-only-col hidden min-w-[80px]">פעולות</th>
                                 </tr>
                             </thead>
                             <tbody id="holidays-body" class="divide-y divide-slate-100">
@@ -346,14 +365,14 @@
     </div>
 
     <!-- Today Command Modal ("מי עובד היום?") -->
-    <div id="today-command-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="today-command-modal" role="dialog" aria-modal="true" aria-labelledby="today-modal-title" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col">
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
-                <h3 class="font-bold text-base flex items-center gap-2">
+                <h3 id="today-modal-title" class="font-bold text-base flex items-center gap-2">
                     <i class="fa-solid fa-tower-broadcast text-cyan-400"></i>
                     <span>לוח פיקוד - מי עובד היום ומחר</span>
                 </h3>
-                <button onclick="closeTodayCommandModal()" class="text-white hover:text-amber-400 text-lg p-1">
+                <button onclick="closeTodayCommandModal()" aria-label="סגור חלון" class="text-white hover:text-amber-400 text-lg p-1">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -363,26 +382,26 @@
     </div>
 
     <!-- Request Modal -->
-    <div id="request-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="request-modal" role="dialog" aria-modal="true" aria-labelledby="request-modal-title" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col">
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
-                <h3 class="font-bold text-base flex items-center gap-2">
+                <h3 id="request-modal-title" class="font-bold text-base flex items-center gap-2">
                     <i class="fa-solid fa-paper-plane text-amber-400"></i>
                     <span>הגשת בקשה לרכב / חופשה / ח.תורן / שינוי משמרת</span>
                 </h3>
-                <button onclick="closeRequestModal()" class="text-white hover:text-amber-400 text-lg p-1">
+                <button onclick="closeRequestModal()" aria-label="סגור חלון" class="text-white hover:text-amber-400 text-lg p-1">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
             
             <div class="p-5 space-y-4 text-xs font-bold">
                 <div>
-                    <label class="block text-slate-600 mb-1">שם השוטר המגיש:</label>
+                    <label for="req-officer-name" class="block text-slate-600 mb-1">שם השוטר המגיש:</label>
                     <select id="req-officer-name" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
                     </select>
                 </div>
                 <div>
-                    <label class="block text-slate-600 mb-1">סוג הבקשה:</label>
+                    <label for="req-type" class="block text-slate-600 mb-1">סוג הבקשה:</label>
                     <select id="req-type" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
                         <option value="בקשה לרכב 🚗">בקשה לרכב 🚗</option>
                         <option value="בקשת ח.תורן 👮‍♂️">בקשת ח.תורן 👮‍♂️</option>
@@ -391,11 +410,11 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-slate-600 mb-1">תאריך מבוקש:</label>
+                    <label for="req-date" class="block text-slate-600 mb-1">תאריך מבוקש:</label>
                     <input type="text" id="req-date" placeholder="למשל: 15.03.2026 או יום שלישי הקרוב" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="block text-slate-600 mb-1">פירוט / סיבת הבקשה:</label>
+                    <label for="req-details" class="block text-slate-600 mb-1">פירוט / סיבת הבקשה:</label>
                     <textarea id="req-details" rows="3" placeholder="פרט כאן את סיבת הבקשה או השינוי המבוקש..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-blue-500 resize-none"></textarea>
                 </div>
                 <div class="pt-2 border-t border-slate-200">
@@ -416,18 +435,18 @@
     </div>
 
     <!-- Stats Modal -->
-    <div id="stats-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="stats-modal" role="dialog" aria-modal="true" aria-labelledby="stats-modal-title" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[88vh] overflow-hidden flex flex-col">
             <div class="bg-police-navy text-white p-4 flex flex-wrap justify-between items-center gap-3">
-                <h3 class="font-bold text-base flex items-center gap-2">
+                <h3 id="stats-modal-title" class="font-bold text-base flex items-center gap-2">
                     <i class="fa-solid fa-chart-pie text-amber-400"></i>
-                    <span id="stats-modal-title">סיכום משמרות שבועי, חודשי ושנתי לשוטרים</span>
+                    <span id="stats-modal-title-text">סיכום משמרות שבועי, חודשי ושנתי לשוטרים</span>
                 </h3>
                 <div class="flex items-center gap-2">
                     <label for="stats-month-select" class="text-xs text-blue-200 font-bold">חודש לסיכום:</label>
                     <select id="stats-month-select" onchange="renderStatsContent()" class="bg-slate-800 text-white border border-blue-400/50 rounded-lg px-2.5 py-1 text-xs font-bold focus:outline-none">
                     </select>
-                    <button onclick="closeStatsModal()" class="text-white hover:text-amber-400 text-lg p-1 mr-2">
+                    <button onclick="closeStatsModal()" aria-label="סגור חלון" class="text-white hover:text-amber-400 text-lg p-1 mr-2">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
@@ -438,14 +457,14 @@
     </div>
 
     <!-- Officers Management Modal (admins only) -->
-    <div id="officers-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="officers-modal" role="dialog" aria-modal="true" aria-labelledby="officers-modal-title" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[88vh] overflow-hidden flex flex-col">
             <div class="bg-police-navy text-white p-4 flex justify-between items-center">
-                <h3 class="font-bold text-base flex items-center gap-2">
+                <h3 id="officers-modal-title" class="font-bold text-base flex items-center gap-2">
                     <i class="fa-solid fa-users-gear text-amber-400"></i>
                     <span>ניהול רשימת השוטרים</span>
                 </h3>
-                <button onclick="closeOfficersModal()" class="text-white hover:text-amber-400 text-lg p-1">
+                <button onclick="closeOfficersModal()" aria-label="סגור חלון" class="text-white hover:text-amber-400 text-lg p-1">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -454,11 +473,11 @@
                 <div id="officers-modal-list" class="space-y-2"></div>
                 <div class="flex flex-wrap items-end gap-2 border-t border-slate-200 pt-3">
                     <div class="flex-grow min-w-[120px]">
-                        <label class="block text-slate-600 mb-1">שם שוטר חדש:</label>
+                        <label for="new-officer-name" class="block text-slate-600 mb-1">שם שוטר חדש:</label>
                         <input type="text" id="new-officer-name" maxlength="20" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
-                        <label class="block text-slate-600 mb-1">סוג:</label>
+                        <label for="new-officer-daily" class="block text-slate-600 mb-1">סוג:</label>
                         <select id="new-officer-daily" class="p-2 bg-slate-50 border border-slate-300 rounded-lg">
                             <option value="0">סמב"ץ (משמרות)</option>
                             <option value="1">יומי</option>
@@ -476,8 +495,13 @@
         </div>
     </div>
 
-    <footer class="py-4 text-center text-xs text-slate-400 border-t border-slate-200 bg-white no-print">
-        Created by Erez <span class="text-xs inline-block">©</span>
+    <footer class="py-3 text-center text-[11px] text-slate-600 border-t border-slate-200 bg-white no-print">
+        <nav aria-label="מידע משפטי" class="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-1">
+            <a href="terms.html" class="hover:underline">תנאי שימוש</a>
+            <a href="privacy.html" class="hover:underline">מדיניות פרטיות</a>
+            <a href="accessibility.html" class="hover:underline">הצהרת נגישות</a>
+        </nav>
+        <p>Produced by erez &copy;</p>
     </footer>
 
     <script>
@@ -753,6 +777,62 @@
             return !!(schedCached && schedCached.length > 0);
         }
 
+        // ---------- נגישות ----------
+
+        // אייקונים הם קישוט בלבד — מסתירים אותם מקוראי מסך (כולל אייקונים שנוצרים דינמית)
+        function hideDecorativeIcons(root) {
+            root.querySelectorAll('i.fa-solid, i.fa-brands, i.fa-regular').forEach(i => i.setAttribute('aria-hidden', 'true'));
+        }
+        new MutationObserver(muts => muts.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) hideDecorativeIcons(n.parentNode || n); })))
+            .observe(document.documentElement, { childList: true, subtree: true });
+
+        // חלונות קופצים: פוקוס נכנס לחלון, Escape סוגר, Tab נשאר בתוך החלון, והפוקוס חוזר למקום הקודם
+        const MODAL_CLOSERS = {
+            'today-command-modal': () => closeTodayCommandModal(),
+            'request-modal': () => closeRequestModal(),
+            'stats-modal': () => closeStatsModal(),
+            'officers-modal': () => closeOfficersModal()
+        };
+        let lastFocusBeforeModal = null;
+        const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+        function openModalA11y(modal) {
+            lastFocusBeforeModal = document.activeElement;
+            const first = modal.querySelector(FOCUSABLE);
+            if (first) setTimeout(() => first.focus(), 0);
+        }
+
+        function getOpenModal() {
+            return Object.keys(MODAL_CLOSERS).map(id => document.getElementById(id)).find(m => m && !m.classList.contains('hidden'));
+        }
+
+        new MutationObserver(muts => muts.forEach(m => {
+            const el = m.target;
+            if (!MODAL_CLOSERS[el.id]) return;
+            const wasHidden = (m.oldValue || '').split(/\s+/).includes('hidden');
+            const isHidden = el.classList.contains('hidden');
+            if (wasHidden && !isHidden) openModalA11y(el);
+            if (!wasHidden && isHidden && lastFocusBeforeModal && document.contains(lastFocusBeforeModal)) {
+                lastFocusBeforeModal.focus();
+                lastFocusBeforeModal = null;
+            }
+        })).observe(document.documentElement, { attributes: true, attributeFilter: ['class'], attributeOldValue: true, subtree: true });
+
+        document.addEventListener('keydown', (e) => {
+            const modal = getOpenModal();
+            if (!modal) return;
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                MODAL_CLOSERS[modal.id]();
+            } else if (e.key === 'Tab') {
+                const items = [...modal.querySelectorAll(FOCUSABLE)].filter(el => el.offsetParent !== null);
+                if (items.length === 0) return;
+                const first = items[0], last = items[items.length - 1];
+                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             if (loadFromLocalCache()) {
                 autoSelectCurrentWeek();
@@ -762,6 +842,7 @@
             loadPinnedOfficer();
             renderSchedule();
             renderHolidays();
+            hideDecorativeIcons(document);
 
             if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
                 navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker registration failed', err));
@@ -1110,7 +1191,7 @@
                 // שורת שם השוטר בטבלה הימנית הנעולה
                 const nameTr = document.createElement('tr');
                 nameTr.className = `${focusClass} transition`;
-                nameTr.innerHTML = `<td class="px-2.5 font-extrabold border-b border-l border-slate-300 ${colorConfig.nameBg} text-right sched-body-cell align-middle whitespace-nowrap">${officer}</td>`;
+                nameTr.innerHTML = `<th scope="row" class="px-2.5 font-extrabold border-b border-l border-slate-300 ${colorConfig.nameBg} text-right sched-body-cell align-middle whitespace-nowrap">${escapeHtml(officer)}</th>`;
                 fixedTbody.appendChild(nameTr);
 
                 // שורת המשמרות בטבלה השמאלית הנגללת
@@ -1128,17 +1209,17 @@
                         rowHTML += `
                             <td class="px-1 text-center border-b border-l border-slate-300/60 min-w-[112px] sched-body-cell align-middle ${todayCellClass}">
                                 <div class="flex items-center gap-1">
-                                    <input type="text" list="shift-options" value="${escapeHtml(shiftVal)}"
+                                    <input type="text" list="shift-options" value="${escapeHtml(shiftVal)}" aria-label="משמרת של ${escapeHtml(officer)} ביום ${dayNames[day]}"
                                         id="input-${officerIdx}-${day}"
                                         onchange="updateShift(${officerIdx}, ${day}, this.value)"
                                         class="w-full text-center p-1.5 rounded-lg border border-slate-400 text-xs font-bold focus:bg-amber-50 focus:border-amber-400 focus:outline-none shadow-sm">
                                     <button onclick="toggleCarIcon(${officerIdx}, ${day})"
-                                        title="הוסף/הסר רכב" 
+                                        title="הוסף/הסר רכב" aria-label="הוסף או הסר רכב, ${escapeHtml(officer)} יום ${dayNames[day]}" 
                                         class="p-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-bold transition shadow-sm">
                                         🚗
                                     </button>
                                     <button onclick="toggleHToranIcon(${officerIdx}, ${day})"
-                                        title="הוסף/הסר ח.תורן" 
+                                        title="הוסף/הסר ח.תורן" aria-label="הוסף או הסר ח.תורן, ${escapeHtml(officer)} יום ${dayNames[day]}" 
                                         class="p-1 bg-indigo-200 hover:bg-indigo-300 text-indigo-900 rounded-lg text-xs font-bold transition shadow-sm">
                                         👮‍♂️
                                     </button>
@@ -1440,7 +1521,7 @@
             if (isMobile) {
                 window.location.href = `whatsapp://send?text=${encodedMsg}`;
             } else {
-                window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
+                window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank', 'noopener');
             }
         }
 
@@ -1586,7 +1667,7 @@
             if (isMobile) {
                 window.location.href = `whatsapp://send?phone=${phone}&text=${encodedMsg}`;
             } else {
-                window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodedMsg}`, '_blank');
+                window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodedMsg}`, '_blank', 'noopener');
             }
             closeRequestModal();
         }
@@ -1813,25 +1894,25 @@
                     sambacOfficers.forEach(off => {
                         const eveSelected = (item.eve === off) ? 'selected' : '';
                         const daySelected = (item.day === off) ? 'selected' : '';
-                        eveOptionsHTML += `<option value="${off}" ${eveSelected}>${off}</option>`;
-                        dayOptionsHTML += `<option value="${off}" ${daySelected}>${off}</option>`;
+                        eveOptionsHTML += `<option value="${escapeHtml(off)}" ${eveSelected}>${escapeHtml(off)}</option>`;
+                        dayOptionsHTML += `<option value="${escapeHtml(off)}" ${daySelected}>${escapeHtml(off)}</option>`;
                     });
 
                     tr.innerHTML = `
                         <td class="p-2 min-w-[130px]">
-                            <input type="text" value="${escapeHtml(item.name)}" onchange="updateHoliday(${index}, 'name', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-police-navy text-xs focus:outline-none focus:border-blue-500">
+                            <input type="text" value="${escapeHtml(item.name)}" aria-label="שם החג" onchange="updateHoliday(${index}, 'name', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-police-navy text-xs focus:outline-none focus:border-blue-500">
                         </td>
                         <td class="p-2 min-w-[110px]">
-                            <input type="date" value="${escapeHtml(formattedDateVal)}" onchange="updateHoliday(${index}, 'date', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-medium text-slate-700 text-xs focus:outline-none focus:border-blue-500">
+                            <input type="date" value="${escapeHtml(formattedDateVal)}" aria-label="תאריך ${escapeHtml(item.name)}" onchange="updateHoliday(${index}, 'date', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-medium text-slate-700 text-xs focus:outline-none focus:border-blue-500">
                         </td>
                         <td class="p-2 min-w-[120px]">
-                            <select onchange="updateHoliday(${index}, 'eve', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-blue-800 text-xs focus:outline-none focus:border-blue-500">${eveOptionsHTML}</select>
+                            <select aria-label="שוטר בערב ${escapeHtml(item.name)}" onchange="updateHoliday(${index}, 'eve', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-blue-800 text-xs focus:outline-none focus:border-blue-500">${eveOptionsHTML}</select>
                         </td>
                         <td class="p-2 min-w-[120px]">
-                            <select onchange="updateHoliday(${index}, 'day', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-amber-800 text-xs focus:outline-none focus:border-blue-500">${dayOptionsHTML}</select>
+                            <select aria-label="שוטר ביום ${escapeHtml(item.name)}" onchange="updateHoliday(${index}, 'day', this.value)" class="w-full p-1.5 rounded-lg border border-slate-300 font-bold text-amber-800 text-xs focus:outline-none focus:border-blue-500">${dayOptionsHTML}</select>
                         </td>
                         <td class="p-2 text-center min-w-[80px]">
-                            <button onclick="deleteHoliday(${index})" title="מחק חג" class="text-rose-600 hover:text-rose-800 p-1"><i class="fa-solid fa-trash-can"></i></button>
+                            <button onclick="deleteHoliday(${index})" title="מחק חג" aria-label="מחק את ${escapeHtml(item.name)}" class="text-rose-600 hover:text-rose-800 p-1"><i class="fa-solid fa-trash-can"></i></button>
                         </td>`;
                 } else {
                     const dateDisplay = formatDateForDisplay(item.date);
@@ -1891,15 +1972,15 @@
             list.innerHTML = officersDraft.map((o, i) => `
                 <div class="flex flex-wrap items-center gap-2 p-2 rounded-xl border border-slate-200 ${COLOR_PALETTE[o.color].row}">
                     <span class="px-2.5 py-1 rounded-lg min-w-[80px] ${COLOR_PALETTE[o.color].nameBg}">${escapeHtml(o.name)}</span>
-                    <select onchange="officersDraft[${i}].daily = this.value === '1'; renderOfficersDraft()" class="p-1.5 bg-white border border-slate-300 rounded-lg">
+                    <select aria-label="סוג משמרת של ${escapeHtml(o.name)}" onchange="officersDraft[${i}].daily = this.value === '1'; renderOfficersDraft()" class="p-1.5 bg-white border border-slate-300 rounded-lg">
                         <option value="0" ${o.daily ? '' : 'selected'}>סמב"ץ</option>
                         <option value="1" ${o.daily ? 'selected' : ''}>יומי</option>
                     </select>
-                    <select onchange="officersDraft[${i}].color = this.value; renderOfficersDraft()" class="p-1.5 bg-white border border-slate-300 rounded-lg">${colorOptions(o.color)}</select>
+                    <select aria-label="צבע של ${escapeHtml(o.name)}" onchange="officersDraft[${i}].color = this.value; renderOfficersDraft()" class="p-1.5 bg-white border border-slate-300 rounded-lg">${colorOptions(o.color)}</select>
                     <div class="flex items-center gap-1 mr-auto">
-                        <button onclick="moveOfficerInDraft(${i}, -1)" title="הזז למעלה" class="p-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg ${i === 0 ? 'opacity-30 pointer-events-none' : ''}"><i class="fa-solid fa-arrow-up"></i></button>
-                        <button onclick="moveOfficerInDraft(${i}, 1)" title="הזז למטה" class="p-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg ${i === officersDraft.length - 1 ? 'opacity-30 pointer-events-none' : ''}"><i class="fa-solid fa-arrow-down"></i></button>
-                        <button onclick="removeOfficerFromDraft(${i})" title="הסר מהרשימה" class="p-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 rounded-lg"><i class="fa-solid fa-user-minus"></i></button>
+                        <button onclick="moveOfficerInDraft(${i}, -1)" title="הזז למעלה" aria-label="הזז למעלה: ${escapeHtml(o.name)}" class="p-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg ${i === 0 ? 'opacity-30 pointer-events-none' : ''}"><i class="fa-solid fa-arrow-up"></i></button>
+                        <button onclick="moveOfficerInDraft(${i}, 1)" title="הזז למטה" aria-label="הזז למטה: ${escapeHtml(o.name)}" class="p-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg ${i === officersDraft.length - 1 ? 'opacity-30 pointer-events-none' : ''}"><i class="fa-solid fa-arrow-down"></i></button>
+                        <button onclick="removeOfficerFromDraft(${i})" title="הסר מהרשימה" aria-label="הסר מהרשימה: ${escapeHtml(o.name)}" class="p-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 rounded-lg"><i class="fa-solid fa-user-minus"></i></button>
                     </div>
                 </div>`).join('');
         }
