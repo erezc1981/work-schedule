@@ -2,23 +2,56 @@
   "rules": {
     ".read": false,
     ".write": false,
+
     "admins": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": false
       }
     },
+
     "police_schedule_2026": {
       ".read": true,
-      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$week": {
+        ".validate": "$week.matches(/^[0-9]+$/) && $week.length <= 4",
+        "dates": {
+          "$d": { ".validate": "$d.matches(/^[0-6]$/) && newData.isString() && newData.val().length <= 10" }
+        },
+        "shifts": {
+          "$officer": {
+            ".validate": "$officer.length <= 30",
+            "$day": { ".validate": "$day.matches(/^[0-6]$/) && newData.isString() && newData.val().length <= 60" }
+          }
+        },
+        "notes": { ".validate": "newData.isString() && newData.val().length <= 2000" },
+        "$other": { ".validate": false }
+      }
     },
+
     "police_holidays_2026": {
       ".read": true,
-      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$i": {
+        ".validate": "$i.matches(/^[0-9]+$/) && $i.length <= 3 && newData.hasChildren(['name', 'date'])",
+        "name": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "date": { ".validate": "newData.isString() && newData.val().length <= 10" },
+        "eve": { ".validate": "newData.isString() && newData.val().length <= 30" },
+        "day": { ".validate": "newData.isString() && newData.val().length <= 30" },
+        "$other": { ".validate": false }
+      }
     },
+
     "police_officers": {
       ".read": true,
-      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$i": {
+        ".validate": "$i.matches(/^[0-9]+$/) && $i.length <= 3 && newData.hasChildren(['name'])",
+        "name": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20" },
+        "daily": { ".validate": "newData.isBoolean()" },
+        "color": { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "$other": { ".validate": false }
+      }
     }
   }
 }
