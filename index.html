@@ -15,28 +15,12 @@
 
     <!-- Web App Manifest & Custom Icon -->
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/calendar--v1.png">
-    <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/calendar--v1.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        police: {
-                            dark: '#0f172a',
-                            navy: '#1e3a8a',
-                            blue: '#2563eb',
-                            gold: '#d97706',
-                            accent: '#3b82f6'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Tailwind CSS (נבנה מ-src/input.css ע"י npm run build:css, ובאופן אוטומטי ב-GitHub Actions) -->
+    <link rel="stylesheet" href="tailwind.css">
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -179,6 +163,10 @@
                     <button onclick="openStatsModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-chart-pie text-xs"></i>
                         <span>סיכום חודשי</span>
+                    </button>
+                    <button onclick="openOfficersModal()" id="manage-officers-btn" class="hidden bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-users-gear text-xs"></i>
+                        <span>ניהול שוטרים</span>
                     </button>
                     <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg border border-amber-500/30 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-lock text-xs" id="admin-icon"></i>
@@ -449,6 +437,45 @@
         </div>
     </div>
 
+    <!-- Officers Management Modal (admins only) -->
+    <div id="officers-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[88vh] overflow-hidden flex flex-col">
+            <div class="bg-police-navy text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-users-gear text-amber-400"></i>
+                    <span>ניהול רשימת השוטרים</span>
+                </h3>
+                <button onclick="closeOfficersModal()" class="text-white hover:text-amber-400 text-lg p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-grow space-y-3 text-xs font-bold">
+                <p class="text-slate-500 font-normal">הסרת שוטר מסתירה אותו מהטבלה בלבד — המשמרות הקודמות שלו נשמרות, ויחזרו אם יתווסף שוב באותו שם.</p>
+                <div id="officers-modal-list" class="space-y-2"></div>
+                <div class="flex flex-wrap items-end gap-2 border-t border-slate-200 pt-3">
+                    <div class="flex-grow min-w-[120px]">
+                        <label class="block text-slate-600 mb-1">שם שוטר חדש:</label>
+                        <input type="text" id="new-officer-name" maxlength="20" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-600 mb-1">סוג:</label>
+                        <select id="new-officer-daily" class="p-2 bg-slate-50 border border-slate-300 rounded-lg">
+                            <option value="0">סמב"ץ (משמרות)</option>
+                            <option value="1">יומי</option>
+                        </select>
+                    </div>
+                    <button onclick="addOfficerToDraft()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-3 rounded-lg shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i><span>הוסף</span>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-200 flex justify-end gap-2 text-xs font-bold">
+                <button onclick="closeOfficersModal()" class="py-2 px-4 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700">ביטול</button>
+                <button onclick="saveOfficersDraft()" class="py-2 px-4 rounded-lg bg-police-navy hover:bg-blue-900 text-white shadow">שמור שינויים</button>
+            </div>
+        </div>
+    </div>
+
     <footer class="py-4 text-center text-xs text-slate-400 border-t border-slate-200 bg-white no-print">
         Created by Erez <span class="text-xs inline-block">©</span>
     </footer>
@@ -470,37 +497,74 @@
 
         const SCHEDULE_PATH = 'police_schedule_2026';
         const HOLIDAYS_PATH = 'police_holidays_2026';
+        const OFFICERS_PATH = 'police_officers';
         const SAVED_OFFICER_STORAGE_KEY = 'police_schedule_pinned_officer';
 
         let isAdmin = false;
         let currentUser = null;
         let scheduleExistsInDb = null;
         let holidaysExistInDb = null;
+        let officersExistInDb = null;
         let currentWeekIndex = 0;
         let selectedOfficerFilter = 'ALL';
         let isInitialLoadDone = false;
 
-        const officers = ['אמיר', 'ארז', 'בן זיקרי', 'יניב', 'יחיאל', 'ולרי', 'ירין', 'יוסף', 'עינב', 'שלומית', 'רעות', 'ליפז', 'לינוי'];
         const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
         const hebrewMonths = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
-        const dailyShiftOfficers = ['שלומית', 'רעות', 'ליפז', 'לינוי'];
-        const sambacOfficers = officers.filter(o => !dailyShiftOfficers.includes(o));
 
-        const officerRowColors = {
-            'אמיר': { row: 'bg-emerald-200/80', nameBg: 'bg-emerald-500 text-white' },
-            'ארז': { row: 'bg-blue-100/70', nameBg: 'bg-blue-300 text-blue-950' },
-            'בן זיקרי': { row: 'bg-emerald-100/70', nameBg: 'bg-emerald-300 text-emerald-950' },
-            'יניב': { row: 'bg-amber-100/80', nameBg: 'bg-amber-300 text-amber-950' },
-            'יחיאל': { row: 'bg-purple-100/70', nameBg: 'bg-purple-300 text-purple-950' },
-            'ולרי': { row: 'bg-sky-100/70', nameBg: 'bg-sky-300 text-sky-950' },
-            'ירין': { row: 'bg-indigo-100/70', nameBg: 'bg-indigo-300 text-indigo-950' },
-            'יוסף': { row: 'bg-teal-100/70', nameBg: 'bg-teal-300 text-teal-950' },
-            'עינב': { row: 'bg-rose-100/70', nameBg: 'bg-rose-300 text-rose-950' },
-            'שלומית': { row: 'bg-orange-100/70', nameBg: 'bg-orange-300 text-orange-950' },
-            'רעות': { row: 'bg-fuchsia-100/70', nameBg: 'bg-fuchsia-300 text-fuchsia-950' },
-            'ליפז': { row: 'bg-lime-100/70', nameBg: 'bg-lime-300 text-lime-950' },
-            'לינוי': { row: 'bg-cyan-100/70', nameBg: 'bg-cyan-300 text-cyan-950' }
+        // פלטת צבעים לשורות. המחלקות כתובות במלואן כדי ש-Tailwind יזהה אותן בזמן הבנייה.
+        const COLOR_PALETTE = {
+            'emerald-strong': { label: 'ירוק כהה', row: 'bg-emerald-200/80', nameBg: 'bg-emerald-500 text-white' },
+            emerald: { label: 'ירוק', row: 'bg-emerald-100/70', nameBg: 'bg-emerald-300 text-emerald-950' },
+            blue:    { label: 'כחול', row: 'bg-blue-100/70', nameBg: 'bg-blue-300 text-blue-950' },
+            amber:   { label: 'צהוב', row: 'bg-amber-100/80', nameBg: 'bg-amber-300 text-amber-950' },
+            purple:  { label: 'סגול', row: 'bg-purple-100/70', nameBg: 'bg-purple-300 text-purple-950' },
+            sky:     { label: 'תכלת', row: 'bg-sky-100/70', nameBg: 'bg-sky-300 text-sky-950' },
+            indigo:  { label: 'אינדיגו', row: 'bg-indigo-100/70', nameBg: 'bg-indigo-300 text-indigo-950' },
+            teal:    { label: 'טורקיז', row: 'bg-teal-100/70', nameBg: 'bg-teal-300 text-teal-950' },
+            rose:    { label: 'ורוד', row: 'bg-rose-100/70', nameBg: 'bg-rose-300 text-rose-950' },
+            orange:  { label: 'כתום', row: 'bg-orange-100/70', nameBg: 'bg-orange-300 text-orange-950' },
+            fuchsia: { label: 'פוקסיה', row: 'bg-fuchsia-100/70', nameBg: 'bg-fuchsia-300 text-fuchsia-950' },
+            lime:    { label: 'ליים', row: 'bg-lime-100/70', nameBg: 'bg-lime-300 text-lime-950' },
+            cyan:    { label: 'ציאן', row: 'bg-cyan-100/70', nameBg: 'bg-cyan-300 text-cyan-950' },
+            slate:   { label: 'אפור', row: 'bg-slate-100/70', nameBg: 'bg-slate-300 text-slate-900' }
         };
+
+        // רשימת ברירת המחדל — משמשת רק עד שנטענת הרשימה מ-Firebase (police_officers)
+        const DEFAULT_OFFICERS = [
+            { name: 'אמיר', daily: false, color: 'emerald-strong' },
+            { name: 'ארז', daily: false, color: 'blue' },
+            { name: 'בן זיקרי', daily: false, color: 'emerald' },
+            { name: 'יניב', daily: false, color: 'amber' },
+            { name: 'יחיאל', daily: false, color: 'purple' },
+            { name: 'ולרי', daily: false, color: 'sky' },
+            { name: 'ירין', daily: false, color: 'indigo' },
+            { name: 'יוסף', daily: false, color: 'teal' },
+            { name: 'עינב', daily: false, color: 'rose' },
+            { name: 'שלומית', daily: true, color: 'orange' },
+            { name: 'רעות', daily: true, color: 'fuchsia' },
+            { name: 'ליפז', daily: true, color: 'lime' },
+            { name: 'לינוי', daily: true, color: 'cyan' }
+        ];
+
+        let officerConfig = DEFAULT_OFFICERS;
+        let officers = [];
+        let dailyShiftOfficers = [];
+        let sambacOfficers = [];
+        let officerRowColors = {};
+
+        function applyOfficerConfig(list) {
+            const clean = (Array.isArray(list) ? list : [])
+                .filter(o => o && typeof o.name === 'string' && o.name.trim())
+                .map(o => ({ name: o.name.trim(), daily: !!o.daily, color: COLOR_PALETTE[o.color] ? o.color : 'slate' }));
+            officerConfig = clean.length > 0 ? clean : DEFAULT_OFFICERS;
+            officers = officerConfig.map(o => o.name);
+            dailyShiftOfficers = officerConfig.filter(o => o.daily).map(o => o.name);
+            sambacOfficers = officerConfig.filter(o => !o.daily).map(o => o.name);
+            officerRowColors = {};
+            officerConfig.forEach(o => { officerRowColors[o.name] = COLOR_PALETTE[o.color]; });
+        }
+        applyOfficerConfig(DEFAULT_OFFICERS);
 
         function generateMultiYearCleanSchedule(startYear = 2026, endYear = 2030) {
             const weeks = [];
@@ -532,6 +596,46 @@
                 });
             }
             return weeks;
+        }
+
+        // ---------- הרחבה אוטומטית של הסידור מעבר לשבוע האחרון שקיים ב-DB ----------
+
+        function weekStartingOn(sunday) {
+            const d = new Date(sunday);
+            const dates = [];
+            for (let i = 0; i < 7; i++) {
+                dates.push(formatDDMMYYYY(d));
+                d.setDate(d.getDate() + 1);
+            }
+            return { dates, shifts: {}, notes: '', _local: true };
+        }
+
+        // מוסיף שבועות ריקים (רק בזיכרון) עד שהאינדקס המבוקש קיים
+        function ensureWeekIndex(idx) {
+            while (scheduleData.length <= idx) {
+                const last = scheduleData[scheduleData.length - 1];
+                const lastDay = last ? ddmmyyyyToDate(last.dates[6]) : null;
+                const nextSunday = lastDay ? new Date(lastDay.getFullYear(), lastDay.getMonth(), lastDay.getDate() + 1) : new Date(2025, 11, 28);
+                scheduleData.push(weekStartingOn(nextSunday));
+            }
+        }
+
+        // לפני כתיבה לשבוע שנוצר בזיכרון — שומרים ב-DB אותו ואת כל השבועות שלפניו שעוד לא נשמרו,
+        // כדי שהמערך ב-DB יישאר רציף
+        function materializeWeeksUpTo(idx) {
+            const updates = {};
+            for (let i = 0; i <= idx; i++) {
+                const w = scheduleData[i];
+                if (w && w._local) {
+                    updates[`${SCHEDULE_PATH}/${i}`] = { dates: w.dates, shifts: w.shifts, notes: w.notes || '' };
+                    delete w._local;
+                }
+            }
+            if (Object.keys(updates).length === 0) return Promise.resolve();
+            return database.ref().update(updates).catch(err => {
+                console.error('Failed to create weeks', err);
+                setSyncStatus('error');
+            });
         }
 
         let defaultScheduleData = generateMultiYearCleanSchedule(2026, 2030);
@@ -600,12 +704,13 @@
         function writePath(path, value) {
             if (!isAdmin) {
                 alert('אין הרשאת עריכה. היכנס כמנהל.');
-                return Promise.resolve();
+                return Promise.resolve(false);
             }
-            return database.ref(path).set(value).catch(err => {
+            return database.ref(path).set(value).then(() => true).catch(err => {
                 console.error('Firebase write failed', path, err);
                 setSyncStatus('error');
                 alert('השמירה נכשלה: ' + (err && err.code === 'PERMISSION_DENIED' ? 'אין הרשאת כתיבה למשתמש זה.' : (err.message || err)));
+                return false;
             });
         }
 
@@ -617,15 +722,50 @@
                 scheduleExistsInDb = true;
                 database.ref(SCHEDULE_PATH).transaction(curr => (curr === null ? defaultScheduleData : undefined));
             }
+            if (officersExistInDb === false) {
+                officersExistInDb = true;
+                database.ref(OFFICERS_PATH).transaction(curr => (curr === null ? DEFAULT_OFFICERS : undefined));
+            }
             if (holidaysExistInDb === false) {
                 holidaysExistInDb = true;
                 database.ref(HOLIDAYS_PATH).transaction(curr => (curr === null ? [] : undefined));
             }
         }
 
+        // ---------- מטמון מקומי: הצגת הסידור האחרון שנטען גם בלי חיבור ----------
+        const CACHE_PREFIX = 'work_schedule_cache_';
+
+        function cacheSet(key, value) {
+            try { localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(value)); } catch (e) { /* מקום מלא — לא קריטי */ }
+        }
+
+        function cacheGet(key) {
+            try { return JSON.parse(localStorage.getItem(CACHE_PREFIX + key)); } catch (e) { return null; }
+        }
+
+        function loadFromLocalCache() {
+            const officersCached = toArray(cacheGet('officers'));
+            if (officersCached) applyOfficerConfig(officersCached);
+            const schedCached = toArray(cacheGet('schedule'));
+            if (schedCached && schedCached.length > 0) scheduleData = Array.from(schedCached, normalizeWeek);
+            const holCached = toArray(cacheGet('holidays'));
+            if (holCached) holidaysData = holCached.filter(h => h && typeof h === 'object');
+            return !!(schedCached && schedCached.length > 0);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            if (loadFromLocalCache()) {
+                autoSelectCurrentWeek();
+                isInitialLoadDone = true;
+            }
             populateOfficerFilterOptions();
             loadPinnedOfficer();
+            renderSchedule();
+            renderHolidays();
+
+            if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+                navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker registration failed', err));
+            }
 
             database.ref('.info/connected').on('value', snap => {
                 setSyncStatus(snap.val() === true ? 'online' : 'offline');
@@ -634,6 +774,7 @@
             database.ref(SCHEDULE_PATH).on('value', (snapshot) => {
                 scheduleExistsInDb = snapshot.exists();
                 const arr = toArray(snapshot.val());
+                if (arr && arr.length > 0) cacheSet('schedule', snapshot.val());
                 if (arr && arr.length > 0) {
                     scheduleData = Array.from(arr, normalizeWeek);
                 } else if (snapshot.exists()) {
@@ -646,14 +787,28 @@
                 if (!isInitialLoadDone) {
                     autoSelectCurrentWeek();
                     isInitialLoadDone = true;
+                } else {
+                    ensureWeekIndex(currentWeekIndex);
                 }
 
                 renderSchedule();
             });
 
+            database.ref(OFFICERS_PATH).on('value', (snapshot) => {
+                officersExistInDb = snapshot.exists();
+                if (snapshot.exists()) cacheSet('officers', snapshot.val());
+                applyOfficerConfig(toArray(snapshot.val()));
+                populateOfficerFilterOptions();
+                updatePinButtonUI();
+                seedDatabaseIfEmpty();
+                renderSchedule();
+                renderHolidays();
+            });
+
             database.ref(HOLIDAYS_PATH).on('value', (snapshot) => {
                 holidaysExistInDb = snapshot.exists();
                 const arr = toArray(snapshot.val());
+                cacheSet('holidays', snapshot.val() || []);
                 holidaysData = arr ? arr.filter(h => h && typeof h === 'object') : [];
                 seedDatabaseIfEmpty();
                 renderHolidays();
@@ -665,35 +820,38 @@
             }
         });
 
+        function formatDDMMYYYY(d) {
+            return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+        }
+
         function getTodayFormatted() {
-            const today = new Date();
-            const day = String(today.getDate()).padStart(2, '0');
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const year = today.getFullYear();
-            return `${day}.${month}.${year}`;
+            return formatDDMMYYYY(new Date());
         }
 
         function getTomorrowFormatted() {
             const tmr = new Date();
             tmr.setDate(tmr.getDate() + 1);
-            const day = String(tmr.getDate()).padStart(2, '0');
-            const month = String(tmr.getMonth() + 1).padStart(2, '0');
-            const year = tmr.getFullYear();
-            return `${day}.${month}.${year}`;
+            return formatDDMMYYYY(tmr);
         }
 
         function autoSelectCurrentWeek() {
             const dateStrShort = getTodayFormatted();
 
-            if (scheduleData && scheduleData.length > 0) {
-                for (let i = 0; i < scheduleData.length; i++) {
-                    if (scheduleData[i].dates && scheduleData[i].dates.some(d => d.includes(dateStrShort))) {
-                        currentWeekIndex = i;
-                        return;
+            const findToday = () => scheduleData.findIndex(w => w && w.dates && w.dates.includes(dateStrShort));
+            let idx = findToday();
+            if (idx === -1) {
+                // היום אחרי השבוע האחרון שקיים — מוסיפים שבועות ריקים עד שמגיעים אליו
+                const lastWeek = scheduleData[scheduleData.length - 1];
+                const lastDay = lastWeek ? ddmmyyyyToDate(lastWeek.dates[6]) : null;
+                if (lastDay && lastDay < new Date()) {
+                    let guard = 0;
+                    while (idx === -1 && guard++ < 1000) {
+                        ensureWeekIndex(scheduleData.length);
+                        idx = findToday();
                     }
                 }
             }
-            currentWeekIndex = 0;
+            currentWeekIndex = idx === -1 ? 0 : idx;
         }
 
         function goToCurrentWeek() {
@@ -705,6 +863,7 @@
             const select = document.getElementById('officer-filter');
             const reqSelect = document.getElementById('req-officer-name');
             if (!select || !reqSelect) return;
+            const prevReq = reqSelect.value;
             select.innerHTML = '<option value="ALL">הצג את כולם</option>';
             reqSelect.innerHTML = '';
 
@@ -719,6 +878,10 @@
                 opt2.textContent = off;
                 reqSelect.appendChild(opt2);
             });
+
+            if (!officers.includes(selectedOfficerFilter)) selectedOfficerFilter = 'ALL';
+            select.value = selectedOfficerFilter;
+            if (officers.includes(prevReq)) reqSelect.value = prevReq;
         }
 
         function loadPinnedOfficer() {
@@ -822,6 +985,8 @@
             const icon = document.getElementById('admin-icon');
             if (!btn || !txt || !icon) return;
             const base = 'text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg border border-amber-500/30 transition flex items-center gap-1.5';
+            const manageBtn = document.getElementById('manage-officers-btn');
+            if (manageBtn) manageBtn.classList.toggle('hidden', !isAdmin);
             if (isAdmin) {
                 btn.className = `bg-amber-500 hover:bg-amber-400 text-slate-900 ${base}`;
                 txt.textContent = `עורך: ${currentUser.displayName || currentUser.email} (יציאה)`;
@@ -1104,7 +1269,9 @@
             if (!week || !officers.includes(officer)) return;
             if (!week.shifts[officer]) week.shifts[officer] = ['', '', '', '', '', '', ''];
             week.shifts[officer][dayIndex] = val;
-            writePath(`${SCHEDULE_PATH}/${currentWeekIndex}/shifts/${officer}/${dayIndex}`, val);
+            const idx = currentWeekIndex;
+            if (!isAdmin) { alert('אין הרשאת עריכה. היכנס כמנהל.'); return; }
+            materializeWeeksUpTo(idx).then(() => writePath(`${SCHEDULE_PATH}/${idx}/shifts/${officer}/${dayIndex}`, val));
         }
 
         function toggleCarIcon(officerIdx, dayIndex) {
@@ -1160,7 +1327,9 @@
             const week = scheduleData[currentWeekIndex];
             if (!week) return;
             week.notes = document.getElementById('general-notes').value;
-            writePath(`${SCHEDULE_PATH}/${currentWeekIndex}/notes`, week.notes);
+            const idx = currentWeekIndex;
+            if (!isAdmin) { alert('אין הרשאת עריכה. היכנס כמנהל.'); return; }
+            materializeWeeksUpTo(idx).then(() => writePath(`${SCHEDULE_PATH}/${idx}/notes`, week.notes));
         }
 
         function saveHolidays() {
@@ -1700,11 +1869,88 @@
             }
         }
 
-        function changeWeek(direction) {
-            if (currentWeekIndex + direction >= 0 && currentWeekIndex + direction < scheduleData.length) {
-                currentWeekIndex += direction;
-                renderSchedule();
+        // ---------- ניהול רשימת השוטרים (מנהלים בלבד) ----------
+
+        let officersDraft = [];
+
+        function openOfficersModal() {
+            if (!isAdmin) return;
+            officersDraft = officerConfig.map(o => ({ ...o }));
+            renderOfficersDraft();
+            document.getElementById('officers-modal').classList.remove('hidden');
+        }
+
+        function closeOfficersModal() {
+            document.getElementById('officers-modal').classList.add('hidden');
+        }
+
+        function renderOfficersDraft() {
+            const list = document.getElementById('officers-modal-list');
+            const colorOptions = (selected) => Object.entries(COLOR_PALETTE)
+                .map(([key, c]) => `<option value="${key}" ${key === selected ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('');
+            list.innerHTML = officersDraft.map((o, i) => `
+                <div class="flex flex-wrap items-center gap-2 p-2 rounded-xl border border-slate-200 ${COLOR_PALETTE[o.color].row}">
+                    <span class="px-2.5 py-1 rounded-lg min-w-[80px] ${COLOR_PALETTE[o.color].nameBg}">${escapeHtml(o.name)}</span>
+                    <select onchange="officersDraft[${i}].daily = this.value === '1'; renderOfficersDraft()" class="p-1.5 bg-white border border-slate-300 rounded-lg">
+                        <option value="0" ${o.daily ? '' : 'selected'}>סמב"ץ</option>
+                        <option value="1" ${o.daily ? 'selected' : ''}>יומי</option>
+                    </select>
+                    <select onchange="officersDraft[${i}].color = this.value; renderOfficersDraft()" class="p-1.5 bg-white border border-slate-300 rounded-lg">${colorOptions(o.color)}</select>
+                    <div class="flex items-center gap-1 mr-auto">
+                        <button onclick="moveOfficerInDraft(${i}, -1)" title="הזז למעלה" class="p-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg ${i === 0 ? 'opacity-30 pointer-events-none' : ''}"><i class="fa-solid fa-arrow-up"></i></button>
+                        <button onclick="moveOfficerInDraft(${i}, 1)" title="הזז למטה" class="p-1.5 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg ${i === officersDraft.length - 1 ? 'opacity-30 pointer-events-none' : ''}"><i class="fa-solid fa-arrow-down"></i></button>
+                        <button onclick="removeOfficerFromDraft(${i})" title="הסר מהרשימה" class="p-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-300 rounded-lg"><i class="fa-solid fa-user-minus"></i></button>
+                    </div>
+                </div>`).join('');
+        }
+
+        function moveOfficerInDraft(i, dir) {
+            const j = i + dir;
+            if (j < 0 || j >= officersDraft.length) return;
+            [officersDraft[i], officersDraft[j]] = [officersDraft[j], officersDraft[i]];
+            renderOfficersDraft();
+        }
+
+        function removeOfficerFromDraft(i) {
+            officersDraft.splice(i, 1);
+            renderOfficersDraft();
+        }
+
+        function addOfficerToDraft() {
+            const input = document.getElementById('new-officer-name');
+            const name = input.value.trim().replace(/\s+/g, ' ');
+            if (!name) return;
+            // תווים שאסורים במפתחות של Firebase
+            if (/[.#$\/\[\]]/.test(name)) {
+                alert('השם לא יכול להכיל את התווים:  . # $ / [ ]');
+                return;
             }
+            if (officersDraft.some(o => o.name === name)) {
+                alert('שוטר בשם הזה כבר קיים ברשימה.');
+                return;
+            }
+            const used = new Set(officersDraft.map(o => o.color));
+            const color = Object.keys(COLOR_PALETTE).find(k => !used.has(k)) || 'slate';
+            officersDraft.push({ name, daily: document.getElementById('new-officer-daily').value === '1', color });
+            input.value = '';
+            renderOfficersDraft();
+        }
+
+        function saveOfficersDraft() {
+            if (officersDraft.length === 0) {
+                alert('הרשימה לא יכולה להיות ריקה.');
+                return;
+            }
+            writePath(OFFICERS_PATH, officersDraft.map(o => ({ name: o.name, daily: !!o.daily, color: o.color })))
+                .then(ok => { if (ok) closeOfficersModal(); });
+        }
+
+        function changeWeek(direction) {
+            const next = currentWeekIndex + direction;
+            if (next < 0) return;
+            ensureWeekIndex(next);
+            currentWeekIndex = next;
+            renderSchedule();
         }
 
         function switchTab(tab) {
