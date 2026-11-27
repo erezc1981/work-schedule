@@ -4,14 +4,44 @@
     ".write": false,
 
     "admins": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": false
       }
     },
 
-    "police_schedule_2026": {
+    "settings": {
       ".read": true,
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "require_login": { ".validate": "newData.isBoolean()" },
+      "$other": { ".validate": false }
+    },
+
+    "users": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').child(auth.uid).val() === true)",
+        ".validate": "newData.hasChildren(['email'])",
+        "email": { ".validate": "newData.isString() && newData.val().length <= 100 && (auth.uid !== $uid || newData.val() === auth.token.email)" },
+        "name": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "lastLoginAt": { ".validate": "newData.isNumber() && newData.val() <= now" },
+        "$other": { ".validate": false }
+      }
+    },
+
+    "viewers": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20"
+      }
+    },
+
+    "police_schedule_2026": {
+      ".read": "root.child('settings').child('require_login').val() !== true || (auth != null && (root.child('viewers').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true))",
       ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
       "$week": {
         ".validate": "$week.matches(/^[0-9]+$/) && $week.length <= 4",
@@ -30,7 +60,7 @@
     },
 
     "police_holidays_2026": {
-      ".read": true,
+      ".read": "root.child('settings').child('require_login').val() !== true || (auth != null && (root.child('viewers').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true))",
       ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
       "$i": {
         ".validate": "$i.matches(/^[0-9]+$/) && $i.length <= 3 && newData.hasChildren(['name', 'date'])",
@@ -43,7 +73,7 @@
     },
 
     "police_officers": {
-      ".read": true,
+      ".read": "root.child('settings').child('require_login').val() !== true || (auth != null && (root.child('viewers').child(auth.uid).exists() || root.child('admins').child(auth.uid).val() === true))",
       ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
       "$i": {
         ".validate": "$i.matches(/^[0-9]+$/) && $i.length <= 3 && newData.hasChildren(['name'])",

@@ -50,6 +50,8 @@
             padding-top: env(safe-area-inset-top);
         }
         .dimmed-row { opacity: 0.45; filter: grayscale(80%); }
+        /* מי שלא אושר לצפייה רואה רק את מסך הכניסה */
+        .gated .gated-hide { display: none !important; }
 
         /* נגישות: מסגרת פוקוס ברורה לניווט במקלדת (גוברת על focus:outline-none) */
         :focus-visible { outline: 3px solid #f59e0b !important; outline-offset: 2px !important; }
@@ -161,23 +163,23 @@
 
                 <!-- Actions & Mode Switch -->
                 <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <button onclick="openTodayCommandModal()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-[11px] sm:text-xs font-extrabold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="openTodayCommandModal()" class="gated-hide bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-[11px] sm:text-xs font-extrabold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-tower-broadcast text-xs"></i>
                         <span>מי עובד היום?</span>
                     </button>
-                    <button onclick="openRequestModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="openRequestModal()" class="gated-hide bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                         <span>הגש בקשה</span>
                     </button>
-                    <button onclick="shareScheduleToWhatsAppText()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="shareScheduleToWhatsAppText()" class="gated-hide bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-brands fa-whatsapp text-xs"></i>
                         <span>שתף סידור ב-WhatsApp</span>
                     </button>
-                    <button onclick="exportShiftsToCalendar()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="exportShiftsToCalendar()" class="gated-hide bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-calendar-plus text-xs"></i>
                         <span>סנכרן ליומן Google</span>
                     </button>
-                    <button onclick="openStatsModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="openStatsModal()" class="gated-hide bg-blue-600 hover:bg-blue-500 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-chart-pie text-xs"></i>
                         <span>סיכום חודשי</span>
                     </button>
@@ -185,11 +187,16 @@
                         <i class="fa-solid fa-users-gear text-xs"></i>
                         <span>ניהול שוטרים</span>
                     </button>
+                    <button onclick="openUsersModal()" id="manage-users-btn" class="hidden bg-amber-100 hover:bg-amber-200 text-amber-900 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-check text-xs"></i>
+                        <span>אישור משתמשים</span>
+                        <span id="pending-users-count" class="hidden bg-rose-600 text-white rounded-full px-1.5 text-[10px] font-extrabold"></span>
+                    </button>
                     <button onclick="toggleAdminMode()" id="admin-toggle-btn" class="bg-slate-800 hover:bg-slate-700 text-amber-400 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg border border-amber-500/30 transition flex items-center gap-1.5">
                         <i class="fa-solid fa-lock text-xs" id="admin-icon"></i>
-                        <span id="admin-btn-text">כניסת מנהל</span>
+                        <span id="admin-btn-text">כניסה</span>
                     </button>
-                    <button onclick="window.print()" class="bg-slate-700 hover:bg-slate-600 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
+                    <button onclick="window.print()" class="gated-hide bg-slate-700 hover:bg-slate-600 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-print text-xs"></i>
                         <span>הדפסה</span>
                     </button>
@@ -200,7 +207,23 @@
         <!-- Main Content -->
         <main id="main-content" tabindex="-1" class="max-w-7xl mx-auto px-2.5 sm:px-4 py-4 sm:py-6 flex-grow w-full print-full">
 
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-4 mb-4 sm:mb-6 no-print space-y-3 sm:space-y-4">
+            <!-- הודעה לפני נעילת הצפייה: מזמינה להתחבר ולבקש גישה -->
+            <div id="access-banner" role="status" class="hidden no-print mb-4 bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl px-4 py-3 text-xs font-bold flex flex-wrap items-center justify-between gap-2"></div>
+
+            <!-- מסך כניסה: מוצג כשהצפייה מוגבלת למשתמשים מאושרים -->
+            <section id="access-gate" aria-labelledby="access-gate-title" class="hidden no-print max-w-md mx-auto my-6 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 text-center space-y-4">
+                <div class="mx-auto w-14 h-14 rounded-2xl bg-police-navy text-amber-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-user-shield"></i></div>
+                <h2 id="access-gate-title" class="text-lg font-black text-police-navy"></h2>
+                <p id="access-gate-text" class="text-sm text-slate-600 leading-relaxed"></p>
+                <div id="access-gate-inapp" class="hidden text-right bg-amber-50 border border-amber-300 text-amber-900 rounded-xl p-3 text-xs font-bold leading-relaxed">
+                    <p class="mb-1"><i class="fa-solid fa-triangle-exclamation"></i> נראה שהאתר נפתח בתוך אפליקציה (למשל וואטסאפ).</p>
+                    <p class="font-normal">Google לא מאפשרת להתחבר מתוך דפדפן של אפליקציה. לחץ על התפריט (⋮ או סמל השיתוף) ובחר "פתח ב-Chrome" או "פתח ב-Safari".</p>
+                    <button onclick="copySiteLink()" class="mt-2 bg-white border border-amber-400 rounded-lg px-3 py-1.5 font-extrabold"><i class="fa-solid fa-copy"></i> <span id="copy-link-text">העתק את הקישור</span></button>
+                </div>
+                <div id="access-gate-actions" class="flex flex-col gap-2"></div>
+            </section>
+
+            <div class="gated-hide bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-4 mb-4 sm:mb-6 no-print space-y-3 sm:space-y-4">
                 <div class="flex flex-wrap justify-between items-center gap-3">
                     <div class="flex items-center gap-2 flex-wrap">
                         <button onclick="changeWeek(-1)" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition shadow-sm" title="שבוע קודם" aria-label="שבוע קודם">
@@ -246,7 +269,7 @@
             </div>
 
             <!-- Schedule View -->
-            <div id="view-schedule" class="space-y-4 sm:space-y-6">
+            <div id="view-schedule" class="gated-hide space-y-4 sm:space-y-6">
                 <div class="flex md:hidden items-center justify-center gap-1.5 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-1.5 rounded-xl text-[11px] font-bold no-print">
                     <i class="fa-solid fa-arrows-left-right"></i>
                     <span>החלק ימינה ושמאלה בימים — שמות השוטרים נעולים מימין</span>
@@ -330,7 +353,7 @@
             </div>
 
             <!-- Holidays View -->
-            <div id="view-holidays" class="hidden space-y-6">
+            <div id="view-holidays" class="gated-hide hidden space-y-6">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
                     <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
                         <h2 class="text-base sm:text-lg font-bold text-police-navy flex items-center gap-2">
@@ -495,6 +518,26 @@
         </div>
     </div>
 
+    <!-- Users Approval Modal (admins only) -->
+    <div id="users-modal" role="dialog" aria-modal="true" aria-labelledby="users-modal-title" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[88vh] overflow-hidden flex flex-col">
+            <div class="bg-police-navy text-white p-4 flex justify-between items-center">
+                <h3 id="users-modal-title" class="font-bold text-base flex items-center gap-2">
+                    <i class="fa-solid fa-user-check text-amber-400"></i>
+                    <span>אישור משתמשים</span>
+                </h3>
+                <button onclick="closeUsersModal()" aria-label="סגור חלון" class="text-white hover:text-amber-400 text-lg p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-grow space-y-3 text-xs font-bold">
+                <div id="require-login-box" class="rounded-xl border p-3 flex flex-wrap items-center justify-between gap-2"></div>
+                <p class="text-slate-500 font-normal">כל מי שנכנס לאתר עם Google מופיע כאן. מאשרים אותו ומשייכים לשם שלו בסידור — כך השורה שלו מודגשת אוטומטית.</p>
+                <div id="users-modal-list" class="space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
     <footer class="py-3 text-center text-[11px] text-slate-600 border-t border-slate-200 bg-white no-print">
         <nav aria-label="מידע משפטי" class="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-1">
             <a href="terms.html" class="hover:underline">תנאי שימוש</a>
@@ -532,6 +575,20 @@
         let currentWeekIndex = 0;
         let selectedOfficerFilter = 'ALL';
         let isInitialLoadDone = false;
+
+        // ---------- הרשאות צפייה ----------
+        // requireLogin: האם הצפייה מוגבלת למשתמשים מאושרים (settings/require_login ב-DB, נאכף גם בכללי Firebase)
+        // access: 'unknown' (עוד לא נבדק) | 'none' (לא מחובר) | 'pending' (מחובר, ממתין לאישור) | 'viewer' | 'admin'
+        let requireLogin = false;
+        let access = 'unknown';
+        let authResolved = false;
+        let cachedAccessOk = false;
+        let linkedOfficer = null;
+        let linkedOfficerApplied = false;
+        let dataDenied = false;
+        let dataAttachedFor = null;
+        let viewerRef = null;
+        const IN_APP_BROWSER = /WhatsApp|FBAN|FBAV|FB_IAB|Instagram|Line\/|; wv\)/i.test(navigator.userAgent);
 
         const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
         const hebrewMonths = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
@@ -791,7 +848,8 @@
             'today-command-modal': () => closeTodayCommandModal(),
             'request-modal': () => closeRequestModal(),
             'stats-modal': () => closeStatsModal(),
-            'officers-modal': () => closeOfficersModal()
+            'officers-modal': () => closeOfficersModal(),
+            'users-modal': () => closeUsersModal()
         };
         let lastFocusBeforeModal = null;
         const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -834,7 +892,9 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            if (loadFromLocalCache()) {
+            requireLogin = cacheGet('require_login') === true;
+            cachedAccessOk = ['viewer', 'admin'].includes(cacheGet('access'));
+            if ((!requireLogin || cachedAccessOk) && loadFromLocalCache()) {
                 autoSelectCurrentWeek();
                 isInitialLoadDone = true;
             }
@@ -842,6 +902,7 @@
             loadPinnedOfficer();
             renderSchedule();
             renderHolidays();
+            refreshAccessUI();
             hideDecorativeIcons(document);
 
             if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
@@ -851,6 +912,50 @@
             database.ref('.info/connected').on('value', snap => {
                 setSyncStatus(snap.val() === true ? 'online' : 'offline');
             });
+
+            database.ref('settings/require_login').on('value', snap => {
+                requireLogin = snap.val() === true;
+                cacheSet('require_login', requireLogin);
+                refreshAccessUI();
+                attachDataListeners();
+            }, err => console.warn('settings read failed', err));
+
+            attachDataListeners();
+
+            if (auth) {
+                auth.onAuthStateChanged(handleAuthChange);
+            }
+        });
+
+        // מי רשאי לקרוא את הסידור כרגע (אותו תנאי כמו בכללי Firebase)
+        function hasViewAccess() {
+            if (access === 'viewer' || access === 'admin') return true;
+            if (access === 'unknown') return cachedAccessOk;
+            return false;
+        }
+
+        function canReadData() {
+            return !requireLogin || hasViewAccess();
+        }
+
+        // מאזינים לנתוני הסידור. מחוברים מחדש כשההרשאה משתנה (כניסה, אישור, נעילה)
+        function attachDataListeners(force) {
+            const allowed = canReadData();
+            if (!force && allowed === dataAttachedFor) return;
+            dataAttachedFor = allowed;
+            [SCHEDULE_PATH, OFFICERS_PATH, HOLIDAYS_PATH].forEach(p => database.ref(p).off('value'));
+            dataDenied = false;
+            if (!allowed) {
+                clearLocalData();
+                refreshAccessUI();
+                return;
+            }
+            const onDenied = (err) => {
+                console.warn('Read denied', err && err.code);
+                dataDenied = true;
+                dataAttachedFor = null;
+                refreshAccessUI();
+            };
 
             database.ref(SCHEDULE_PATH).on('value', (snapshot) => {
                 scheduleExistsInDb = snapshot.exists();
@@ -873,18 +978,20 @@
                 }
 
                 renderSchedule();
-            });
+            }, onDenied);
 
             database.ref(OFFICERS_PATH).on('value', (snapshot) => {
                 officersExistInDb = snapshot.exists();
                 if (snapshot.exists()) cacheSet('officers', snapshot.val());
                 applyOfficerConfig(toArray(snapshot.val()));
                 populateOfficerFilterOptions();
+                applyLinkedOfficer();
                 updatePinButtonUI();
                 seedDatabaseIfEmpty();
                 renderSchedule();
                 renderHolidays();
-            });
+                if (isUsersModalOpen()) renderUsersModal();
+            }, onDenied);
 
             database.ref(HOLIDAYS_PATH).on('value', (snapshot) => {
                 holidaysExistInDb = snapshot.exists();
@@ -894,12 +1001,86 @@
                 seedDatabaseIfEmpty();
                 renderHolidays();
                 renderSchedule();
-            });
+            }, onDenied);
+        }
 
-            if (auth) {
-                auth.onAuthStateChanged(handleAuthChange);
+        // מוחק את הסידור מהמכשיר, ומהזיכרון כשהצפייה נעולה (ביציאה, או כשאין הרשאה)
+        function clearLocalData() {
+            ['schedule', 'holidays', 'officers'].forEach(k => localStorage.removeItem(CACHE_PREFIX + k));
+            if (!requireLogin) return;
+            scheduleData = generateMultiYearCleanSchedule(2026, 2030);
+            holidaysData = [];
+            isInitialLoadDone = false;
+            renderSchedule();
+            renderHolidays();
+        }
+
+        // מסך הכניסה, ההודעה העליונה וכפתור הכניסה — לפי מצב ההרשאה
+        function refreshAccessUI() {
+            const gated = requireLogin && (!hasViewAccess() || dataDenied);
+            document.body.classList.toggle('gated', gated);
+            const gate = document.getElementById('access-gate');
+            const banner = document.getElementById('access-banner');
+            if (gate) gate.classList.toggle('hidden', !gated);
+
+            if (gated) {
+                const title = document.getElementById('access-gate-title');
+                const text = document.getElementById('access-gate-text');
+                const actions = document.getElementById('access-gate-actions');
+                const inapp = document.getElementById('access-gate-inapp');
+                const signInBtn = `<button onclick="toggleAdminMode()" class="bg-police-navy hover:bg-blue-900 text-white font-extrabold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2"><i class="fa-brands fa-google"></i><span>כניסה עם Google</span></button>`;
+                const signOutBtn = `<button onclick="toggleAdminMode()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl">יציאה / החלפת חשבון</button>`;
+                inapp.classList.add('hidden');
+                if (!authResolved || (currentUser && access === 'unknown')) {
+                    title.textContent = 'טוען...';
+                    text.textContent = 'בודק הרשאות צפייה.';
+                    actions.innerHTML = '';
+                } else if (!currentUser) {
+                    title.textContent = 'הסידור פתוח לשוטרים מאושרים בלבד';
+                    text.textContent = 'התחבר עם חשבון Google. בכניסה הראשונה תישלח בקשת גישה למנהל, ואחרי האישור הסידור ייפתח כאן.';
+                    actions.innerHTML = signInBtn;
+                    if (IN_APP_BROWSER) inapp.classList.remove('hidden');
+                } else {
+                    const who = currentUser.displayName || currentUser.email || '';
+                    title.textContent = 'הבקשה שלך נשלחה';
+                    text.textContent = `שלום ${who}. המנהל יאשר אותך בקרוב — אחרי האישור הסידור ייפתח כאן אוטומטית, בלי לרענן.`;
+                    actions.innerHTML = signOutBtn;
+                }
             }
-        });
+
+            if (banner) {
+                let msg = '';
+                if (!requireLogin && authResolved && access === 'none') {
+                    msg = `<span><i class="fa-solid fa-circle-info"></i> בקרוב הצפייה בסידור תהיה למשתמשים מאושרים בלבד. התחבר עכשיו כדי לבקש גישה.</span><button onclick="toggleAdminMode()" class="bg-police-navy text-white rounded-lg px-3 py-1.5 font-extrabold flex items-center gap-1.5"><i class="fa-brands fa-google"></i>כניסה</button>`;
+                } else if (!requireLogin && access === 'pending') {
+                    msg = `<span><i class="fa-solid fa-hourglass-half"></i> בקשת הגישה שלך נשלחה וממתינה לאישור המנהל.</span>`;
+                }
+                banner.innerHTML = msg;
+                banner.classList.toggle('hidden', !msg);
+            }
+            updateAdminButtonUI();
+        }
+
+        // שוטר שאושר ושויך לשם בסידור — השורה שלו מודגשת והשם ממולא בבקשות (אם לא בחר אחרת במכשיר)
+        function applyLinkedOfficer() {
+            if (linkedOfficerApplied || !linkedOfficer || !officers.includes(linkedOfficer)) return;
+            linkedOfficerApplied = true;
+            const reqSelect = document.getElementById('req-officer-name');
+            if (reqSelect) reqSelect.value = linkedOfficer;
+            if (localStorage.getItem(SAVED_OFFICER_STORAGE_KEY) || selectedOfficerFilter !== 'ALL') return;
+            selectedOfficerFilter = linkedOfficer;
+            const select = document.getElementById('officer-filter');
+            if (select) select.value = linkedOfficer;
+            updatePinButtonUI();
+            renderSchedule();
+        }
+
+        function copySiteLink() {
+            const url = location.origin + location.pathname;
+            const done = () => { const t = document.getElementById('copy-link-text'); if (t) t.textContent = 'הקישור הועתק'; };
+            if (navigator.clipboard) navigator.clipboard.writeText(url).then(done).catch(() => prompt('העתק את הקישור:', url));
+            else prompt('העתק את הקישור:', url);
+        }
 
         function formatDDMMYYYY(d) {
             return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
@@ -1017,18 +1198,20 @@
             }
         }
 
-        // ---------- כניסת מנהלים (Firebase Authentication עם חשבון Google) ----------
-        // ההרשאה נקבעת לפי הנתיב admins/{uid} ב-DB, ונאכפת בצד השרת ע"י database.rules.json.
+        // ---------- כניסה (Firebase Authentication עם חשבון Google) ----------
+        // עורכים: admins/{uid} = true. צופים מאושרים: viewers/{uid} = שם השוטר בסידור (או "-").
+        // ההרשאות נאכפות בצד השרת ע"י database.rules.json.
 
         async function toggleAdminMode() {
             if (!auth) {
-                alert('כניסת מנהלים עדיין לא הוגדרה: יש להזין apiKey בהגדרות FIREBASE_CONFIG בקוד.');
+                alert('הכניסה עדיין לא הוגדרה: יש להזין apiKey בהגדרות FIREBASE_CONFIG בקוד.');
                 return;
             }
             if (currentUser) {
                 await auth.signOut();
                 return;
             }
+            if (IN_APP_BROWSER && !confirm('נראה שהאתר נפתח בתוך אפליקציה (למשל וואטסאפ), ו-Google לרוב חוסמת שם התחברות.\n\nמומלץ לפתוח את הקישור ב-Chrome או ב-Safari.\n\nלנסות בכל זאת?')) return;
             try {
                 await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
             } catch (err) {
@@ -1041,20 +1224,69 @@
         }
 
         async function handleAuthChange(user) {
+            if (viewerRef) { viewerRef.off('value'); viewerRef = null; }
+            stopAdminListeners();
+            const hadUser = !!currentUser;
             currentUser = user;
+            authResolved = true;
             isAdmin = false;
-            if (user) {
-                try {
-                    const snap = await database.ref(`admins/${user.uid}`).once('value');
-                    isAdmin = snap.val() === true;
-                } catch (err) {
-                    isAdmin = false;
-                }
-                if (!isAdmin) {
-                    alert(`החשבון ${user.email} אינו מורשה לעריכה.\n\nכדי להוסיף אותו, מנהל צריך ליצור ב-Firebase את הנתיב:\nadmins/${user.uid} = true`);
-                }
+            linkedOfficer = null;
+            linkedOfficerApplied = false;
+
+            if (!user) {
+                access = 'none';
+                cacheSet('access', 'none');
+                // יציאה מחשבון: הסידור לא נשאר שמור במכשיר
+                if (hadUser) clearLocalData();
+                afterAccessChange();
+                return;
             }
-            updateAdminButtonUI();
+
+            access = 'unknown';
+            refreshAccessUI();
+
+            // רישום המשתמש — כך הוא מופיע למנהל ברשימת "אישור משתמשים"
+            database.ref(`users/${user.uid}`).set({
+                email: user.email || '',
+                name: (user.displayName || '').slice(0, 60),
+                lastLoginAt: firebase.database.ServerValue.TIMESTAMP
+            }).catch(err => console.warn('User registration failed', err));
+
+            try {
+                const snap = await database.ref(`admins/${user.uid}`).once('value');
+                isAdmin = snap.val() === true;
+            } catch (err) {
+                isAdmin = false;
+            }
+            if (currentUser !== user) return;
+
+            if (isAdmin) {
+                access = 'admin';
+                cacheSet('access', 'admin');
+                startAdminListeners();
+            }
+
+            // מאזין חי: ברגע שהמנהל מאשר (או מבטל), הסידור נפתח (או נסגר) בלי לרענן
+            viewerRef = database.ref(`viewers/${user.uid}`);
+            viewerRef.on('value', snap => {
+                linkedOfficer = snap.exists() ? String(snap.val()) : null;
+                if (!isAdmin) {
+                    access = snap.exists() ? 'viewer' : 'pending';
+                    cacheSet('access', access);
+                }
+                applyLinkedOfficer();
+                afterAccessChange();
+            }, () => {
+                if (!isAdmin) access = 'pending';
+                afterAccessChange();
+            });
+            afterAccessChange();
+        }
+
+        function afterAccessChange() {
+            if (access !== 'unknown') cachedAccessOk = access === 'viewer' || access === 'admin';
+            refreshAccessUI();
+            attachDataListeners();
             seedDatabaseIfEmpty();
             renderSchedule();
             renderHolidays();
@@ -1068,19 +1300,170 @@
             const base = 'text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg border border-amber-500/30 transition flex items-center gap-1.5';
             const manageBtn = document.getElementById('manage-officers-btn');
             if (manageBtn) manageBtn.classList.toggle('hidden', !isAdmin);
+            const usersBtn = document.getElementById('manage-users-btn');
+            if (usersBtn) usersBtn.classList.toggle('hidden', !isAdmin);
+            const who = currentUser ? (currentUser.displayName || currentUser.email) : '';
             if (isAdmin) {
                 btn.className = `bg-amber-500 hover:bg-amber-400 text-slate-900 ${base}`;
-                txt.textContent = `עורך: ${currentUser.displayName || currentUser.email} (יציאה)`;
+                txt.textContent = `עורך: ${who} (יציאה)`;
                 icon.className = 'fa-solid fa-lock-open text-xs';
+            } else if (currentUser && access === 'viewer') {
+                btn.className = `bg-slate-800 hover:bg-slate-700 text-emerald-300 ${base}`;
+                txt.textContent = `${who} (יציאה)`;
+                icon.className = 'fa-solid fa-user-check text-xs';
             } else if (currentUser) {
-                btn.className = `bg-slate-800 hover:bg-slate-700 text-rose-300 ${base}`;
-                txt.textContent = 'לא מורשה (יציאה)';
-                icon.className = 'fa-solid fa-ban text-xs';
+                btn.className = `bg-slate-800 hover:bg-slate-700 text-amber-300 ${base}`;
+                txt.textContent = access === 'pending' ? 'ממתין לאישור (יציאה)' : `${who} (יציאה)`;
+                icon.className = 'fa-solid fa-hourglass-half text-xs';
             } else {
                 btn.className = `bg-slate-800 hover:bg-slate-700 text-amber-400 ${base}`;
-                txt.textContent = 'כניסת מנהל';
+                txt.textContent = 'כניסה';
                 icon.className = 'fa-solid fa-lock text-xs';
             }
+        }
+
+        // ---------- אישור משתמשים (מנהלים בלבד) ----------
+
+        let usersData = {};
+        let viewersData = {};
+        let adminsData = {};
+        let adminRefs = [];
+
+        function startAdminListeners() {
+            stopAdminListeners();
+            const listen = (path, setter) => {
+                const ref = database.ref(path);
+                ref.on('value', snap => { setter(snap.val() || {}); updatePendingBadge(); if (isUsersModalOpen()) renderUsersModal(); },
+                    err => console.warn('Admin read failed', path, err));
+                adminRefs.push(ref);
+            };
+            listen('users', v => { usersData = v; });
+            listen('viewers', v => { viewersData = v; });
+            listen('admins', v => { adminsData = v; });
+        }
+
+        function stopAdminListeners() {
+            adminRefs.forEach(r => r.off('value'));
+            adminRefs = [];
+            usersData = {}; viewersData = {}; adminsData = {};
+            updatePendingBadge();
+        }
+
+        function pendingUids() {
+            return Object.keys(usersData).filter(uid => viewersData[uid] == null && adminsData[uid] !== true);
+        }
+
+        function updatePendingBadge() {
+            const badge = document.getElementById('pending-users-count');
+            if (!badge) return;
+            const n = pendingUids().length;
+            badge.textContent = n;
+            badge.classList.toggle('hidden', n === 0);
+        }
+
+        function isUsersModalOpen() {
+            const m = document.getElementById('users-modal');
+            return !!m && !m.classList.contains('hidden');
+        }
+
+        function openUsersModal() {
+            if (!isAdmin) return;
+            renderUsersModal();
+            document.getElementById('users-modal').classList.remove('hidden');
+        }
+
+        function closeUsersModal() {
+            document.getElementById('users-modal').classList.add('hidden');
+        }
+
+        function renderUsersModal() {
+            const box = document.getElementById('require-login-box');
+            const list = document.getElementById('users-modal-list');
+            if (!box || !list) return;
+
+            box.className = `rounded-xl border p-3 flex flex-wrap items-center justify-between gap-2 ${requireLogin ? 'bg-emerald-50 border-emerald-300' : 'bg-amber-50 border-amber-300'}`;
+            box.innerHTML = requireLogin
+                ? `<span class="text-emerald-900"><i class="fa-solid fa-lock"></i> הצפייה נעולה — רק משתמשים מאושרים רואים את הסידור.</span>
+                   <button onclick="setRequireLogin(false)" class="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-700">פתח לכולם</button>`
+                : `<span class="text-amber-900"><i class="fa-solid fa-lock-open"></i> הצפייה עדיין פתוחה לכל מי שיש לו את הקישור.</span>
+                   <button onclick="setRequireLogin(true)" class="bg-police-navy text-white rounded-lg px-3 py-1.5 shadow">נעל למאושרים בלבד</button>`;
+
+            const uids = Object.keys(usersData).filter(uid => /^[A-Za-z0-9_-]+$/.test(uid));
+            const status = uid => adminsData[uid] === true ? 'admin' : (viewersData[uid] != null ? 'viewer' : 'pending');
+            const order = { pending: 0, viewer: 1, admin: 2 };
+            uids.sort((a, b) => order[status(a)] - order[status(b)] || ((usersData[b].lastLoginAt || 0) - (usersData[a].lastLoginAt || 0)));
+
+            if (uids.length === 0) {
+                list.innerHTML = '<p class="text-center text-slate-500 font-normal py-4">עוד אף אחד לא נכנס לאתר עם Google.</p>';
+                return;
+            }
+
+            list.innerHTML = uids.map(uid => {
+                const u = usersData[uid] || {};
+                const st = status(uid);
+                const linked = viewersData[uid] != null ? String(viewersData[uid]) : '-';
+                const opts = ['-', ...officers].map(o => `<option value="${escapeHtml(o)}" ${o === linked ? 'selected' : ''}>${o === '-' ? '— לא משויך —' : escapeHtml(o)}</option>`).join('');
+                const badge = {
+                    pending: '<span class="bg-amber-200 text-amber-900 rounded-full px-2 py-0.5 text-[10px]">ממתין</span>',
+                    viewer: '<span class="bg-emerald-200 text-emerald-900 rounded-full px-2 py-0.5 text-[10px]">מאושר</span>',
+                    admin: '<span class="bg-blue-200 text-blue-900 rounded-full px-2 py-0.5 text-[10px]">מנהל</span>'
+                }[st];
+                const label = escapeHtml(u.name || u.email || uid);
+                let buttons = '';
+                if (st === 'pending') {
+                    buttons = `<button onclick="approveUser('${uid}')" class="bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-3 py-1.5 shadow">אשר</button>
+                               <button onclick="rejectUser('${uid}')" aria-label="דחה את ${label}" class="bg-white border border-rose-300 text-rose-700 rounded-lg px-2.5 py-1.5">דחה</button>`;
+                } else if (st === 'viewer') {
+                    buttons = `<button onclick="approveUser('${uid}')" class="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-1.5">שמור שיוך</button>
+                               <button onclick="revokeUser('${uid}')" aria-label="בטל גישה ל${label}" class="bg-white border border-rose-300 text-rose-700 rounded-lg px-2.5 py-1.5">בטל גישה</button>`;
+                } else {
+                    buttons = `<button onclick="approveUser('${uid}')" class="bg-white border border-slate-300 text-slate-700 rounded-lg px-3 py-1.5">שמור שיוך</button>`;
+                }
+                return `
+                    <div class="p-2.5 rounded-xl border ${st === 'pending' ? 'border-amber-300 bg-amber-50/60' : 'border-slate-200'} flex flex-wrap items-center gap-2">
+                        <div class="min-w-[140px] flex-grow">
+                            <div class="flex items-center gap-1.5 text-slate-800">${label} ${badge}</div>
+                            <div class="text-[11px] text-slate-500 font-normal" dir="ltr">${escapeHtml(u.email || '')}</div>
+                        </div>
+                        <select id="link-${uid}" aria-label="שיוך ${label} לשוטר בסידור" class="p-1.5 bg-white border border-slate-300 rounded-lg">${opts}</select>
+                        <div class="flex items-center gap-1.5">${buttons}</div>
+                    </div>`;
+            }).join('');
+        }
+
+        function approveUser(uid) {
+            const sel = document.getElementById(`link-${uid}`);
+            const officer = sel ? sel.value : '-';
+            // מנהל לא צריך אישור צפייה — רק שיוך לשם (או הסרת השיוך)
+            if (adminsData[uid] === true && officer === '-') {
+                writePath(`viewers/${uid}`, null);
+                return;
+            }
+            writePath(`viewers/${uid}`, officer || '-');
+        }
+
+        function revokeUser(uid) {
+            const u = usersData[uid] || {};
+            if (!confirm(`לבטל את הגישה של ${u.name || u.email || 'המשתמש'}?\nאם הצפייה נעולה, הוא לא יוכל לראות את הסידור יותר.`)) return;
+            writePath(`viewers/${uid}`, null);
+        }
+
+        function rejectUser(uid) {
+            const u = usersData[uid] || {};
+            if (!confirm(`להסיר את הבקשה של ${u.name || u.email || 'המשתמש'} מהרשימה?\n(אם ייכנס שוב, הבקשה תופיע מחדש.)`)) return;
+            writePath(`users/${uid}`, null);
+        }
+
+        function setRequireLogin(value) {
+            if (value) {
+                const approved = Object.keys(viewersData).length;
+                const pending = pendingUids().length;
+                const msg = `לנעול את הסידור למשתמשים מאושרים בלבד?\n\nמאושרים: ${approved}\nממתינים לאישור: ${pending}\n\nכל מי שלא אושר (כולל מי שעוד לא נכנס עם Google) לא יוכל לראות את הסידור. מנהלים תמיד רואים.`;
+                if (!confirm(msg)) return;
+            } else if (!confirm('לפתוח את הסידור שוב לכל מי שיש לו את הקישור?')) {
+                return;
+            }
+            writePath('settings/require_login', value).then(ok => { if (ok) renderUsersModal(); });
         }
 
         function getHolidayInfoForDate(dateStrDDMMYYYY) {
