@@ -1,6 +1,6 @@
 // Service Worker: מאפשר לפתוח את האתר גם בלי חיבור לאינטרנט.
 // אסטרטגיה: קודם רשת (כדי לקבל תמיד את הגרסה העדכנית), ואם אין רשת — מהמטמון.
-const CACHE = 'work-schedule-v3';
+const CACHE = 'work-schedule-v4';
 const SHELL = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './tailwind.css', './terms.html', './privacy.html', './accessibility.html'];
 
 self.addEventListener('install', (event) => {

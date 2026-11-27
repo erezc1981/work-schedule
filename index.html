@@ -196,6 +196,10 @@
                         <i class="fa-solid fa-lock text-xs" id="admin-icon"></i>
                         <span id="admin-btn-text">כניסה</span>
                     </button>
+                    <button onclick="signOutUser()" id="signout-btn" class="hidden bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg border border-slate-600 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                        <span>התנתקות</span>
+                    </button>
                     <button onclick="window.print()" class="gated-hide bg-slate-700 hover:bg-slate-600 text-white text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg shadow transition flex items-center gap-1.5">
                         <i class="fa-solid fa-print text-xs"></i>
                         <span>הדפסה</span>
@@ -567,6 +571,8 @@
         const OFFICERS_PATH = 'police_officers';
         const SAVED_OFFICER_STORAGE_KEY = 'police_schedule_pinned_officer';
 
+        // isAdminUser: יש למשתמש הרשאת מנהל. isAdmin: מצב עריכה פעיל כרגע (מנהל שיצא ממצב עריכה עדיין רואה את הסידור)
+        let isAdminUser = false;
         let isAdmin = false;
         let currentUser = null;
         let scheduleExistsInDb = null;
@@ -1029,7 +1035,7 @@
                 const actions = document.getElementById('access-gate-actions');
                 const inapp = document.getElementById('access-gate-inapp');
                 const signInBtn = `<button onclick="toggleAdminMode()" class="bg-police-navy hover:bg-blue-900 text-white font-extrabold py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2"><i class="fa-brands fa-google"></i><span>כניסה עם Google</span></button>`;
-                const signOutBtn = `<button onclick="toggleAdminMode()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl">יציאה / החלפת חשבון</button>`;
+                const signOutBtn = `<button onclick="signOutUser()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl">יציאה / החלפת חשבון</button>`;
                 inapp.classList.add('hidden');
                 if (!authResolved || (currentUser && access === 'unknown')) {
                     title.textContent = 'טוען...';
@@ -1207,8 +1213,15 @@
                 alert('הכניסה עדיין לא הוגדרה: יש להזין apiKey בהגדרות FIREBASE_CONFIG בקוד.');
                 return;
             }
+            if (currentUser && isAdminUser) {
+                // מנהל: הכפתור רק מדליק/מכבה מצב עריכה. החשבון נשאר מחובר והסידור נשאר פתוח
+                isAdmin = !isAdmin;
+                cacheSet('editMode', isAdmin);
+                afterAccessChange();
+                return;
+            }
             if (currentUser) {
-                await auth.signOut();
+                await signOutUser();
                 return;
             }
             if (IN_APP_BROWSER && !confirm('נראה שהאתר נפתח בתוך אפליקציה (למשל וואטסאפ), ו-Google לרוב חוסמת שם התחברות.\n\nמומלץ לפתוח את הקישור ב-Chrome או ב-Safari.\n\nלנסות בכל זאת?')) return;
@@ -1223,12 +1236,19 @@
             }
         }
 
+        async function signOutUser() {
+            if (!auth || !currentUser) return;
+            if (isAdminUser && requireLogin && !confirm('להתנתק מהחשבון?\n\nהצפייה נעולה, ולכן אחרי ההתנתקות הסידור ייסגר עד שתתחבר שוב.\nכדי רק לצאת ממצב עריכה — לחץ על כפתור העורך.')) return;
+            await auth.signOut();
+        }
+
         async function handleAuthChange(user) {
             if (viewerRef) { viewerRef.off('value'); viewerRef = null; }
             stopAdminListeners();
             const hadUser = !!currentUser;
             currentUser = user;
             authResolved = true;
+            isAdminUser = false;
             isAdmin = false;
             linkedOfficer = null;
             linkedOfficerApplied = false;
@@ -1254,13 +1274,14 @@
 
             try {
                 const snap = await database.ref(`admins/${user.uid}`).once('value');
-                isAdmin = snap.val() === true;
+                isAdminUser = snap.val() === true;
             } catch (err) {
-                isAdmin = false;
+                isAdminUser = false;
             }
             if (currentUser !== user) return;
+            isAdmin = isAdminUser && cacheGet('editMode') !== false;
 
-            if (isAdmin) {
+            if (isAdminUser) {
                 access = 'admin';
                 cacheSet('access', 'admin');
                 startAdminListeners();
@@ -1270,14 +1291,14 @@
             viewerRef = database.ref(`viewers/${user.uid}`);
             viewerRef.on('value', snap => {
                 linkedOfficer = snap.exists() ? String(snap.val()) : null;
-                if (!isAdmin) {
+                if (!isAdminUser) {
                     access = snap.exists() ? 'viewer' : 'pending';
                     cacheSet('access', access);
                 }
                 applyLinkedOfficer();
                 afterAccessChange();
             }, () => {
-                if (!isAdmin) access = 'pending';
+                if (!isAdminUser) access = 'pending';
                 afterAccessChange();
             });
             afterAccessChange();
@@ -1302,11 +1323,17 @@
             if (manageBtn) manageBtn.classList.toggle('hidden', !isAdmin);
             const usersBtn = document.getElementById('manage-users-btn');
             if (usersBtn) usersBtn.classList.toggle('hidden', !isAdmin);
+            const signOutTopBtn = document.getElementById('signout-btn');
+            if (signOutTopBtn) signOutTopBtn.classList.toggle('hidden', !isAdminUser);
             const who = currentUser ? (currentUser.displayName || currentUser.email) : '';
             if (isAdmin) {
                 btn.className = `bg-amber-500 hover:bg-amber-400 text-slate-900 ${base}`;
-                txt.textContent = `עורך: ${who} (יציאה)`;
+                txt.textContent = `עורך: ${who} (יציאה מעריכה)`;
                 icon.className = 'fa-solid fa-lock-open text-xs';
+            } else if (isAdminUser) {
+                btn.className = `bg-slate-800 hover:bg-slate-700 text-amber-400 ${base}`;
+                txt.textContent = `${who} (כניסה לעריכה)`;
+                icon.className = 'fa-solid fa-pen-to-square text-xs';
             } else if (currentUser && access === 'viewer') {
                 btn.className = `bg-slate-800 hover:bg-slate-700 text-emerald-300 ${base}`;
                 txt.textContent = `${who} (יציאה)`;
